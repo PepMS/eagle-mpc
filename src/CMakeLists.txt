@@ -4,12 +4,14 @@ set(MULTICOPTER_MPC_SOURCES
     multicopter-base-params.cpp
     waypoint.cpp
     mission.cpp
+    problem-mission.cpp
 )
 
 set(MULTICOPTER_MPC_HEADERS
     ../include/multicopter-base-params.hpp
     ../include/waypoint.hpp
     ../include/mission.hpp
+    ../include/problem-mission.hpp
 )
 
 set(MULTICOPTER_MPC_INCLUDE_DIRS
