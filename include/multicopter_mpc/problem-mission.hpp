@@ -26,7 +26,7 @@ namespace multicopter_mpc {
 class ProblemMission {
  public:
   ProblemMission(boost::shared_ptr<Mission> mission, boost::shared_ptr<MultiCopterBaseParams> mc_params,
-                 boost::shared_ptr<pinocchio::Model> mc_model);
+                 boost::shared_ptr<pinocchio::Model> mc_model, const double& dt);
   ~ProblemMission();
 
   boost::shared_ptr<crocoddyl::ShootingProblem> createProblem();

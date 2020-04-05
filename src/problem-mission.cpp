@@ -2,8 +2,8 @@
 
 namespace multicopter_mpc {
 ProblemMission::ProblemMission(boost::shared_ptr<Mission> mission, boost::shared_ptr<MultiCopterBaseParams> mc_params,
-                               boost::shared_ptr<pinocchio::Model> mc_model)
-    : mission_(mission), mc_params_(mc_params), mc_model_(mc_model), dt_(1e-2) {}
+                               boost::shared_ptr<pinocchio::Model> mc_model, const double& dt)
+    : mission_(mission), mc_params_(mc_params), mc_model_(mc_model), dt_(dt) {}
 ProblemMission::~ProblemMission() {}
 
 boost::shared_ptr<crocoddyl::ShootingProblem> ProblemMission::createProblem() {
@@ -19,8 +19,8 @@ boost::shared_ptr<crocoddyl::ShootingProblem> ProblemMission::createProblem() {
 
   // Regularizations
   Eigen::VectorXd state_weights(mc_model_->nv * 2);
-  state_weights.head(3).fill(1.);                        // Position
-  state_weights.segment(3, 3).fill(1.);                  // Orientation
+  state_weights.head(3).fill(1.);                           // Position
+  state_weights.segment(3, 3).fill(1.);                     // Orientation
   state_weights.segment(mc_model_->nv, 3).fill(1.);         // Linear velocity
   state_weights.segment(mc_model_->nv + 3, 3).fill(1000.);  // Angular velocity
 
@@ -63,11 +63,9 @@ boost::shared_ptr<crocoddyl::ShootingProblem> ProblemMission::createProblem() {
             boost::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(state, act_model,
                                                                                   running_cost_model),
             dt_);
-    boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> terminal_model =
-        boost::make_shared<crocoddyl::IntegratedActionModelEuler>(
-            boost::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(state, act_model,
-                                                                                  terminal_cost_model),
-            dt_);
+    terminal_model = boost::make_shared<crocoddyl::IntegratedActionModelEuler>(
+        boost::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(state, act_model, terminal_cost_model),
+        dt_);
 
     if (std::next(wp) != mission_->waypoints_.end()) {
       std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> run_models(wp->knots - 1, running_model);
