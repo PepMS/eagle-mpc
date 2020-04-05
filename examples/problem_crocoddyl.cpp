@@ -71,7 +71,7 @@ int main(void) {
   running_cost_model->addCost("track_pose", goal_tracking_cost, 1e-2);
   terminal_cost_model->addCost("goal_pose", goal_tracking_cost, 100);
 
-  double dt = 1e-2;
+  double dt = 3e-2;
   boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> running_model =
       boost::make_shared<crocoddyl::IntegratedActionModelEuler>(
           boost::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(state, act_model, running_cost_model),
@@ -81,7 +81,8 @@ int main(void) {
           boost::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(state, act_model, terminal_cost_model),
           dt);
 
-  std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> running_models(mission.waypoints_[0].knots, running_model);
+  std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> running_models(mission.waypoints_[0].knots,
+                                                                                running_model);
 
   boost::shared_ptr<crocoddyl::ShootingProblem> problem =
       boost::make_shared<crocoddyl::ShootingProblem>(mission.x0_, running_models, terminal_model);
