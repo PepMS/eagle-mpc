@@ -13,6 +13,7 @@
 #include "crocoddyl/multibody/fwd.hpp"
 #include "crocoddyl/multibody/actuations/multicopter-base.hpp"
 #include "crocoddyl/multibody/costs/frame-placement.hpp"
+#include "crocoddyl/multibody/costs/frame-velocity.hpp"
 #include "crocoddyl/multibody/costs/cost-sum.hpp"
 #include "crocoddyl/multibody/costs/state.hpp"
 #include "crocoddyl/multibody/costs/control.hpp"
@@ -33,6 +34,8 @@ class ProblemMission {
   boost::shared_ptr<Mission> mission_;
   boost::shared_ptr<MultiCopterBaseParams> mc_params_;
   boost::shared_ptr<pinocchio::Model> mc_model_;
+
+  double dt_;
 };
 }  // namespace multicopter_mpc
 
