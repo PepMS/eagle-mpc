@@ -8,6 +8,8 @@
 #include <boost/python/enum.hpp>
 #include <eigenpy/eigenpy.hpp>
 
+#include "python/multicopter_mpc/waypoint.hpp"
+
 namespace multicopter_mpc {
 namespace python {
 
@@ -17,9 +19,10 @@ BOOST_PYTHON_MODULE(libmulticopter_mpc_pywrap) {
   bp::class_<std::map<std::string, std::string> >("StringMap")
       .def(bp::map_indexing_suite<std::map<std::string, std::string> >());
 
+  exposeWayPoint();
 }
 
 }  // namespace python
-}  // namespace optiuavm
+}  // namespace multicopter_mpc
 
 #endif
