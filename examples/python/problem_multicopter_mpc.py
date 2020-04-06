@@ -32,9 +32,9 @@ server_uav = yaml_parser.ParamsServer(yaml_uav.getParams())
 mc_params = multicopter_mpc.MultiCopterBaseParams()
 
 # Mission
-# yaml_mission = yaml_parser.ParserYAML("/home/pepms/robotics/libraries/optiuavm/mission/loop.yaml", "", True)
-# server_mission = yaml_parser.ParamsServer(yaml_mission.getParams())
+yaml_mission = yaml_parser.ParserYAML("/home/pepms/robotics/libraries/optiuavm/mission/loop.yaml", "", True)
+server_mission = yaml_parser.ParamsServer(yaml_mission.getParams())
+mission = multicopter_mpc.Mission(uav.nq + uav.nv)
+mission.fillWaypoints(server_mission)
+mission.fillInitialState(server_mission)
 
-
-# wp_list = optiuavm.fillWaypoints(server_mission)
-# x0 = optiuavm.fillInitialState(server_mission)
