@@ -17,9 +17,7 @@ namespace python {
 namespace bp = boost::python;
 
 BOOST_PYTHON_MODULE(libmulticopter_mpc_pywrap) {
-  bp::class_<std::map<std::string, std::string> >("StringMap")
-      .def(bp::map_indexing_suite<std::map<std::string, std::string> >());
-
+  
   exposeWayPoint();
   exposeMultiCopterBaseParams();
 }
