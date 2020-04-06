@@ -9,6 +9,7 @@
 #include <eigenpy/eigenpy.hpp>
 
 #include "python/multicopter_mpc/waypoint.hpp"
+#include "python/multicopter_mpc/multicopter-base-params.hpp"
 
 namespace multicopter_mpc {
 namespace python {
@@ -20,6 +21,7 @@ BOOST_PYTHON_MODULE(libmulticopter_mpc_pywrap) {
       .def(bp::map_indexing_suite<std::map<std::string, std::string> >());
 
   exposeWayPoint();
+  exposeMultiCopterBaseParams();
 }
 
 }  // namespace python
