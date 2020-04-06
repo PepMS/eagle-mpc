@@ -17,9 +17,6 @@ find_package(Boost COMPONENTS python)
 find_package(PythonInterp)
 find_package(PythonLibs REQUIRED)
 
-message("Crocodyl include: " ${eigenpy_INCLUDE_DIRS})
-
-
 SET(YAML_PARSER_LIB /usr/local/lib/libyaml_parser.so)
 SET(YAML_PARSER_INCLUDE_DIRS /usr/local/include/yaml_parser/)
 SET(CROCODDYL_LIB /usr/local/lib/libcrocoddyl.so)
