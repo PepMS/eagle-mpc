@@ -2,7 +2,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/examples/bin/)
 
 # PROBLEM_CROCODDYL
 set(SOURCES_PROBLEM_CROCODDYL
-problem_crocoddyl.cpp)
+problem-crocoddyl.cpp)
 
 set(INCLUDE_PROBLEM_CROCODDYL
 ../include
@@ -18,13 +18,13 @@ ${URDFDOM_LIB}
 ${YAMLCPP_LIBRARY}
 )
 
-add_executable(problem_crocoddyl ${SOURCES_PROBLEM_CROCODDYL})
-target_include_directories(problem_crocoddyl PUBLIC ${INCLUDE_PROBLEM_CROCODDYL})
-target_link_libraries(problem_crocoddyl PUBLIC ${LIBS_PROBLEM_CROCODDYL})
+add_executable(problem-crocoddyl ${SOURCES_PROBLEM_CROCODDYL})
+target_include_directories(problem-crocoddyl PUBLIC ${INCLUDE_PROBLEM_CROCODDYL})
+target_link_libraries(problem-crocoddyl PUBLIC ${LIBS_PROBLEM_CROCODDYL})
 
 # PROBLEM_MULTICOPTER_MPC
 set(SOURCES_PROBLEM_MULTICOPTER_MPC
-problem_multicopter_mpc.cpp)
+problem-multicopter-mpc.cpp)
 
 set(INCLUDE_PROBLEM_MULTICOPTER_MPC
 ../include
@@ -40,6 +40,6 @@ ${URDFDOM_LIB}
 ${YAMLCPP_LIBRARY}
 )
 
-add_executable(problem_multicopter_mpc ${SOURCES_PROBLEM_MULTICOPTER_MPC})
-target_include_directories(problem_multicopter_mpc PUBLIC ${INCLUDE_PROBLEM_CRCODDYL})
-target_link_libraries(problem_multicopter_mpc PUBLIC ${LIBS_PROBLEM_MULTICOPTER_MPC})
+add_executable(problem-multicopter-mpc ${SOURCES_PROBLEM_MULTICOPTER_MPC})
+target_include_directories(problem-multicopter-mpc PUBLIC ${INCLUDE_PROBLEM_CRCODDYL})
+target_link_libraries(problem-multicopter-mpc PUBLIC ${LIBS_PROBLEM_MULTICOPTER_MPC})
