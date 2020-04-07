@@ -4,7 +4,6 @@
 #include "multicopter_mpc/multicopter-base-params.hpp"
 
 #include <Eigen/Dense>
-// #include <eigenpy/eigenpy.hpp>
 
 namespace multicopter_mpc {
 namespace python {
@@ -12,6 +11,8 @@ namespace python {
 namespace bp = boost::python;
 
 void exposeMultiCopterBaseParams() {
+  bp::register_ptr_to_python<boost::shared_ptr<MultiCopterBaseParams> >();
+
   bp::class_<MultiCopterBaseParams>(
       "MultiCopterBaseParams",
       bp::init<double, double, Eigen::MatrixXd, double, double>(
@@ -47,6 +48,8 @@ void exposeMultiCopterBaseParams() {
           "min_torque",
           bp::make_getter(&MultiCopterBaseParams::min_torque_, bp::return_value_policy<bp::return_by_value>()),
           bp::make_setter(&MultiCopterBaseParams::min_torque_), "min torque");
+  
+
 }
 }  // namespace python
 }  // namespace multicopter_mpc

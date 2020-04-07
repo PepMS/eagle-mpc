@@ -11,6 +11,8 @@ namespace python {
 namespace bp = boost::python;
 
 void exposeMission() {
+  bp::register_ptr_to_python<boost::shared_ptr<Mission> >();
+
   bp::class_<Mission>("Mission", bp::init<int>(bp::args("nx"), "Initialize mission params"))
       .def("fillWaypoints", &Mission::fillWaypoints, bp::args("server"))
       .def("fillInitialState", &Mission::fillInitialState, bp::args("server"))

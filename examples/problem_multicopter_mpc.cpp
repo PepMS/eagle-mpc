@@ -31,7 +31,7 @@ int main(void) {
   multicopter_mpc::ProblemMission multicopter_problem(
       boost::make_shared<multicopter_mpc::Mission>(mission),
       boost::make_shared<multicopter_mpc::MultiCopterBaseParams>(mc_params),
-      boost::make_shared<pinocchio::Model>(model), 1e-2);
+      boost::make_shared<pinocchio::Model>(model), model.getFrameId("base_link"), 1e-2);
 
   boost::shared_ptr<crocoddyl::ShootingProblem> problem = multicopter_problem.createProblem();
 
