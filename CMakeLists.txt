@@ -13,6 +13,9 @@ set(CMAKE_BUILD_TYPE RELEASE)
 find_package(eigenpy REQUIRED)
 find_package(Eigen3 3.3 REQUIRED)
 find_package(YamlCpp REQUIRED)
+find_package(Boost COMPONENTS python)
+find_package(PythonInterp)
+find_package(PythonLibs REQUIRED)
 
 SET(YAML_PARSER_LIB /usr/local/lib/libyaml_parser.so)
 SET(YAML_PARSER_INCLUDE_DIRS /usr/local/include/yaml_parser/)
@@ -21,17 +24,9 @@ SET(CROCODDYL_INCLUDE_DIRS /usr/local/include/crocoddyl)
 SET(PINOCCHIO_LIB /usr/local/lib/libpinocchio.so)
 SET(PINOCCHIO_INCLUDE_DIRS /usr/local/include/pinocchio)
 SET(URDFDOM_LIB /usr/lib/x86_64-linux-gnu/liburdfdom_model.so)
-# find_package(Boost COMPONENTS python)
-# find_package(PythonInterp)
-# find_package(PythonLibs REQUIRED)
 
 message(STATUS "Eigen library:" ${EIGEN3_INCLUDE_DIRS})
 
-# OptiUAVAM Library
-add_subdirectory(src)
-
-# Compile tests
-# add_subdirectory(tests)
-
-#Compile examples
+add_subdirectory(src) # MultiCopter-MPC Library
 add_subdirectory(examples)
+add_subdirectory(bindings) 
