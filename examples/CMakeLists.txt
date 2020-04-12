@@ -43,3 +43,25 @@ ${YAMLCPP_LIBRARY}
 add_executable(problem-multicopter-mpc ${SOURCES_PROBLEM_MULTICOPTER_MPC})
 target_include_directories(problem-multicopter-mpc PUBLIC ${INCLUDE_PROBLEM_CRCODDYL})
 target_link_libraries(problem-multicopter-mpc PUBLIC ${LIBS_PROBLEM_MULTICOPTER_MPC})
+
+# PROBLEM_MULTICOPTER_MPC_TEST
+set(SOURCES_PROBLEM_MULTICOPTER_TEST
+problem-multicopter-test.cpp)
+
+set(INCLUDE_PROBLEM_MULTICOPTER_TEST
+../include
+${EIGEN3_INCLUDE_DIRS}
+${CROCODDYL_INCLUDE_DIRS}
+)
+
+set(LIBS_PROBLEM_MULTICOPTER_TEST
+multicopter_mpc
+-lboost_system
+${CROCODDYL_LIB}
+${URDFDOM_LIB}
+${YAMLCPP_LIBRARY}
+)
+
+add_executable(problem-multicopter-test ${SOURCES_PROBLEM_MULTICOPTER_TEST})
+target_include_directories(problem-multicopter-test PUBLIC ${INCLUDE_PROBLEM_CRCODDYL})
+target_link_libraries(problem-multicopter-test PUBLIC ${LIBS_PROBLEM_MULTICOPTER_TEST})
