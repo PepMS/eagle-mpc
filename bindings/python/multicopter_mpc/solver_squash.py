@@ -33,7 +33,11 @@ class SolverSquashFDDP():
 
         # Inner solvers
         self.solverFDDP = crocoddyl.SolverFDDP(self.problem)
+        self.solverFDDP.th_stop_gaps = 1e-3
+        self.solverFDDP.setStoppingCriteria(crocoddyl.StoppingType.StopCriteriaCostReduction)
+        self.solverFDDP.setStoppingTest(crocoddyl.StoppingTestType.StopTestGaps)
         self.solverDDP = crocoddyl.SolverDDP(self.problem)
+        self.solverDDP.setStoppingCriteria(crocoddyl.StoppingType.StopCriteriaCostReduction)
 
     def barrierInit(self):
         barrierActivationBounds = crocoddyl.ActivationBounds(
@@ -61,7 +65,6 @@ class SolverSquashFDDP():
             self.barrierUpdate()
 
             self.solverFDDP.th_stop = self.convergence
-            # XXX: Add a threshold for stopping at certain amount of gaps
             self.solverFDDP.solve(self.xs, self.us, self.maxIters, False,
                                   self.regInit)
             self.xs = self.solverFDDP.xs
@@ -74,6 +77,8 @@ class SolverSquashFDDP():
             self.solverDDP.th_stop = self.solverFDDP.th_stop
             self.solverDDP.solve(self.xs, self.ss, self.maxIters, False,
                                  self.regInit)
+            self.xs = self.solverDDP.xs
+            self.ss = self.solverDDP.ss
 
     def squashingupdate(self):
         actuation.squashing.smooth = self.squashingSmooth
@@ -81,11 +86,15 @@ class SolverSquashFDDP():
     def barrierUpdate(self):
         self.barrierQuadraticWeights = 1.0 / np.power(
             self.squashingSmooth * (self.squashingUb - self.squashingLb), 2)
-        for m in self.problem.runningModels:
-            m.differential.costs.costs[
-                'sBarrier'].cost.activation.weights = self.barrierQuadraticWeights
+        # for m in self.problem.runningModels:
+        #     m.differential.costs.costs[
+        #         'sBarrier'].cost.activation.weights = self.barrierQuadraticWeights
+        self.problem.runningModels[0].differential.costs.costs[
+            'sBarrier'].cost.activation.weights = self.barrierQuadraticWeights
 
     def setBarrierWeight(self, weight):
         self.barrierWeight = weight
-        for m in self.problem.runningModels:
-            m.differential.costs.costs['sBarrier'].weight = self.barrierWeight
+        # for m in self.problem.runningModels:
+        #     m.differential.costs.costs['sBarrier'].weight = self.barrierWeight
+        self.problem.runningModels[0].differential.costs.costs[
+            'sBarrier'].weight = self.barrierWeight
