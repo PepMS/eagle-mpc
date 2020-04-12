@@ -51,14 +51,14 @@ problem_mission = multicopter_mpc.ProblemMission(
     dt)
 problem = problem_mission.createProblem()
 
-ddp_solver = crocoddyl.SolverFDDP(problem)
+ddp_solver = crocoddyl.SolverBoxFDDP(problem)
 ddp_solver.setCallbacks(
     [crocoddyl.CallbackLogger(),
      crocoddyl.CallbackVerbose()])
 ddp_solver.solve()
-ddp_solver.setStoppingCriteria(crocoddyl.StoppingType.StopCriteriaCostReduction)
-ddp_solver.th_stop = 1e-3
-ddp_solver.solve()
+# ddp_solver.setStoppingCriteria(crocoddyl.StoppingType.StopCriteriaCostReduction)
+# ddp_solver.th_stop = 1e-3
+# ddp_solver.solve()
 
 # if WITHDISPLAY:
 #     display = crocoddyl.GepettoDisplay(uav)

@@ -14,6 +14,11 @@ ProblemMission::ProblemMission(boost::shared_ptr<Mission> mission, boost::shared
 ProblemMission::~ProblemMission() {}
 
 boost::shared_ptr<crocoddyl::ShootingProblem> ProblemMission::createProblem() {
+  Eigen::VectorXd s_lb = Eigen::VectorXd(mc_params_->n_rotors_);
+  Eigen::VectorXd s_ub = Eigen::VectorXd(mc_params_->n_rotors_);
+  s_lb.fill(mc_params_->min_thrust_);
+  s_ub.fill(mc_params_->max_thrust_);
+
   // TODO: check whether the waypoint list is full
   std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> running_models;
   boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> terminal_model;
@@ -23,9 +28,9 @@ boost::shared_ptr<crocoddyl::ShootingProblem> ProblemMission::createProblem() {
 
   // Regularizations
   Eigen::VectorXd state_weights(mc_model_->nv * 2);
-  state_weights.head(3).fill(0.1);                           // Position 1.
-  state_weights.segment(3, 3).fill(1000.);                     // Orientation 1. 
-  state_weights.segment(mc_model_->nv, 3).fill(1000.);         // Linear velocity 1.
+  state_weights.head(3).fill(0.1);                          // Position 1.
+  state_weights.segment(3, 3).fill(1000.);                  // Orientation 1.
+  state_weights.segment(mc_model_->nv, 3).fill(1000.);      // Linear velocity 1.
   state_weights.segment(mc_model_->nv + 3, 3).fill(1000.);  // Angular velocity 1000.
   boost::shared_ptr<crocoddyl::CostModelAbstract> state_reg_cost = boost::make_shared<crocoddyl::CostModelState>(
       state, boost::make_shared<crocoddyl::ActivationModelWeightedQuad>(state_weights), state->zero(),
@@ -40,11 +45,11 @@ boost::shared_ptr<crocoddyl::ShootingProblem> ProblemMission::createProblem() {
     boost::shared_ptr<crocoddyl::CostModelSum> terminal_cost_model =
         boost::make_shared<crocoddyl::CostModelSum>(state, actuation_->get_nu());
 
-    running_cost_model->addCost("x_reg", state_reg_cost, 1e-6); 
-    running_cost_model->addCost("u_reg", control_reg_cost, 1e-6); // 1e-4
+    running_cost_model->addCost("x_reg", state_reg_cost, 1e-6);
+    running_cost_model->addCost("u_reg", control_reg_cost, 1e-6);  // 1e-4
     if (std::next(wp) != mission_->waypoints_.end()) {
       terminal_cost_model->addCost("x_reg_cost", state_reg_cost, 1e-6);
-      terminal_cost_model->addCost("u_reg_cost", control_reg_cost, 1e-6); // 1e-4
+      terminal_cost_model->addCost("u_reg_cost", control_reg_cost, 1e-6);  // 1e-4
     }
 
     crocoddyl::FramePlacement M_ref = crocoddyl::FramePlacement(frame_id_, wp->pose);
@@ -71,10 +76,18 @@ boost::shared_ptr<crocoddyl::ShootingProblem> ProblemMission::createProblem() {
         dt_);
 
     if (std::next(wp) != mission_->waypoints_.end()) {
+      running_model->set_u_lb(s_lb);
+      running_model->set_u_ub(s_ub);
+      terminal_model->set_u_lb(s_lb);
+      terminal_model->set_u_ub(s_ub);
+
       std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> run_models(wp->knots - 1, running_model);
       run_models.push_back(terminal_model);
       running_models.insert(running_models.end(), run_models.begin(), run_models.end());
     } else {
+      running_model->set_u_lb(s_lb);
+      running_model->set_u_ub(s_ub);
+      
       std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> run_models(wp->knots, running_model);
       running_models.insert(running_models.end(), run_models.begin(), run_models.end());
     }
