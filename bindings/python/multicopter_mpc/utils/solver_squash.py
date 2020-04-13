@@ -32,22 +32,24 @@ class SolverSquashFDDP():
 
         # Inner solvers
         self.solverFDDP = crocoddyl.SolverFDDP(self.problem)
-        self.solverFDDP.th_stop_gaps = 1e-3
+        self.solverFDDP.th_stop_gaps = 1e0
         self.solverFDDP.setStoppingCriteria(crocoddyl.StoppingType.StopCriteriaCostReduction)
         self.solverFDDP.setStoppingTest(crocoddyl.StoppingTestType.StopTestGaps)
         self.solverDDP = crocoddyl.SolverDDP(self.problem)
         self.solverDDP.setStoppingCriteria(crocoddyl.StoppingType.StopCriteriaCostReduction)
 
     def barrierInit(self):
-        barrierActivationBounds = crocoddyl.ActivationBounds(self.squashingModel.s_lb, self.squashingModel.s_ub)
+        barrierActivationBounds = crocoddyl.ActivationBounds(self.squashingModel.s_lb, self.squashingModel.s_ub, 1.0)
         barrierActivation = crocoddyl.ActivationModelWeightedQuadraticBarrier(barrierActivationBounds,
                                                                               self.barrierQuadraticWeights)
+        # barrierActivation = crocoddyl.ActivationModelQuadraticBarrier(barrierActivationBounds)
         squashingBarrierCost = crocoddyl.CostModelControl(self.state, barrierActivation, self.actuation.nu)
 
         # we only need to change one running model to change them all
-        self.problem.runningModels[0].differential.costs.addCost("sBarrier", squashingBarrierCost, self.barrierWeight)
 
         for idx, m in enumerate(self.problem.runningModels):
+            if "sBarrier" not in m.differential.costs.costs:
+                m.differential.costs.addCost("sBarrier", squashingBarrierCost, self.barrierWeight)
             self.problem.updateModel(idx, m)
 
     def setCallbacks(self, callbacks):
@@ -74,18 +76,20 @@ class SolverSquashFDDP():
             self.solverDDP.th_stop = self.solverFDDP.th_stop
             self.solverDDP.solve(self.xs, self.ss, self.maxIters, False, self.regInit)
             self.xs = self.solverDDP.xs
-            self.ss = self.solverDDP.ss
+            self.ss = self.solverDDP.us
 
     def squashingUpdate(self):
         self.actuation.squashing.smooth = self.squashingSmooth
 
     def barrierUpdate(self):
         self.barrierQuadraticWeights = 1.0 / np.power(self.squashingSmooth * (self.squashingUb - self.squashingLb), 2)
-        # for m in self.problem.runningModels:
-        #     m.differential.costs.costs[
-        #         'sBarrier'].cost.activation.weights = self.barrierQuadraticWeights
-        self.problem.runningModels[0].differential.costs.costs[
-            'sBarrier'].cost.activation.weights = self.barrierQuadraticWeights
+        for m in self.problem.runningModels:
+            m.differential.costs.costs[
+                'sBarrier'].cost.activation.weights = self.barrierQuadraticWeights
+            m.differential.costs.costs['sBarrier'].weight = self.barrierWeight
+        # self.problem.runningModels[0].differential.costs.costs[
+        #     'sBarrier'].cost.activation.weights = self.barrierQuadraticWeights
+        # self.problem.runningModels[0].differential.costs.costs['sBarrier'].weight = self.barrierWeight
 
     def setBarrierWeight(self, weight):
         self.barrierWeight = weight

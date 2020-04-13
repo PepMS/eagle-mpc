@@ -4,6 +4,7 @@ import sys
 import crocoddyl
 import pinocchio
 import example_robot_data
+import numpy as np
 
 import multicopter_mpc
 from multicopter_mpc.utils.solver_squash import SolverSquashFDDP
@@ -12,6 +13,7 @@ import yaml_parser
 WITHPLOT = 'plot' in sys.argv
 HECTOR = 'hector' in sys.argv
 WITHDISPLAY = 'display' in sys.argv
+
 
 crocoddyl.switchToNumpyMatrix()
 
@@ -34,14 +36,14 @@ mc_params = multicopter_mpc.MultiCopterBaseParams()
 mc_params.fill(server_uav)
 
 # Mission
-yaml_mission = yaml_parser.ParserYAML("/home/pepms/robotics/libraries/multicopter_mpc/config/mission/simple.yaml", "",
-                                      True)
+yaml_mission = yaml_parser.ParserYAML("/home/pepms/robotics/libraries/multicopter_mpc/config/mission/passthrough.yaml",
+                                      "", True)
 server_mission = yaml_parser.ParamsServer(yaml_mission.getParams())
 mission = multicopter_mpc.Mission(uav.nq + uav.nv)
 mission.fillWaypoints(server_mission)
 mission.fillInitialState(server_mission)
 
-dt = 3e-2
+dt = 1e-2
 s_lb = pinocchio.utils.zero([mc_params.n_rotors, 1])
 s_ub = pinocchio.utils.zero([mc_params.n_rotors, 1])
 s_lb.fill(mc_params.min_thrust)
@@ -54,10 +56,9 @@ mc_actuation = crocoddyl.ActuationSquashingModel(actuation, squashing, actuation
 problem_mission = multicopter_mpc.ProblemMission(mission, mc_params, uav_model, mc_actuation,
                                                  uav_model.getFrameId(link_name), dt)
 problem = problem_mission.createProblem()
-
-sbfddp_solver = SolverSquashFDDP(problem, squashing)
-sbfddp_solver.setCallbacks([crocoddyl.CallbackLogger(), crocoddyl.CallbackVerbose()])
-sbfddp_solver.solve()
+solver = SolverSquashFDDP(problem, squashing)
+solver.setCallbacks([crocoddyl.CallbackLogger(), crocoddyl.CallbackVerbose()])
+solver.solve()
 
 if WITHDISPLAY:
     display = crocoddyl.GepettoDisplay(uav)
@@ -66,4 +67,9 @@ if WITHDISPLAY:
     #     'world/wp',
     #     target_pos.tolist() + [target_quat[0], target_quat[1], target_quat[2], target_quat[3]])
 
-    display.displayFromSolver(sbfddp_solver)
+    display.displayFromSolver(solver)
+
+if WITHPLOT:
+    log = solver.getCallbacks()[0]
+    crocoddyl.plotOCSolution(log.xs, log.us, figIndex=1, show=False)
+    crocoddyl.plotConvergence(log.costs, log.u_regs, log.x_regs, log.stops, log.grads, log.steps, figIndex=2)
