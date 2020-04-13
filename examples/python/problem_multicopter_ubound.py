@@ -43,22 +43,23 @@ mission.fillWaypoints(server_mission)
 mission.fillInitialState(server_mission)
 
 dt = 3e-2
+s_lb = pinocchio.utils.zero([mc_params.n_rotors, 1])
+s_ub = pinocchio.utils.zero([mc_params.n_rotors, 1])
+s_lb.fill(mc_params.min_thrust)
+s_ub.fill(mc_params.max_thrust)
+
 state = crocoddyl.StateMultibody(uav_model)
 actuation = crocoddyl.ActuationModelMultiCopterBase(state, mc_params.n_rotors, mc_params.tau_f)
-problem_mission = multicopter_mpc.ProblemMission(mission, mc_params, uav_model, actuation,
+squashing = crocoddyl.SquashingModelSmoothSat(s_lb, s_ub, mc_params.n_rotors)
+mc_actuation = crocoddyl.ActuationSquashingModel(actuation, squashing, actuation.nu)
+problem_mission = multicopter_mpc.ProblemMission(mission, mc_params, uav_model, mc_actuation,
                                                  uav_model.getFrameId(link_name), dt)
 problem = problem_mission.createProblem()
 
-ddp_solver = crocoddyl.SolverBoxFDDP(problem)
-ddp_solver.setCallbacks([crocoddyl.CallbackLogger(), crocoddyl.CallbackVerbose()])
-ddp_solver.solve()
-# ddp_solver.setStoppingCriteria(crocoddyl.StoppingType.StopCriteriaCostReduction)
-# ddp_solver.th_stop = 1e-3
-# ddp_solver.solve()
-
-sbfddp_solver = SolverSquashFDDP(problem)
+sbfddp_solver = SolverSquashFDDP(problem, squashing)
 sbfddp_solver.setCallbacks([crocoddyl.CallbackLogger(), crocoddyl.CallbackVerbose()])
 sbfddp_solver.solve()
+
 # if WITHDISPLAY:
 #     display = crocoddyl.GepettoDisplay(uav)
 #     uav.viewer.gui.addXYZaxis('world/wp', [1., 0., 0., 1.], .03, 0.5)
