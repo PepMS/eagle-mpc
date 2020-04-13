@@ -47,7 +47,7 @@ class SolverSquashFDDP():
         # we only need to change one running model to change them all
         self.problem.runningModels[0].differential.costs.addCost("sBarrier", squashingBarrierCost, self.barrierWeight)
 
-        for idx, m in enumerate(problem.runningModels):
+        for idx, m in enumerate(self.problem.runningModels):
             self.problem.updateModel(idx, m)
 
     def setCallbacks(self, callbacks):

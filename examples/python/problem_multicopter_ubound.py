@@ -3,16 +3,15 @@ import sys
 
 import crocoddyl
 import pinocchio
-import numpy as np
 import example_robot_data
 
 import multicopter_mpc
 from multicopter_mpc.utils.solver_squash import SolverSquashFDDP
 import yaml_parser
 
-WITHDISPLAY = 'display' in sys.argv or 'DISPLAY' in os.environ
-WITHPLOT = 'plot' in sys.argv or 'PLOT' in os.environ
+WITHPLOT = 'plot' in sys.argv
 HECTOR = 'hector' in sys.argv
+WITHDISPLAY = 'display' in sys.argv
 
 crocoddyl.switchToNumpyMatrix()
 
@@ -60,11 +59,11 @@ sbfddp_solver = SolverSquashFDDP(problem, squashing)
 sbfddp_solver.setCallbacks([crocoddyl.CallbackLogger(), crocoddyl.CallbackVerbose()])
 sbfddp_solver.solve()
 
-# if WITHDISPLAY:
-#     display = crocoddyl.GepettoDisplay(uav)
-#     uav.viewer.gui.addXYZaxis('world/wp', [1., 0., 0., 1.], .03, 0.5)
-#     # hector.viewer.gui.applyConfiguration(
-#     #     'world/wp',
-#     #     target_pos.tolist() + [target_quat[0], target_quat[1], target_quat[2], target_quat[3]])
+if WITHDISPLAY:
+    display = crocoddyl.GepettoDisplay(uav)
+    uav.viewer.gui.addXYZaxis('world/wp', [1., 0., 0., 1.], .03, 0.5)
+    # hector.viewer.gui.applyConfiguration(
+    #     'world/wp',
+    #     target_pos.tolist() + [target_quat[0], target_quat[1], target_quat[2], target_quat[3]])
 
-#     display.displayFromSolver(ddp_solver)
+    display.displayFromSolver(sbfddp_solver)
