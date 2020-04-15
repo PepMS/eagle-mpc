@@ -33,3 +33,5 @@ target_link_libraries(multicopter_mpc PUBLIC ${MULTICOPTER_MPC_LIBS})
 install(TARGETS multicopter_mpc
         LIBRARY DESTINATION lib)
 install(DIRECTORY ../include/multicopter_mpc DESTINATION include)
+install(DIRECTORY ../config/mission DESTINATION share/multicopter_mpc)
+install(DIRECTORY ../config/multirotor DESTINATION share/multicopter_mpc)
