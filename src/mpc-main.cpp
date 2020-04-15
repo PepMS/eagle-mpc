@@ -71,4 +71,6 @@ MpcMain::MpcMain(MultiCopterTypes::Type mc_type, MissionTypes::Type mission_type
 
   std::cout << "MULTICOPTER MPC: MPC Main initialization complete" << std::endl;
 }
+
+MpcMain::~MpcMain(){}
 }  // namespace multicopter_mpc
