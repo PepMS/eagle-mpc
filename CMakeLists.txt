@@ -13,7 +13,7 @@ set(CMAKE_BUILD_TYPE RELEASE)
 find_package(eigenpy REQUIRED)
 find_package(Eigen3 3.3 REQUIRED)
 find_package(YamlCpp REQUIRED)
-find_package(Boost COMPONENTS python)
+find_package(Boost COMPONENTS python3)
 find_package(PythonInterp)
 find_package(PythonLibs REQUIRED)
 
@@ -28,5 +28,5 @@ SET(URDFDOM_LIB /usr/lib/x86_64-linux-gnu/liburdfdom_model.so)
 message(STATUS "Eigen library:" ${EIGEN3_INCLUDE_DIRS})
 
 add_subdirectory(src) # MultiCopter-MPC Library
-add_subdirectory(examples)
+# add_subdirectory(examples)
 add_subdirectory(bindings) 

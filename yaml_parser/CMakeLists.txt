@@ -12,7 +12,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 
 find_package(YamlCpp REQUIRED)
 find_package(Eigen3 3.3 REQUIRED)
-find_package(Boost COMPONENTS python)
+find_package(Boost COMPONENTS python3)
 find_package(PythonInterp)
 find_package(PythonLibs REQUIRED)
 message(STATUS "Eigen library:" ${EIGEN3_INCLUDE_DIRS})

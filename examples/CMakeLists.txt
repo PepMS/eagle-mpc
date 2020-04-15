@@ -16,6 +16,7 @@ multicopter_mpc
 ${CROCODDYL_LIB}
 ${URDFDOM_LIB}
 ${YAMLCPP_LIBRARY}
+${PINOCCHIO_LIB}
 )
 
 add_executable(problem-crocoddyl ${SOURCES_PROBLEM_CROCODDYL})
@@ -38,6 +39,7 @@ multicopter_mpc
 ${CROCODDYL_LIB}
 ${URDFDOM_LIB}
 ${YAMLCPP_LIBRARY}
+${PINOCCHIO_LIB}
 )
 
 add_executable(problem-multicopter-mpc ${SOURCES_PROBLEM_MULTICOPTER_MPC})
@@ -60,6 +62,8 @@ multicopter_mpc
 ${CROCODDYL_LIB}
 ${URDFDOM_LIB}
 ${YAMLCPP_LIBRARY}
+${PINOCCHIO_LIB}
+
 )
 
 add_executable(problem-multicopter-test ${SOURCES_PROBLEM_MULTICOPTER_TEST})
