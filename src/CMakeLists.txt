@@ -5,6 +5,7 @@ set(MULTICOPTER_MPC_SOURCES
     waypoint.cpp
     mission.cpp
     problem-mission.cpp
+    mpc-main.cpp
 )
 
 set(MULTICOPTER_MPC_HEADERS
@@ -12,6 +13,7 @@ set(MULTICOPTER_MPC_HEADERS
     ../include/waypoint.hpp
     ../include/mission.hpp
     ../include/problem-mission.hpp
+    ../include/mpc-main.hpp
 )
 
 set(MULTICOPTER_MPC_INCLUDE_DIRS

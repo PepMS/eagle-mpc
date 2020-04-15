@@ -3,6 +3,11 @@
 
 #include <string>
 
+#include "pinocchio/parsers/urdf.hpp"
+#include "pinocchio/multibody/model.hpp"
+
+#include "example-robot-data/path.hpp"
+
 #include "crocoddyl/core/fwd.hpp"
 #include "crocoddyl/core/solver-base.hpp"
 #include "crocoddyl/core/solvers/box-fddp.hpp"
@@ -28,7 +33,7 @@ struct SolverTypes {
 
 class MpcMain {
  public:
-  MpcMain(MultiCopterTypes mc_type, MissionTypes mission_type, SolverTypes solver_type);
+  MpcMain(MultiCopterTypes::Type mc_type, MissionTypes::Type mission_type, SolverTypes::Type solver_type);
   ~MpcMain();
 
  private:
@@ -36,19 +41,21 @@ class MpcMain {
   void initSquashBoxFDDP();
   void init();
 
-  MultiCopterTypes mc_type_;
-  MissionTypes mission_type_;
+  MultiCopterTypes::Type mc_type_;
+  MissionTypes::Type mission_type_;
 
   // DDP related
-  pinocchio::Model model_;
-  crocoddyl::StateMultibody state_;
-  MultiCopterBaseParams params_;
-  Mission mission_;
-  crocoddyl::ActuationModelMultiCopterBase actuation_;
+  boost::shared_ptr<pinocchio::Model> model_;
+  boost::shared_ptr<crocoddyl::StateMultibody> state_;
+  boost::shared_ptr<MultiCopterBaseParams> params_;
+  boost::shared_ptr<Mission> mission_;
+  boost::shared_ptr<crocoddyl::ActuationModelMultiCopterBase> actuation_;
+  double dt_;
 
-  SolverTypes solver_type_;
-  crocoddyl::SolverBoxFDDP solver_BoxFDDP_;
-  crocoddyl::ShootingProblem problem_;
+  SolverTypes::Type solver_type_;
+  // crocoddyl::SolverBoxFDDP solver_BoxFDDP_;
+  boost::shared_ptr<ProblemMission> problem_;
+
 };
 
 }  // namespace multicopter_mpc
