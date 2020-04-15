@@ -6,6 +6,7 @@
 #include "crocoddyl/core/fwd.hpp"
 #include "crocoddyl/core/integrator/euler.hpp"
 #include "crocoddyl/core/solvers/fddp.hpp"
+#include "crocoddyl/core/solvers/ddp.hpp"
 #include "crocoddyl/core/utils/callbacks.hpp"
 #include "crocoddyl/core/activations/weighted-quadratic.hpp"
 
@@ -71,7 +72,7 @@ int main(void) {
   running_cost_model->addCost("track_pose", goal_tracking_cost, 1e-2);
   terminal_cost_model->addCost("goal_pose", goal_tracking_cost, 100);
 
-  double dt = 1e-2;
+  double dt = 3e-2;
   boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> running_model =
       boost::make_shared<crocoddyl::IntegratedActionModelEuler>(
           boost::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(state, act_model, running_cost_model),
@@ -93,4 +94,7 @@ int main(void) {
   fddp.setCallbacks(cbs);
 
   fddp.solve();
+  fddp.set_stoppingCriteria(fddp.StopCriteriaCostReduction);
+  fddp.solve();
+
 }

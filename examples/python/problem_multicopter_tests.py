@@ -7,7 +7,6 @@ import numpy as np
 import example_robot_data
 
 import multicopter_mpc
-from multicopter_mpc.utils.solver_squash import SolverSquashFDDP
 import yaml_parser
 
 WITHDISPLAY = 'display' in sys.argv or 'DISPLAY' in os.environ
@@ -15,6 +14,11 @@ WITHPLOT = 'plot' in sys.argv or 'PLOT' in os.environ
 HECTOR = 'hector' in sys.argv
 
 crocoddyl.switchToNumpyMatrix()
+
+# uav = example_robot_data.loadHector()
+# link_name = "base_link"
+# yaml_uav = yaml_parser.ParserYAML("../../config/multirotor/hector.yaml",
+#                                   "", True)
 
 if HECTOR:
     uav = example_robot_data.loadHector()
@@ -35,29 +39,23 @@ mc_params = multicopter_mpc.MultiCopterBaseParams()
 mc_params.fill(server_uav)
 
 # Mission
-yaml_mission = yaml_parser.ParserYAML("/home/pepms/robotics/libraries/multicopter_mpc/config/mission/passthrough.yaml", "",
-                                      True)
+yaml_mission = yaml_parser.ParserYAML("/home/pepms/robotics/libraries/optiuavm/mission/simple.yaml", "", True)
 server_mission = yaml_parser.ParamsServer(yaml_mission.getParams())
 mission = multicopter_mpc.Mission(uav.nq + uav.nv)
 mission.fillWaypoints(server_mission)
 mission.fillInitialState(server_mission)
 
 dt = 1e-2
-state = crocoddyl.StateMultibody(uav_model)
-actuation = crocoddyl.ActuationModelMultiCopterBase(state, mc_params.n_rotors, mc_params.tau_f)
-problem_mission = multicopter_mpc.ProblemMission(mission, mc_params, uav_model, actuation,
-                                                 uav_model.getFrameId(link_name), dt)
+problem_mission = multicopter_mpc.ProblemMission(mission, mc_params, uav_model, uav_model.getFrameId(link_name), dt)
 problem = problem_mission.createProblem()
 
-ddp_solver = crocoddyl.SolverBoxFDDP(problem)
-ddp_solver.setCallbacks([crocoddyl.CallbackLogger(), crocoddyl.CallbackVerbose()])
-ddp_solver.solve()
+actuation = problem.terminalModel.differential.actuation
+state = actuation.state
+controlCost = crocoddyl.CostModelControl(state, actuation.nu)
 
-if WITHDISPLAY:
-    display = crocoddyl.GepettoDisplay(uav)
-    uav.viewer.gui.addXYZaxis('world/wp', [1., 0., 0., 1.], .03, 0.5)
-    # hector.viewer.gui.applyConfiguration(
-    #     'world/wp',
-    #     target_pos.tolist() + [target_quat[0], target_quat[1], target_quat[2], target_quat[3]])
+problem.runningModels[0].differential.costs.addCost("sBarrier", controlCost, 10)
 
-    display.displayFromSolver(ddp_solver)
+problem.runningDatas[0].differential.costs.costs.update({
+    'sBarrier', problem.runningModels[0].differential.costs.costs['sBarrier'].cost.createData(
+        problem.runningDatas[0].differential.costs.shared)
+})
