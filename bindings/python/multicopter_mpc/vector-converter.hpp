@@ -21,6 +21,7 @@ namespace bp = boost::python;
 
 /// @note Registers converter from a provided type to the python
 ///       iterable type to the.
+
 template <class T, bool NoProxy = true>
 struct vector_to_list {
   static PyObject* convert(const std::vector<T>& vec) {
@@ -87,6 +88,6 @@ struct list_to_vector {
 };
 
 }  // namespace python
-}  // namespace crocoddyl
+}  // namespace multicopter_mpc
 
 #endif  // BINDINGS_PYTHON_CROCODDYL_UTILS_VECTOR_CONVERTER_HPP_

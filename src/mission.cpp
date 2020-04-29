@@ -1,9 +1,7 @@
 #include "multicopter_mpc/mission.hpp"
 
 namespace multicopter_mpc {
-Mission::Mission(const std::size_t& nx) {
-  x0_ = Eigen::VectorXd::Zero(nx);
-}
+Mission::Mission(const std::size_t& nx) { x0_ = Eigen::VectorXd::Zero(nx); }
 Mission::~Mission() {}
 
 void Mission::fillWaypoints(const yaml_parser::ParamsServer& server) {
@@ -58,5 +56,13 @@ void Mission::fillInitialState(const yaml_parser::ParamsServer& server) {
   x0_.segment(7, 3) = vel_lin;
   x0_.segment(10, 3) = vel_rot;
 }
+
+const std::vector<WayPoint>& Mission::getWaypoints() const { return waypoints_; };
+
+void Mission::setWaypoints(const std::vector<WayPoint>& waypoints)
+{
+  waypoints_ = waypoints;
+}
+
 
 }  // namespace multicopter_mpc

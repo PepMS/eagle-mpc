@@ -11,10 +11,9 @@ namespace python {
 namespace bp = boost::python;
 
 void exposeWayPoint() {
-  bp::to_python_converter<std::vector<WayPoint, std::allocator<WayPoint> >, vector_to_list<WayPoint, false> >();
-
-  list_to_vector().from_python<std::vector<WayPoint, std::allocator<WayPoint> > >();
-
+    
+  bp::register_ptr_to_python<boost::shared_ptr<WayPoint> >();
+  
   bp::class_<WayPoint>("WayPoint", bp::init<int, Eigen::Vector3d&, Eigen::Quaterniond&>(
                                        bp::args("knots, position, orientation"), "Initialize params server"))
       .add_property("M", bp::make_getter(&WayPoint::pose, bp::return_value_policy<bp::return_by_value>()))
