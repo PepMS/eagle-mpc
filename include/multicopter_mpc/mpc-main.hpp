@@ -36,6 +36,11 @@ class MpcMain {
   MpcMain(MultiCopterTypes::Type mc_type, MissionTypes::Type mission_type, SolverTypes::Type solver_type);
   ~MpcMain();
 
+  void solve();
+  void setInitialState(const Eigen::Ref<const Eigen::VectorXd>& initial_state);
+  const Eigen::VectorXd& getActuatorControls() const;
+  const Eigen::VectorXd& getState(const size_t& n_node) const;
+
  private:
   void initBoxFDDP();
   void initSquashBoxFDDP();
@@ -50,12 +55,13 @@ class MpcMain {
   boost::shared_ptr<MultiCopterBaseParams> params_;
   boost::shared_ptr<Mission> mission_;
   boost::shared_ptr<crocoddyl::ActuationModelMultiCopterBase> actuation_;
+  boost::shared_ptr<crocoddyl::SolverAbstract> solver_;
+  boost::shared_ptr<crocoddyl::ShootingProblem> problem_opt_;
+  
   double dt_;
 
   SolverTypes::Type solver_type_;
-  // crocoddyl::SolverBoxFDDP solver_BoxFDDP_;
   boost::shared_ptr<ProblemMission> problem_;
-
 };
 
 }  // namespace multicopter_mpc

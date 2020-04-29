@@ -56,13 +56,4 @@ void Mission::fillInitialState(const yaml_parser::ParamsServer& server) {
   x0_.segment(7, 3) = vel_lin;
   x0_.segment(10, 3) = vel_rot;
 }
-
-const std::vector<WayPoint>& Mission::getWaypoints() const { return waypoints_; };
-
-void Mission::setWaypoints(const std::vector<WayPoint>& waypoints)
-{
-  waypoints_ = waypoints;
-}
-
-
 }  // namespace multicopter_mpc

@@ -21,6 +21,9 @@ MpcMain::MpcMain(MultiCopterTypes::Type mc_type, MissionTypes::Type mission_type
       model_frame_name = "base_link";
       break;
     default:
+      model_description_path = EXAMPLE_ROBOT_DATA_MODEL_DIR "/iris_description/robots/iris_simple.urdf";
+      model_yaml_path = "/usr/local/share/multicopter_mpc/multirotor/iris.yaml";
+      model_frame_name = "iris__base_link";
       break;
   }
 
@@ -52,14 +55,15 @@ MpcMain::MpcMain(MultiCopterTypes::Type mc_type, MissionTypes::Type mission_type
   mission_->fillInitialState(server_mission);  // should be changed with every solving iteration
 
   state_ = boost::make_shared<crocoddyl::StateMultibody>(model_);
-  dt_ = 1e-2;
+  dt_ = 4e-3;
   switch (solver_type_) {
     case SolverTypes::BoxFDDP: {
       problem_ = boost::make_shared<ProblemMission>(
           mission_, params_, model_,
           boost::make_shared<crocoddyl::ActuationModelMultiCopterBase>(state_, params_->n_rotors_, params_->tau_f_),
           model_->getFrameId(model_frame_name), dt_);
-
+      problem_opt_ = problem_->createProblem();
+      solver_ = boost::make_shared<crocoddyl::SolverBoxFDDP>(problem_opt_);
       break;
     }
     case SolverTypes::SquashBoxFDDP: {
@@ -69,8 +73,24 @@ MpcMain::MpcMain(MultiCopterTypes::Type mc_type, MissionTypes::Type mission_type
       break;
   }
 
+  solver_->solve();
   std::cout << "MULTICOPTER MPC: MPC Main initialization complete" << std::endl;
 }
 
-MpcMain::~MpcMain(){}
+MpcMain::~MpcMain() {}
+
+void MpcMain::solve() { solver_->solve(solver_->get_xs(), solver_->get_us(), 1); }
+
+void MpcMain::setInitialState(const Eigen::Ref<const Eigen::VectorXd>& initial_state) {
+  // TODO: Check dimension!!!
+  problem_opt_->set_x0(initial_state);
+}
+
+const Eigen::VectorXd& MpcMain::getState(const size_t& n_node) const {
+  // Check problem number of nodes!
+  return solver_->get_xs()[n_node];
+}
+
+const Eigen::VectorXd& MpcMain::getActuatorControls() const { return solver_->get_us().front(); }
+
 }  // namespace multicopter_mpc

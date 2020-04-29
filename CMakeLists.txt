@@ -28,5 +28,5 @@ SET(URDFDOM_LIB /usr/lib/x86_64-linux-gnu/liburdfdom_model.so)
 message(STATUS "Eigen library:" ${EIGEN3_INCLUDE_DIRS})
 
 add_subdirectory(src) # MultiCopter-MPC Library
-# add_subdirectory(examples)
+add_subdirectory(examples)
 add_subdirectory(bindings) 
