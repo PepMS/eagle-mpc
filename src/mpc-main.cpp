@@ -75,11 +75,20 @@ MpcMain::MpcMain(MultiCopterTypes::Type mc_type, MissionTypes::Type mission_type
 
   solver_->solve();
   std::cout << "MULTICOPTER MPC: MPC Main initialization complete" << std::endl;
+
+  controls_normalized_ = Eigen::Vector3d::Zero(params_->n_rotors_);
+  controls_ = Eigen::Vector3d::Zero(params_->n_rotors_);
 }
+
+MpcMain::MpcMain() {}
 
 MpcMain::~MpcMain() {}
 
-void MpcMain::solve() { solver_->solve(solver_->get_xs(), solver_->get_us(), 1); }
+void MpcMain::solve() {
+  solver_->solve(solver_->get_xs(), solver_->get_us(), 1);
+  controls_ = solver_->get_us().front();
+  computeNormalizedControls();
+}
 
 void MpcMain::setInitialState(const Eigen::Ref<const Eigen::VectorXd>& initial_state) {
   // TODO: Check dimension!!!
@@ -91,6 +100,13 @@ const Eigen::VectorXd& MpcMain::getState(const size_t& n_node) const {
   return solver_->get_xs()[n_node];
 }
 
-const Eigen::VectorXd& MpcMain::getActuatorControls() const { return solver_->get_us().front(); }
+const Eigen::VectorXd& MpcMain::getActuatorControls() const { return controls_; }
+const Eigen::VectorXd& MpcMain::getActuatorControlsNormalized() const { return controls_normalized_; }
+
+void MpcMain::computeNormalizedControls() {
+  controls_normalized_ = MOTOR_TH_NORM_MIN + (controls_.array() - params_->min_thrust_) /
+                                                 (params_->max_thrust_ - params_->min_thrust_) *
+                                                 (MOTOR_TH_NORM_MAX - MOTOR_TH_NORM_MIN);
+}
 
 }  // namespace multicopter_mpc
