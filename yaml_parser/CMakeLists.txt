@@ -19,12 +19,13 @@ message(STATUS "Eigen library:" ${EIGEN3_INCLUDE_DIRS})
 
 set(SOURCES
 src/converter_utils.cpp
+src/parser_yaml.cpp
 )
 
 set(INCLUDE_DIRS
 include
 ${EIGEN3_INCLUDE_DIRS}
-/usr/local/include/
+# /usr/local/include/
 )
 
 set(HEADERS
@@ -47,7 +48,7 @@ target_link_libraries(yaml_parser PUBLIC ${LIBS})
 install(TARGETS yaml_parser
         LIBRARY DESTINATION lib)
 install(DIRECTORY include/yaml_parser DESTINATION include)
-install(FILES "cmake/FindYamlCpp.cmake" DESTINATION "lib/cmake/YamlCpp")
+# install(FILES "cmake/FindYamlCpp.cmake" DESTINATION "lib/cmake/YamlCpp")
 # install(FILES "cmake/FindYamlParser.cmake" DESTINATION "lib/cmake/${PROJECT_NAME}")
 
 add_subdirectory(bindings) 
