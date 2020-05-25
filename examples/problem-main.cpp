@@ -14,7 +14,7 @@ int main(void)
   state = Eigen::VectorXd::Zero(13);
 
   state(6) = 1.0;
-  state(2) = 0.8;
+  state(2) = 0.9;
   mpc_main.setInitialState(state);
   mpc_main.solve();
   std::cout << "Control output: \n" << mpc_main.getActuatorControls() << std::endl;

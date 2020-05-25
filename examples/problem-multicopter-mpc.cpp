@@ -5,8 +5,7 @@
 
 #include "crocoddyl/core/solvers/ddp.hpp"
 
-#include "yaml_parser/parser_yaml.hpp"
-#include "yaml_parser/params_server.hpp"
+#include "yaml_parser/parser_yaml.h"
 
 #include "multicopter_mpc/multicopter-base-params.hpp"
 #include "multicopter_mpc/mission.hpp"

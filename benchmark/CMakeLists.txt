@@ -1,12 +1,12 @@
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/examples)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/benchmark)
 
-set(INCLUDE_EXAMPLES
+set(INCLUDE_BENCHMARK
 ../include
 ${EIGEN3_INCLUDE_DIRS}
 ${CROCODDYL_INCLUDE_DIRS}
 )
 
-set(LIBS_EXAMPLES
+set(LIBS_BENCHMARK
 multicopter_mpc
 -lboost_system
 ${CROCODDYL_LIB}
@@ -16,12 +16,12 @@ ${PINOCCHIO_LIB}
 )
 
 file(GLOB APP_SOURCES ./*.cpp)
-message("EXAMPLES BUILD")
+message("BENCHMARK BUILD")
 foreach(sourcefile ${APP_SOURCES})
   get_filename_component(execname ${sourcefile} NAME_WE)
-  message("-- Example: " ${execname})
+  message("-- Benchmark: " ${execname})
   add_executable(${execname} ${sourcefile})
-  target_include_directories(${execname} PUBLIC ${INCLUDE_EXAMPLES})
-  target_link_libraries(${execname} PUBLIC ${LIBS_EXAMPLES})
+  target_include_directories(${execname} PUBLIC ${INCLUDE_BENCHMARK})
+  target_link_libraries(${execname} PUBLIC ${LIBS_BENCHMARK})
 endforeach(sourcefile ${APP_SOURCES})
-message("EXAMPLES BUILD")
+message("BENCHMARK BUILD")

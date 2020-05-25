@@ -10,7 +10,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/yaml_parser/cmak
 set(CMAKE_INSTALL_PREFIX /usr/local)
 set(CMAKE_BUILD_TYPE RELEASE)
 
-option(WITH_BINDINGS "Compile bindings" ON)
+option(WITH_BINDINGS "Compile bindings" OFF)
 option(WITH_EXAMPLES "Compile examples" OFF)
 option(WITH_BENCHMARK "Compile benchmarks" ON)
 
@@ -32,5 +32,15 @@ SET(URDFDOM_LIB /usr/lib/x86_64-linux-gnu/liburdfdom_model.so)
 message(STATUS "Eigen library:" ${EIGEN3_INCLUDE_DIRS})
 
 add_subdirectory(src) # MultiCopter-MPC Library
-add_subdirectory(examples)
-add_subdirectory(bindings) 
+
+if (WITH_EXAMPLES)
+  add_subdirectory(examples)
+endif ()
+
+if (WITH_BINDINGS)
+  add_subdirectory(bindings) 
+endif ()
+
+if (WITH_BENCHMARK)
+  add_subdirectory(benchmark)
+endif ()
