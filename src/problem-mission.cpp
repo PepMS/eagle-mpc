@@ -47,7 +47,7 @@ boost::shared_ptr<crocoddyl::ShootingProblem> ProblemMission::createProblem() {
         boost::make_shared<crocoddyl::CostModelSum>(state, actuation_->get_nu());
 
     running_cost_model->addCost("x_reg", state_reg_cost, 1e-6);
-    running_cost_model->addCost("u_reg", control_reg_cost, 1e-4);  // 1e-4
+    running_cost_model->addCost("u_reg", control_reg_cost, 1e-2);  // 1e-4
     if (std::next(wp) != mission_->waypoints_.end()) {
       terminal_cost_model->addCost("x_reg_cost", state_reg_cost, 1e-6);
       terminal_cost_model->addCost("u_reg_cost", control_reg_cost, 1e-4);  // 1e-4

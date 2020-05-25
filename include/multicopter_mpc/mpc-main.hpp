@@ -6,6 +6,9 @@
 
 #include <string>
 
+#include <boost/move/unique_ptr.hpp>
+#include <boost/move/make_unique.hpp>
+
 #include "pinocchio/parsers/urdf.hpp"
 #include "pinocchio/multibody/model.hpp"
 
@@ -40,11 +43,19 @@ class MpcMain {
   MpcMain();
   ~MpcMain();
 
-  void solve();
+  // Problem management related
+  void removeProblem();
+  void createProblem();
+  const boost::shared_ptr<const crocoddyl::SolverAbstract> getSolver() const;
+
+  // MPC Run related
+  void solve(const size_t& n_iter);
   void setInitialState(const Eigen::Ref<const Eigen::VectorXd>& initial_state);
   const Eigen::VectorXd& getActuatorControls() const;
   const Eigen::VectorXd& getActuatorControlsNormalized() const;
   const Eigen::VectorXd& getState(const size_t& n_node) const;
+
+  boost::shared_ptr<Mission> mission_;
 
  private:
   void initBoxFDDP();
@@ -54,12 +65,12 @@ class MpcMain {
 
   MultiCopterTypes::Type mc_type_;
   MissionTypes::Type mission_type_;
+  std::string model_frame_name_;
 
   // DDP related
   boost::shared_ptr<pinocchio::Model> model_;
   boost::shared_ptr<crocoddyl::StateMultibody> state_;
   boost::shared_ptr<MultiCopterBaseParams> params_;
-  boost::shared_ptr<Mission> mission_;
   boost::shared_ptr<crocoddyl::ActuationModelMultiCopterBase> actuation_;
   boost::shared_ptr<crocoddyl::SolverAbstract> solver_;
   boost::shared_ptr<crocoddyl::ShootingProblem> problem_opt_;
@@ -69,7 +80,7 @@ class MpcMain {
   Eigen::VectorXd controls_;
 
   SolverTypes::Type solver_type_;
-  boost::shared_ptr<ProblemMission> problem_;
+  boost::movelib::unique_ptr<ProblemMission> problem_;
 };
 
 }  // namespace multicopter_mpc

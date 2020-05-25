@@ -5,25 +5,23 @@ MpcMain::MpcMain(MultiCopterTypes::Type mc_type, MissionTypes::Type mission_type
     : mc_type_(mc_type), mission_type_(mission_type), solver_type_(solver_type) {
   std::string model_description_path;
   std::string model_yaml_path;
-  std::string model_frame_name;
-
   std::string mission_yaml_path;
 
   switch (mc_type_) {
     case MultiCopterTypes::Iris:
       model_description_path = EXAMPLE_ROBOT_DATA_MODEL_DIR "/iris_description/robots/iris_simple.urdf";
       model_yaml_path = "/usr/local/share/multicopter_mpc/multirotor/iris.yaml";
-      model_frame_name = "iris__base_link";
+      model_frame_name_ = "iris__base_link";
       break;
     case MultiCopterTypes::Hector:
       model_description_path = EXAMPLE_ROBOT_DATA_MODEL_DIR "/hector_description/robots/quadrotor_base.urdf";
       model_yaml_path = "/usr/local/share/multicopter_mpc/multirotor/hector.yaml";
-      model_frame_name = "base_link";
+      model_frame_name_ = "base_link";
       break;
     default:
       model_description_path = EXAMPLE_ROBOT_DATA_MODEL_DIR "/iris_description/robots/iris_simple.urdf";
       model_yaml_path = "/usr/local/share/multicopter_mpc/multirotor/iris.yaml";
-      model_frame_name = "iris__base_link";
+      model_frame_name_ = "iris__base_link";
       break;
   }
 
@@ -48,20 +46,34 @@ MpcMain::MpcMain(MultiCopterTypes::Type mc_type, MissionTypes::Type mission_type
   pinocchio::urdf::buildModel(model_description_path, pinocchio::JointModelFreeFlyer(), model);
   model_ = boost::make_shared<pinocchio::Model>(model);
 
+  // Multicopter mission and params
   params_ = boost::make_shared<MultiCopterBaseParams>();
   params_->fill(server_params);
   mission_ = boost::make_shared<Mission>(model_->nq + model_->nv);
   mission_->fillWaypoints(server_mission);
   mission_->fillInitialState(server_mission);  // should be changed with every solving iteration
 
+  // State and problem initialization
   state_ = boost::make_shared<crocoddyl::StateMultibody>(model_);
   dt_ = 4e-3;
+  createProblem();
+  std::cout << "MULTICOPTER MPC: MPC Main initialization complete" << std::endl;
+
+  controls_normalized_ = Eigen::Vector3d::Zero(params_->n_rotors_);
+  controls_ = Eigen::Vector3d::Zero(params_->n_rotors_);
+}
+
+MpcMain::MpcMain() {}
+
+MpcMain::~MpcMain() {}
+
+void MpcMain::createProblem() {
   switch (solver_type_) {
     case SolverTypes::BoxFDDP: {
-      problem_ = boost::make_shared<ProblemMission>(
+      problem_ = boost::movelib::make_unique<ProblemMission>(
           mission_, params_, model_,
           boost::make_shared<crocoddyl::ActuationModelMultiCopterBase>(state_, params_->n_rotors_, params_->tau_f_),
-          model_->getFrameId(model_frame_name), dt_);
+          model_->getFrameId(model_frame_name_), dt_);
       problem_opt_ = problem_->createProblem();
       solver_ = boost::make_shared<crocoddyl::SolverBoxFDDP>(problem_opt_);
       break;
@@ -74,18 +86,15 @@ MpcMain::MpcMain(MultiCopterTypes::Type mc_type, MissionTypes::Type mission_type
   }
 
   solver_->solve();
-  std::cout << "MULTICOPTER MPC: MPC Main initialization complete" << std::endl;
-
-  controls_normalized_ = Eigen::Vector3d::Zero(params_->n_rotors_);
-  controls_ = Eigen::Vector3d::Zero(params_->n_rotors_);
+  solver_->set_th_stop(1e-6);
 }
 
-MpcMain::MpcMain() {}
+void MpcMain::removeProblem() { problem_.reset(); }
 
-MpcMain::~MpcMain() {}
+const boost::shared_ptr<const crocoddyl::SolverAbstract> MpcMain::getSolver() const { return solver_; }
 
-void MpcMain::solve() {
-  solver_->solve(solver_->get_xs(), solver_->get_us(), 1);
+void MpcMain::solve(const size_t& n_iter) {
+  solver_->solve(solver_->get_xs(), solver_->get_us(), n_iter);
   controls_ = solver_->get_us().front();
   computeNormalizedControls();
 }
