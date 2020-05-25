@@ -16,6 +16,7 @@ multicopter_mpc
 ${CROCODDYL_LIB}
 ${URDFDOM_LIB}
 ${YAMLCPP_LIBRARY}
+${PINOCCHIO_LIB}
 )
 
 add_executable(problem-crocoddyl ${SOURCES_PROBLEM_CROCODDYL})
@@ -38,10 +39,11 @@ multicopter_mpc
 ${CROCODDYL_LIB}
 ${URDFDOM_LIB}
 ${YAMLCPP_LIBRARY}
+${PINOCCHIO_LIB}
 )
 
 add_executable(problem-multicopter-mpc ${SOURCES_PROBLEM_MULTICOPTER_MPC})
-target_include_directories(problem-multicopter-mpc PUBLIC ${INCLUDE_PROBLEM_CRCODDYL})
+target_include_directories(problem-multicopter-mpc PUBLIC ${INCLUDE_PROBLEM_MULTICOPTER_MPC})
 target_link_libraries(problem-multicopter-mpc PUBLIC ${LIBS_PROBLEM_MULTICOPTER_MPC})
 
 # PROBLEM_MULTICOPTER_MPC_TEST
@@ -60,8 +62,34 @@ multicopter_mpc
 ${CROCODDYL_LIB}
 ${URDFDOM_LIB}
 ${YAMLCPP_LIBRARY}
+${PINOCCHIO_LIB}
+
 )
 
 add_executable(problem-multicopter-test ${SOURCES_PROBLEM_MULTICOPTER_TEST})
-target_include_directories(problem-multicopter-test PUBLIC ${INCLUDE_PROBLEM_CRCODDYL})
+target_include_directories(problem-multicopter-test PUBLIC ${INCLUDE_PROBLEM_MULTICOPTER_TEST})
 target_link_libraries(problem-multicopter-test PUBLIC ${LIBS_PROBLEM_MULTICOPTER_TEST})
+
+# PROBLEM_MULTICOPTER_MPC_TEST
+set(SOURCES_MPC_MAIN
+problem-main.cpp)
+
+set(INCLUDE_MPC_MAIN
+../include
+${EIGEN3_INCLUDE_DIRS}
+${CROCODDYL_INCLUDE_DIRS}
+)
+
+set(LIBS_MPC_MAIN
+multicopter_mpc
+-lboost_system
+${CROCODDYL_LIB}
+${URDFDOM_LIB}
+${YAMLCPP_LIBRARY}
+${PINOCCHIO_LIB}
+
+)
+
+add_executable(problem-main ${SOURCES_MPC_MAIN})
+target_include_directories(problem-main PUBLIC ${INCLUDE_MPC_MAIN})
+target_link_libraries(problem-main PUBLIC ${LIBS_MPC_MAIN})

@@ -55,9 +55,10 @@ ddp_solver.solve()
 
 if WITHDISPLAY:
     display = crocoddyl.GepettoDisplay(uav)
-    uav.viewer.gui.addXYZaxis('world/wp', [1., 0., 0., 1.], .03, 0.5)
-    # hector.viewer.gui.applyConfiguration(
-    #     'world/wp',
-    #     target_pos.tolist() + [target_quat[0], target_quat[1], target_quat[2], target_quat[3]])
+    for idx_wp, wp in enumerate(mission.waypoints):
+        name = 'world/wp' + str(idx_wp)
+        uav.viewer.gui.addXYZaxis(name, [1., 0., 0., 1.], .03, 0.5)
+        wp_pose = pinocchio.SE3ToXYZQUAT(wp.M)
+        uav.viewer.gui.applyConfiguration(name, wp_pose.reshape(7).tolist()[0])
 
     display.displayFromSolver(ddp_solver)

@@ -15,6 +15,8 @@ struct WayPoint {
 
     WayPoint(int knots, Eigen::Vector3d& pos, Eigen::Quaterniond& quat);
     WayPoint(int knots, Eigen::Vector3d& pos, Eigen::Quaterniond& quat, Eigen::Vector3d& vel, Eigen::Vector3d& rate);
+    
+    bool operator==(const WayPoint& other) {return false;}
 };
 }
 
