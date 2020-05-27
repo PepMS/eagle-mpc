@@ -1,7 +1,7 @@
 #ifndef BINDINGS_PYTHON_OPTIUAVM_YAML_PARSER_YAML_HPP_
 #define BINDINGS_PYTHON_OPTIUAVM_YAML_PARSER_YAML_HPP_
 
-#include "yaml_parser/parser_yaml.hpp"
+#include "yaml_parser/parser_yaml.h"
 
 namespace yaml_parser {
 namespace python {
