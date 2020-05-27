@@ -48,9 +48,6 @@ void printOverview(const Eigen::ArrayXd& iterations, const Eigen::ArrayXd& durat
 }
 
 int main(void) {
-  multicopter_mpc::MpcMain mpc_main(multicopter_mpc::MultiCopterTypes::Iris, multicopter_mpc::MissionTypes::Hover,
-                                    multicopter_mpc::SolverTypes::BoxFDDP);
-
   int nodes_max = 200;
   int nodes_min = 30;
   int nodes_inc = 10;
@@ -58,8 +55,11 @@ int main(void) {
   int solve_trials = 10;
 
   for (int n = nodes_min; n < nodes_max; n += nodes_inc) {
+    multicopter_mpc::MpcMain mpc_main(multicopter_mpc::MultiCopterTypes::Iris, multicopter_mpc::MissionTypes::Hover,
+                                      multicopter_mpc::SolverTypes::BoxFDDP);
+    
     mpc_main.mission_->waypoints_[0].knots = n;
-    mpc_main.removeProblem();
+    
     mpc_main.createProblem();
 
     printNodeCombination(n);

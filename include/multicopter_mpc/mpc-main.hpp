@@ -6,9 +6,6 @@
 
 #include <string>
 
-#include <boost/move/unique_ptr.hpp>
-#include <boost/move/make_unique.hpp>
-
 #include "pinocchio/parsers/urdf.hpp"
 #include "pinocchio/multibody/model.hpp"
 
@@ -39,12 +36,11 @@ struct SolverTypes {
 
 class MpcMain {
  public:
-  MpcMain(MultiCopterTypes::Type mc_type, MissionTypes::Type mission_type, SolverTypes::Type solver_type);
   MpcMain();
+  MpcMain(MultiCopterTypes::Type mc_type, MissionTypes::Type mission_type, SolverTypes::Type solver_type);
   ~MpcMain();
 
   // Problem management related
-  void removeProblem();
   void createProblem();
   const boost::shared_ptr<const crocoddyl::SolverAbstract> getSolver() const;
 
@@ -80,7 +76,8 @@ class MpcMain {
   Eigen::VectorXd controls_;
 
   SolverTypes::Type solver_type_;
-  boost::movelib::unique_ptr<ProblemMission> problem_;
+  boost::shared_ptr<ProblemMission> problem_;
+  
 };
 
 }  // namespace multicopter_mpc

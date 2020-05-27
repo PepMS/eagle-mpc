@@ -57,10 +57,11 @@ MpcMain::MpcMain(MultiCopterTypes::Type mc_type, MissionTypes::Type mission_type
   state_ = boost::make_shared<crocoddyl::StateMultibody>(model_);
   dt_ = 4e-3;
   createProblem();
-  std::cout << "MULTICOPTER MPC: MPC Main initialization complete" << std::endl;
 
   controls_normalized_ = Eigen::Vector3d::Zero(params_->n_rotors_);
   controls_ = Eigen::Vector3d::Zero(params_->n_rotors_);
+
+  std::cout << "MULTICOPTER MPC: MPC Main initialization complete" << std::endl;
 }
 
 MpcMain::MpcMain() {}
@@ -70,7 +71,7 @@ MpcMain::~MpcMain() {}
 void MpcMain::createProblem() {
   switch (solver_type_) {
     case SolverTypes::BoxFDDP: {
-      problem_ = boost::movelib::make_unique<ProblemMission>(
+      problem_ = boost::make_shared<ProblemMission>(
           mission_, params_, model_,
           boost::make_shared<crocoddyl::ActuationModelMultiCopterBase>(state_, params_->n_rotors_, params_->tau_f_),
           model_->getFrameId(model_frame_name_), dt_);
@@ -88,8 +89,6 @@ void MpcMain::createProblem() {
   solver_->solve();
   solver_->set_th_stop(1e-6);
 }
-
-void MpcMain::removeProblem() { problem_.reset(); }
 
 const boost::shared_ptr<const crocoddyl::SolverAbstract> MpcMain::getSolver() const { return solver_; }
 

@@ -28,13 +28,13 @@ int main(void) {
   pinocchio::urdf::buildModel(EXAMPLE_ROBOT_DATA_MODEL_DIR "/hector_description/robots/quadrotor_base.urdf",
                               pinocchio::JointModelFreeFlyer(), model);
 
-  yaml_parser::ParserYAML yaml_file("../../config/multirotor/hector.yaml", "", true);
+  yaml_parser::ParserYAML yaml_file("/usr/local/share/multicopter_mpc/multirotor/hector.yaml", "", true);
   yaml_parser::ParamsServer server_params(yaml_file.getParams());
 
   multicopter_mpc::MultiCopterBaseParams mc_params;
   mc_params.fill(server_params);
 
-  yaml_parser::ParserYAML yaml_mission("../../config/mission/simple.yaml", "", true);
+  yaml_parser::ParserYAML yaml_mission("/usr/local/share/multicopter_mpc/mission/simple.yaml", "", true);
   yaml_parser::ParamsServer server_mission(yaml_mission.getParams());
 
   multicopter_mpc::Mission mission(model.nq + model.nv);
