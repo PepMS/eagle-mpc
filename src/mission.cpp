@@ -34,6 +34,7 @@ void Mission::fillWaypoints(const yaml_parser::ParamsServer& server) {
       waypoints_.push_back(wp);
     }
   }
+
 }
 
 void Mission::fillInitialState(const yaml_parser::ParamsServer& server) {
@@ -56,4 +57,17 @@ void Mission::fillInitialState(const yaml_parser::ParamsServer& server) {
   x0_.segment(7, 3) = vel_lin;
   x0_.segment(10, 3) = vel_rot;
 }
+
+void Mission::countTotalKnots() {
+  size_t knots = 0;
+
+  for (auto wp = waypoints_.begin(); wp != waypoints_.end(); wp++) {
+    knots += wp->knots;
+  }
+
+  knots_ = knots;
+}
+
+const size_t& Mission::getTotalKnots() const { return knots_; }
+
 }  // namespace multicopter_mpc
