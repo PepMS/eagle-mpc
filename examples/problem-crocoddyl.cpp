@@ -81,11 +81,50 @@ int main(void) {
           boost::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(state, act_model, terminal_cost_model),
           dt);
 
+  Eigen::VectorXd tau_lb = Eigen::VectorXd(act_model->get_nu());
+  Eigen::VectorXd tau_ub = Eigen::VectorXd(act_model->get_nu());
+  tau_lb.head(mc_params.n_rotors_).fill(mc_params.min_thrust_);
+  tau_ub.head(mc_params.n_rotors_).fill(mc_params.max_thrust_);
+  running_model->set_u_lb(tau_lb);
+  running_model->set_u_ub(tau_ub);
+  
   std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> running_models(mission.waypoints_[0].knots,
                                                                                 running_model);
 
   boost::shared_ptr<crocoddyl::ShootingProblem> problem =
       boost::make_shared<crocoddyl::ShootingProblem>(mission.x0_, running_models, terminal_model);
+
+  // boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> int_model =
+  //     boost::static_pointer_cast<crocoddyl::IntegratedActionModelEuler>(problem->get_runningModels()[0]);
+  // boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model =
+  //     boost::static_pointer_cast<crocoddyl::DifferentialActionModelFreeFwdDynamics>(int_model->get_differential());
+  // boost::shared_ptr<crocoddyl::CostModelSum> cost_model_sum =
+  //     boost::static_pointer_cast<crocoddyl::CostModelSum>(diff_model->get_costs());
+  // boost::shared_ptr<crocoddyl::CostModelFramePlacement> cost_model_placement =
+  //     boost::static_pointer_cast<crocoddyl::CostModelFramePlacement>(
+  //         cost_model_sum->get_costs().find("track_pose")->second->cost);
+
+  // boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> int_model2 =
+  //     boost::static_pointer_cast<crocoddyl::IntegratedActionModelEuler>(problem->get_runningModels()[1]);
+  // boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model2 =
+  //     boost::static_pointer_cast<crocoddyl::DifferentialActionModelFreeFwdDynamics>(int_model2->get_differential());
+  // boost::shared_ptr<crocoddyl::CostModelSum> cost_model_sum2 =
+  //     boost::static_pointer_cast<crocoddyl::CostModelSum>(diff_model2->get_costs());
+  // boost::shared_ptr<crocoddyl::CostModelFramePlacement> cost_model_placement2 =
+  //     boost::static_pointer_cast<crocoddyl::CostModelFramePlacement>(
+  //         cost_model_sum2->get_costs().find("track_pose")->second->cost);
+
+  // std::cout << cost_model_placement->get_Mref() << std::endl;
+  // std::cout << cost_model_placement2->get_Mref() << std::endl;
+
+  // crocoddyl::FramePlacement M_ref_2 = crocoddyl::FramePlacement(M_ref);
+  // M_ref_2.oMf = pinocchio::SE3::Random();
+  // cost_model_placement->set_Mref(M_ref_2);
+
+  // std::cout << cost_model_placement->get_Mref() << std::endl;
+  // printf("This is the pointer %p \n", cost_model_placement.get());
+  // std::cout << cost_model_placement2->get_Mref() << std::endl;
+  // printf("This is the pointer %p \n", cost_model_placement2.get());
 
   crocoddyl::SolverFDDP fddp(problem);
   std::vector<boost::shared_ptr<crocoddyl::CallbackAbstract>> cbs;
@@ -93,7 +132,6 @@ int main(void) {
   fddp.setCallbacks(cbs);
 
   fddp.solve();
-  fddp.set_stoppingCriteria(fddp.StopCriteriaCostReduction);
-  fddp.solve();
-
+  // fddp.set_stoppingCriteria(fddp.StopCriteriaCostReduction);
+  // fddp.solve();
 }

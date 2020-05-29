@@ -26,7 +26,7 @@ void TrajectoryGenerator::createProblem(const SolverTypes::Type& solver_type) {
 
     // Regularitzations
     cost_model_running->addCost("x_reg", cost_reg_state, 1e-6);
-    cost_model_running->addCost("u_reg", cost_reg_control, 1e-2);  // 1e-4
+    cost_model_running->addCost("u_reg", cost_reg_control, 1e-4);  // 1e-4
     if (std::next(wp) != mission_->waypoints_.end()) {
       cost_model_terminal->addCost("x_reg_cost", cost_reg_state, 1e-6);
       cost_model_terminal->addCost("u_reg_cost", cost_reg_control, 1e-4);  // 1e-4
@@ -64,8 +64,8 @@ void TrajectoryGenerator::createProblem(const SolverTypes::Type& solver_type) {
       int_model_terminal->set_u_lb(tau_lb_);
       int_model_terminal->set_u_ub(tau_ub_);
 
-      std::vector<boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics>> diff_models_running(wp->knots - 1,
-                                                                                         diff_model_running);
+      std::vector<boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics>> diff_models_running(
+          wp->knots - 1, diff_model_running);
       diff_models_running.push_back(diff_model_terminal);
       diff_models_running_.insert(diff_models_running_.end(), diff_models_running.begin(), diff_models_running.end());
 
@@ -77,18 +77,17 @@ void TrajectoryGenerator::createProblem(const SolverTypes::Type& solver_type) {
       int_model_running->set_u_lb(tau_lb_);
       int_model_running->set_u_ub(tau_ub_);
 
-      std::vector<boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics>> diff_models_running(wp->knots - 1,
-                                                                                         diff_model_running);
+      std::vector<boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics>> diff_models_running(
+          wp->knots, diff_model_running);
       diff_models_running_.insert(diff_models_running_.end(), diff_models_running.begin(), diff_models_running.end());
 
-      std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> int_models_running(wp->knots - 1,
-                                                                                        int_model_running);
+      std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> int_models_running(wp->knots, int_model_running);
       int_models_running_.insert(int_models_running_.end(), int_models_running.begin(), int_models_running.end());
+      int_model_terminal_ = int_model_terminal;
     }
-
-    problem_ = boost::make_shared<crocoddyl::ShootingProblem>(mission_->x0_, int_models_running_, int_model_terminal_);
-    setSolver(solver_type);
   }
-}
+  problem_ = boost::make_shared<crocoddyl::ShootingProblem>(mission_->x0_, int_models_running_, int_model_terminal_);
+  setSolver(solver_type);
+}  // namespace multicopter_mpc
 
 }  // namespace multicopter_mpc

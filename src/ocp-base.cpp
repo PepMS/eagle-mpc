@@ -13,6 +13,8 @@ OcpAbstract::OcpAbstract(const boost::shared_ptr<pinocchio::Model> model,
   tau_ub_ = Eigen::VectorXd(actuation_->get_nu());
   tau_lb_.head(mc_params_->n_rotors_).fill(mc_params_->min_thrust_);
   tau_ub_.head(mc_params_->n_rotors_).fill(mc_params_->max_thrust_);
+
+  dt_ = 1e-2;
 }
 
 OcpAbstract::~OcpAbstract() {}
@@ -43,7 +45,7 @@ boost::shared_ptr<crocoddyl::CostModelAbstract> OcpAbstract::setCostControlRegul
 
 void OcpAbstract::setSolver(const SolverTypes::Type& solver_type) {
   assert(problem_ != nullptr);
-  
+
   switch (solver_type) {
     case SolverTypes::BoxFDDP: {
       solver_ = boost::make_shared<crocoddyl::SolverBoxFDDP>(problem_);
@@ -55,6 +57,19 @@ void OcpAbstract::setSolver(const SolverTypes::Type& solver_type) {
     default:
       break;
   }
+}
+
+void OcpAbstract::setSolverCallbacks(const bool& activated) {
+  if (activated) {
+    solver_callbacks_.push_back(boost::make_shared<crocoddyl::CallbackVerbose>());
+  } else {
+    solver_callbacks_.clear();
+  }
+  solver_->setCallbacks(solver_callbacks_);
+}
+
+void OcpAbstract::solve() {
+  solver_->solve();
 }
 
 }  // namespace multicopter_mpc

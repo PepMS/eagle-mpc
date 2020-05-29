@@ -2,6 +2,7 @@
 #define MULTICOPTER_MPC_OCP_TRAJECTORY_GENERATOR_HPP_
 
 #include <cassert>
+#include <iostream>
 
 #include <boost/shared_ptr.hpp>
 

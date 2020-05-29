@@ -14,6 +14,7 @@
 #include "crocoddyl/core/optctrl/shooting.hpp"
 #include "crocoddyl/core/solver-base.hpp"
 #include "crocoddyl/core/solvers/fddp.hpp"
+#include "crocoddyl/core/solvers/box-fddp.hpp"
 #include "crocoddyl/multibody/actions/free-fwddyn.hpp"
 #include "crocoddyl/multibody/actuations/multicopter-base.hpp"
 #include "crocoddyl/multibody/costs/control.hpp"
@@ -40,6 +41,8 @@ class OcpAbstract {
   virtual boost::shared_ptr<crocoddyl::CostModelAbstract> setCostControlRegularization();
 
   virtual void setSolver(const SolverTypes::Type& solver_type);
+  virtual void setSolverCallbacks(const bool& activated);
+  virtual void solve();
 
  protected:
   boost::shared_ptr<MultiCopterBaseParams> mc_params_;
@@ -52,7 +55,10 @@ class OcpAbstract {
   boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model_terminal_;
   boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> int_model_terminal_;
   boost::shared_ptr<crocoddyl::ShootingProblem> problem_;
+  
   boost::shared_ptr<crocoddyl::SolverAbstract> solver_;
+  std::vector<boost::shared_ptr<crocoddyl::CallbackAbstract>> solver_callbacks_;
+
   size_t frame_base_link_id_;
   size_t knots_;
   double dt_;
