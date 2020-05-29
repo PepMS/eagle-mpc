@@ -15,7 +15,7 @@ namespace multicopter_mpc {
 class TrajectoryGenerator : public OcpAbstract {
  public:
   TrajectoryGenerator(const boost::shared_ptr<pinocchio::Model> model,
-                      const boost::shared_ptr<MultiCopterBaseParams>& mc_params,
+                      const boost::shared_ptr<MultiCopterBaseParams>& mc_params, const double& dt,
                       const boost::shared_ptr<Mission>& mission);
   ~TrajectoryGenerator();
 

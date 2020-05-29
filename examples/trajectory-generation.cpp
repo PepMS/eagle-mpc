@@ -35,7 +35,7 @@ int main(void) {
 
   boost::shared_ptr<pinocchio::Model> mc_model = boost::make_shared<pinocchio::Model>(model);
 
-  multicopter_mpc::TrajectoryGenerator trajectory(mc_model, mc_params, mission);
+  multicopter_mpc::TrajectoryGenerator trajectory(mc_model, mc_params, 1e-2, mission);
 
   trajectory.createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
   trajectory.setSolverCallbacks(true);

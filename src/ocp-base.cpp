@@ -3,8 +3,9 @@
 namespace multicopter_mpc {
 
 OcpAbstract::OcpAbstract(const boost::shared_ptr<pinocchio::Model> model,
-                         const boost::shared_ptr<MultiCopterBaseParams>& mc_params)
-    : model_(model), mc_params_(mc_params) {
+                         const boost::shared_ptr<MultiCopterBaseParams>& mc_params,
+                         const double& dt)
+    : model_(model), mc_params_(mc_params), dt_(dt) {
   state_ = boost::make_shared<crocoddyl::StateMultibody>(model_);
   actuation_ =
       boost::make_shared<crocoddyl::ActuationModelMultiCopterBase>(state_, mc_params_->n_rotors_, mc_params_->tau_f_);
@@ -15,8 +16,6 @@ OcpAbstract::OcpAbstract(const boost::shared_ptr<pinocchio::Model> model,
   tau_ub_.head(mc_params_->n_rotors_).fill(mc_params_->max_thrust_);
 
   frame_base_link_id_ = model_->getFrameId(mc_params_->base_link_name_);
-
-  dt_ = 1e-2;
 }
 
 OcpAbstract::~OcpAbstract() {}
