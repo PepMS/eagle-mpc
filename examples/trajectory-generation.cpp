@@ -23,6 +23,7 @@ int main(void) {
   boost::shared_ptr<multicopter_mpc::MultiCopterBaseParams> mc_params =
       boost::make_shared<multicopter_mpc::MultiCopterBaseParams>();
   mc_params->fill(server_params);
+  std::cout << mc_params->base_link_name_ << std::endl;
 
   yaml_parser::ParserYAML yaml_mission("/usr/local/share/multicopter_mpc/mission/passthrough.yaml", "", true);
   yaml_parser::ParamsServer server_mission(yaml_mission.getParams());
@@ -34,12 +35,9 @@ int main(void) {
 
   boost::shared_ptr<pinocchio::Model> mc_model = boost::make_shared<pinocchio::Model>(model);
 
-  multicopter_mpc::TrajectoryGenerator trajectory(mc_model, mc_params,mission, model.getFrameId("iris__base_link"));
+  multicopter_mpc::TrajectoryGenerator trajectory(mc_model, mc_params, mission);
 
   trajectory.createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
   trajectory.setSolverCallbacks(true);
-  std::cout << "Here " << std::endl;
   trajectory.solve();
-  std::cout << "Here " << std::endl;
-  
 }

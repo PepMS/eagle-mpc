@@ -1,6 +1,8 @@
 #ifndef MULTICOPTER_MPC_MULTICOPTER_BASE_PARAMS_HPP_
 #define MULTICOPTER_MPC_MULTICOPTER_BASE_PARAMS_HPP_
 
+#include <iostream>
+
 #include "Eigen/Dense"
 
 #include "yaml_parser/params_server.hpp"
@@ -24,6 +26,7 @@ class MultiCopterBaseParams {
   double min_thrust_;           // Max thrust produced by the motor/propeller
   Eigen::VectorXd max_torque_;  // Max torque for each manipulator's joint
   Eigen::VectorXd min_torque_;  // Min torque for each manipulator's joint
+  std::string base_link_name_;   // Flying platform base_link name
 };
 }  // namespace multicopter_mpc
 #endif  // MULTICOPTER_MPC_MULTICOPTER_BASE_PARAMS_HPP_

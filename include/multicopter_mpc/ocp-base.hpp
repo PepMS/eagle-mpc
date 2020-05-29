@@ -32,7 +32,7 @@ namespace multicopter_mpc {
 class OcpAbstract {
  public:
   OcpAbstract(const boost::shared_ptr<pinocchio::Model> model,
-              const boost::shared_ptr<MultiCopterBaseParams>& mc_params, const size_t& frame_base_link_id);
+              const boost::shared_ptr<MultiCopterBaseParams>& mc_params);
   ~OcpAbstract();
 
   virtual void createProblem(const SolverTypes::Type& solver_type) = 0;

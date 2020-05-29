@@ -23,7 +23,9 @@ void MultiCopterBaseParams::fill(const yaml_parser::ParamsServer& server) {
   cm_ = server.getParam<double>("multirotor/cm");
   max_thrust_ = server.getParam<double>("multirotor/max_thrust");
   min_thrust_ = server.getParam<double>("multirotor/min_thrust");
-
+  min_thrust_ = server.getParam<double>("multirotor/min_thrust");
+  base_link_name_ = server.getParam<std::string>("multirotor/base_link_name");
+  
   std::vector<std::string> rotors = server.getParam<std::vector<std::string>>("multirotor/rotors");
 
   n_rotors_ = rotors.size();

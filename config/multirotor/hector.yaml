@@ -3,6 +3,7 @@ multirotor:
     cm: 1e-6 # 6.0e-6
     max_thrust: 5
     min_thrust: 0.1
+    base_link_name: "base_link"
     $rotors:
         -   x: 0.1525
             y: 0.0

@@ -53,6 +53,7 @@ ddp_solver = crocoddyl.SolverBoxFDDP(problem)
 ddp_solver.setCallbacks([crocoddyl.CallbackLogger(), crocoddyl.CallbackVerbose()])
 ddp_solver.solve()
 
+ddp_solver.xs
 # if WITHDISPLAY:
 #     display = crocoddyl.GepettoDisplay(uav)
 #     for idx_wp, wp in enumerate(mission.waypoints):

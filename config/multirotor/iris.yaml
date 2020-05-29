@@ -6,6 +6,7 @@ multirotor:
     max_thrust: 6.0031890135 # (838 rad/s)
     # min_thrust: 0.0854858 # (100 rad/s)
     min_thrust: 0.0 # (0 rad/s)
+    base_link_name: "iris__base_link"
     $rotors:
         -   x:  0.13
             y: -0.22

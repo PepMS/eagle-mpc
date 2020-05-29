@@ -16,7 +16,7 @@ class TrajectoryGenerator : public OcpAbstract {
  public:
   TrajectoryGenerator(const boost::shared_ptr<pinocchio::Model> model,
                       const boost::shared_ptr<MultiCopterBaseParams>& mc_params,
-                      const boost::shared_ptr<Mission>& mission, const size_t& frame_base_link_id);
+                      const boost::shared_ptr<Mission>& mission);
   ~TrajectoryGenerator();
 
   virtual void createProblem(const SolverTypes::Type& solver_type);
