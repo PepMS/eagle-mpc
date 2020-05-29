@@ -1,20 +1,7 @@
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 
-set(MULTICOPTER_MPC_SOURCES
-    multicopter-base-params.cpp
-    waypoint.cpp
-    mission.cpp
-    problem-mission.cpp
-    mpc-main.cpp
-)
-
-set(MULTICOPTER_MPC_HEADERS
-    ../include/multicopter-base-params.hpp
-    ../include/waypoint.hpp
-    ../include/mission.hpp
-    ../include/problem-mission.hpp
-    ../include/mpc-main.hpp
-)
+file(GLOB_RECURSE MULTICOPTER_MPC_SOURCES *.cpp)
+file(GLOB_RECURSE MULTICOPTER_MPC_HEADERS ../include/multicopter_mpc/*.hpp)
 
 set(MULTICOPTER_MPC_INCLUDE_DIRS
     ../include

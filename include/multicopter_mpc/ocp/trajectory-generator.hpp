@@ -1,7 +1,7 @@
 #ifndef MULTICOPTER_MPC_OCP_TRAJECTORY_GENERATOR_HPP_
 #define MULTICOPTER_MPC_OCP_TRAJECTORY_GENERATOR_HPP_
 
-#include <assert.h>
+#include <cassert>
 
 #include <boost/shared_ptr.hpp>
 
@@ -18,7 +18,7 @@ class TrajectoryGenerator : public OcpAbstract {
                       const boost::shared_ptr<Mission>& mission, const size_t& frame_base_link_id);
   ~TrajectoryGenerator();
 
-  virtual void createProblem();
+  virtual void createProblem(const SolverTypes::Type& solver_type);
 
  private:
   boost::shared_ptr<Mission> mission_;

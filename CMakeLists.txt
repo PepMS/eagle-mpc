@@ -10,9 +10,9 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/yaml_parser/cmak
 set(CMAKE_INSTALL_PREFIX /usr/local)
 set(CMAKE_BUILD_TYPE RELEASE)
 
-option(WITH_BINDINGS "Compile bindings" ON)
+option(WITH_BINDINGS "Compile bindings" OFF)
 option(WITH_EXAMPLES "Compile examples" OFF)
-option(WITH_BENCHMARK "Compile benchmarks" ON)
+option(WITH_BENCHMARK "Compile benchmarks" OFF)
 
 find_package(eigenpy REQUIRED)
 find_package(Eigen3 3.3 REQUIRED)

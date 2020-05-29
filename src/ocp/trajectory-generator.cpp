@@ -9,7 +9,7 @@ TrajectoryGenerator::TrajectoryGenerator(const boost::shared_ptr<pinocchio::Mode
 
 TrajectoryGenerator::~TrajectoryGenerator() {}
 
-void TrajectoryGenerator::createProblem() {
+void TrajectoryGenerator::createProblem(const SolverTypes::Type& solver_type) {
   assert(mission_->waypoints_.size() > 0);
 
   knots_ = mission_->getTotalKnots();
@@ -59,21 +59,35 @@ void TrajectoryGenerator::createProblem() {
         boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_model_terminal, dt_);
 
     if (std::next(wp) != mission_->waypoints_.end()) {
-      int_model_running->set_u_lb(s_lb);
-      int_model_running->set_u_ub(s_ub);
-      int_model_terminal->set_u_lb(s_lb);
-      int_model_terminal->set_u_ub(s_ub);
-      
-      std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> int_models_running(wp->knots - 1, int_model_running);
-      int_models_running.push_back(terminal_model);
-      running_models.insert(running_models.end(), run_models.begin(), run_models.end());
-    } else {
-      running_model->set_u_lb(s_lb);
-      running_model->set_u_ub(s_ub);
+      int_model_running->set_u_lb(tau_lb_);
+      int_model_running->set_u_ub(tau_ub_);
+      int_model_terminal->set_u_lb(tau_lb_);
+      int_model_terminal->set_u_ub(tau_ub_);
 
-      std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> run_models(wp->knots, running_model);
-      running_models.insert(running_models.end(), run_models.begin(), run_models.end());
+      std::vector<boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics>> diff_models_running(wp->knots - 1,
+                                                                                         diff_model_running);
+      diff_models_running.push_back(diff_model_terminal);
+      diff_models_running_.insert(diff_models_running_.end(), diff_models_running.begin(), diff_models_running.end());
+
+      std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> int_models_running(wp->knots - 1,
+                                                                                        int_model_running);
+      int_models_running.push_back(int_model_terminal);
+      int_models_running_.insert(int_models_running_.end(), int_models_running.begin(), int_models_running.end());
+    } else {
+      int_model_running->set_u_lb(tau_lb_);
+      int_model_running->set_u_ub(tau_ub_);
+
+      std::vector<boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics>> diff_models_running(wp->knots - 1,
+                                                                                         diff_model_running);
+      diff_models_running_.insert(diff_models_running_.end(), diff_models_running.begin(), diff_models_running.end());
+
+      std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> int_models_running(wp->knots - 1,
+                                                                                        int_model_running);
+      int_models_running_.insert(int_models_running_.end(), int_models_running.begin(), int_models_running.end());
     }
+
+    problem_ = boost::make_shared<crocoddyl::ShootingProblem>(mission_->x0_, int_models_running_, int_model_terminal_);
+    setSolver(solver_type);
   }
 }
 

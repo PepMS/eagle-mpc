@@ -16,11 +16,11 @@ ${YAMLCPP_LIBRARY}
 ${PINOCCHIO_LIB}
 )
 
-file(GLOB APP_SOURCES ./*.cpp)
-foreach(sourcefile ${APP_SOURCES})
+file(GLOB BENCHMARK_SOURCES ./*.cpp)
+foreach(sourcefile ${BENCHMARK_SOURCES})
   get_filename_component(execname ${sourcefile} NAME_WE)
   message("-- Benchmark: " ${execname})
   add_executable(${execname} ${sourcefile})
   target_include_directories(${execname} PUBLIC ${INCLUDE_BENCHMARK})
   target_link_libraries(${execname} PUBLIC ${LIBS_BENCHMARK})
-endforeach(sourcefile ${APP_SOURCES})
+endforeach(sourcefile ${BENCHMARK_SOURCES})
