@@ -13,14 +13,14 @@ class Mission {
 
   void fillWaypoints(const yaml_parser::ParamsServer& server);
   void fillInitialState(const yaml_parser::ParamsServer& server);
-  const size_t& getTotalKnots() const;
+  const std::size_t& getTotalKnots() const;
 
   std::vector<WayPoint> waypoints_;
   Eigen::VectorXd x0_;
 
  private:
   void countTotalKnots();
-  size_t knots_;
+  std::size_t n_knots_;
 };
 }  // namespace multicopter_mpc
 

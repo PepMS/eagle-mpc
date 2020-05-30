@@ -38,9 +38,6 @@ class OcpAbstract {
 
   virtual void createProblem(const SolverTypes::Type& solver_type) = 0;
 
-  virtual boost::shared_ptr<crocoddyl::CostModelAbstract> setCostStateRegularization();
-  virtual boost::shared_ptr<crocoddyl::CostModelAbstract> setCostControlRegularization();
-
   virtual void setSolver(const SolverTypes::Type& solver_type);
   virtual void setSolverCallbacks(const bool& activated);
   virtual void solve();
@@ -60,8 +57,8 @@ class OcpAbstract {
   boost::shared_ptr<crocoddyl::SolverAbstract> solver_;
   std::vector<boost::shared_ptr<crocoddyl::CallbackAbstract>> solver_callbacks_;
 
-  size_t frame_base_link_id_;
-  size_t knots_;
+  int frame_base_link_id_;
+  std::size_t n_knots_;
   double dt_;
   Eigen::VectorXd tau_ub_;
   Eigen::VectorXd tau_lb_;

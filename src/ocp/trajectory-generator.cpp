@@ -13,10 +13,10 @@ TrajectoryGenerator::~TrajectoryGenerator() {}
 void TrajectoryGenerator::createProblem(const SolverTypes::Type& solver_type) {
   assert(mission_->waypoints_.size() > 0);
 
-  knots_ = mission_->getTotalKnots();
+  n_knots_ = mission_->getTotalKnots();
 
-  boost::shared_ptr<crocoddyl::CostModelAbstract> cost_reg_state = setCostStateRegularization();
-  boost::shared_ptr<crocoddyl::CostModelAbstract> cost_reg_control = setCostControlRegularization();
+  boost::shared_ptr<crocoddyl::CostModelAbstract> cost_reg_state = createCostStateRegularization();
+  boost::shared_ptr<crocoddyl::CostModelAbstract> cost_reg_control = createCostControlRegularization();
 
   for (std::vector<WayPoint>::const_iterator wp = mission_->waypoints_.begin(); wp != mission_->waypoints_.end();
        ++wp) {
@@ -89,6 +89,30 @@ void TrajectoryGenerator::createProblem(const SolverTypes::Type& solver_type) {
   }
   problem_ = boost::make_shared<crocoddyl::ShootingProblem>(mission_->x0_, int_models_running_, int_model_terminal_);
   setSolver(solver_type);
-}  // namespace multicopter_mpc
+}
+
+boost::shared_ptr<crocoddyl::CostModelAbstract> TrajectoryGenerator::createCostStateRegularization() {
+  Eigen::VectorXd state_weights(state_->get_ndx());
+
+  state_weights.head(3).fill(1.);                        // Position 1.
+  state_weights.segment(3, 3).fill(1.);                  // Orientation 1.
+  state_weights.segment(model_->nv, 3).fill(1.);         // Linear velocity 1.
+  state_weights.segment(model_->nv + 3, 3).fill(1000.);  // Angular velocity 1000.
+
+  boost::shared_ptr<crocoddyl::ActivationModelWeightedQuad> activation_state =
+      boost::make_shared<crocoddyl::ActivationModelWeightedQuad>(state_weights);
+
+  boost::shared_ptr<crocoddyl::CostModelAbstract> cost_reg_state =
+      boost::make_shared<crocoddyl::CostModelState>(state_, activation_state, state_->zero(), actuation_->get_nu());
+
+  return cost_reg_state;
+}
+
+boost::shared_ptr<crocoddyl::CostModelAbstract> TrajectoryGenerator::createCostControlRegularization() {
+  boost::shared_ptr<crocoddyl::CostModelAbstract> cost_reg_control =
+      boost::make_shared<crocoddyl::CostModelControl>(state_, actuation_->get_nu());
+
+  return cost_reg_control;
+}
 
 }  // namespace multicopter_mpc
