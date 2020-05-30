@@ -109,6 +109,7 @@ boost::shared_ptr<crocoddyl::CostModelAbstract> TrajectoryGenerator::createCostS
 }
 
 boost::shared_ptr<crocoddyl::CostModelAbstract> TrajectoryGenerator::createCostControlRegularization() {
+  
   boost::shared_ptr<crocoddyl::CostModelAbstract> cost_reg_control =
       boost::make_shared<crocoddyl::CostModelControl>(state_, actuation_->get_nu());
 

@@ -65,9 +65,9 @@ void Mission::countTotalKnots() {
     knots += wp->knots;
   }
 
-  knots_ = knots;
+  n_knots_ = knots;
 }
 
-const size_t& Mission::getTotalKnots() const { return knots_; }
+const size_t& Mission::getTotalKnots() const { return n_knots_; }
 
 }  // namespace multicopter_mpc
