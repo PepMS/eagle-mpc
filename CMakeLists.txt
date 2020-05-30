@@ -10,6 +10,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/yaml_parser/cmak
 set(CMAKE_INSTALL_PREFIX /usr/local)
 set(CMAKE_BUILD_TYPE RELEASE)
 
+enable_testing()
+
 option(WITH_BINDINGS "Compile bindings" OFF)
 option(WITH_EXAMPLES "Compile examples" OFF)
 option(WITH_BENCHMARK "Compile benchmarks" OFF)
@@ -17,7 +19,7 @@ option(WITH_BENCHMARK "Compile benchmarks" OFF)
 find_package(eigenpy REQUIRED)
 find_package(Eigen3 3.3 REQUIRED)
 find_package(YamlCpp REQUIRED)
-find_package(Boost COMPONENTS python3 REQUIRED)
+find_package(Boost COMPONENTS python3 filesystem unit_test_framework REQUIRED)
 set(Python_ADDITIONAL_VERSIONS "3.6")
 find_package(PythonInterp)
 find_package(PythonLibs REQUIRED)
@@ -45,3 +47,5 @@ endif ()
 if (WITH_BENCHMARK)
   add_subdirectory(benchmark)
 endif ()
+
+add_subdirectory(unittest)
