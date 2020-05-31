@@ -3,19 +3,28 @@
 namespace multicopter_mpc {
 
 MultiCopterBaseParams::MultiCopterBaseParams() {}
-MultiCopterBaseParams::MultiCopterBaseParams(double cf, double cm, Eigen::MatrixXd tau_f, double max_th, double min_th)
-    : cf_(cf), cm_(cm), n_rotors_(tau_f.cols()), tau_f_(tau_f), max_thrust_(max_th), min_thrust_(min_th) {}
-
 MultiCopterBaseParams::MultiCopterBaseParams(double cf, double cm, Eigen::MatrixXd tau_f, double max_th, double min_th,
-                                             Eigen::VectorXd max_torque, Eigen::VectorXd min_torque)
+                                             const std::string& base_link)
     : cf_(cf),
       cm_(cm),
       n_rotors_(tau_f.cols()),
       tau_f_(tau_f),
       max_thrust_(max_th),
       min_thrust_(min_th),
-      max_torque_(max_torque),
-      min_torque_(min_torque) {}
+      base_link_name_(base_link) {}
+
+// MultiCopterBaseParams::MultiCopterBaseParams(double cf, double cm, Eigen::MatrixXd tau_f, double max_th, double min_th,
+//                                              Eigen::VectorXd max_torque, Eigen::VectorXd min_torque,
+//                                              const std::string& base_link)
+//     : cf_(cf),
+//       cm_(cm),
+//       n_rotors_(tau_f.cols()),
+//       tau_f_(tau_f),
+//       max_thrust_(max_th),
+//       min_thrust_(min_th),
+//       max_torque_(max_torque),
+//       min_torque_(min_torque),
+//       base_link_name_(base_link) {}
 MultiCopterBaseParams::~MultiCopterBaseParams() {}
 
 void MultiCopterBaseParams::fill(const yaml_parser::ParamsServer& server) {
@@ -25,7 +34,7 @@ void MultiCopterBaseParams::fill(const yaml_parser::ParamsServer& server) {
   min_thrust_ = server.getParam<double>("multirotor/min_thrust");
   min_thrust_ = server.getParam<double>("multirotor/min_thrust");
   base_link_name_ = server.getParam<std::string>("multirotor/base_link_name");
-  
+
   std::vector<std::string> rotors = server.getParam<std::vector<std::string>>("multirotor/rotors");
 
   n_rotors_ = rotors.size();

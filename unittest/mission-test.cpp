@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(fill_waypoints_number_waypoints) {
   std::size_t nx = 13;
   multicopter_mpc::Mission mission(nx);
 
-  std::string mission_yaml_path = std::string(_MULTICOPTER_MPC_ROOT_DIR) + "/unittest/config/mission.yaml";
+  std::string mission_yaml_path = std::string(_MULTICOPTER_MPC_ROOT_DIR) + "/unittest/config/mission-test.yaml";
 
   yaml_parser::ParserYAML yaml_mission(mission_yaml_path, "", true);
   yaml_parser::ParamsServer server_mission(yaml_mission.getParams());
@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(fill_waypoints_waypoint_pose_motion) {
   std::size_t nx = 13;
   multicopter_mpc::Mission mission(nx);
 
-  std::string mission_yaml_path = std::string(_MULTICOPTER_MPC_ROOT_DIR) + "/unittest/config/mission.yaml";
+  std::string mission_yaml_path = std::string(_MULTICOPTER_MPC_ROOT_DIR) + "/unittest/config/mission-test.yaml";
 
   yaml_parser::ParserYAML yaml_mission(mission_yaml_path, "", true);
   yaml_parser::ParamsServer server_mission(yaml_mission.getParams());
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(fill_waypoints_waypoint_pose) {
   std::size_t nx = 13;
   multicopter_mpc::Mission mission(nx);
 
-  std::string mission_yaml_path = std::string(_MULTICOPTER_MPC_ROOT_DIR) + "/unittest/config/mission.yaml";
+  std::string mission_yaml_path = std::string(_MULTICOPTER_MPC_ROOT_DIR) + "/unittest/config/mission-test.yaml";
 
   yaml_parser::ParserYAML yaml_mission(mission_yaml_path, "", true);
   yaml_parser::ParamsServer server_mission(yaml_mission.getParams());
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(fill_initial_state) {
   std::size_t nx = 13;
   multicopter_mpc::Mission mission(nx);
 
-  std::string mission_yaml_path = std::string(_MULTICOPTER_MPC_ROOT_DIR) + "/unittest/config/mission.yaml";
+  std::string mission_yaml_path = std::string(_MULTICOPTER_MPC_ROOT_DIR) + "/unittest/config/mission-test.yaml";
 
   yaml_parser::ParserYAML yaml_mission(mission_yaml_path, "", true);
   yaml_parser::ParamsServer server_mission(yaml_mission.getParams());
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(count_total_knots) {
   std::size_t nx = 13;
   multicopter_mpc::Mission mission(nx);
 
-  std::string mission_yaml_path = std::string(_MULTICOPTER_MPC_ROOT_DIR) + "/unittest/config/mission.yaml";
+  std::string mission_yaml_path = std::string(_MULTICOPTER_MPC_ROOT_DIR) + "/unittest/config/mission-test.yaml";
 
   yaml_parser::ParserYAML yaml_mission(mission_yaml_path, "", true);
   yaml_parser::ParamsServer server_mission(yaml_mission.getParams());
