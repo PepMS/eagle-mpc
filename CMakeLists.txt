@@ -16,6 +16,14 @@ option(WITH_BINDINGS "Compile bindings" OFF)
 option(WITH_EXAMPLES "Compile examples" OFF)
 option(WITH_BENCHMARK "Compile benchmarks" OFF)
 
+# Testing purposes
+set(MULTICOPTER_MPC_CONFIG_DIR ${PROJECT_BINARY_DIR}/other/multicopter_mpc)
+set(_MULTICOPTER_MPC_ROOT_DIR ${CMAKE_SOURCE_DIR})
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config/other/path.h "${MULTICOPTER_MPC_CONFIG_DIR}/path.h")
+message("CONFIG ${MULTICOPTER_MPC_CONFIG_DIR}/config.h")
+message("CONFIG DIRECTORY ${PROJECT_BINARY_DIR}")
+include_directories("${PROJECT_BINARY_DIR}/other")
+
 find_package(eigenpy REQUIRED)
 find_package(Eigen3 3.3 REQUIRED)
 find_package(YamlCpp REQUIRED)
