@@ -2,12 +2,12 @@
 
 #include <boost/test/unit_test.hpp>
 
-// #include "multicopter_mpc/waypoint.hpp"
-
 #include "multicopter_mpc/waypoint.hpp"
 
+BOOST_AUTO_TEST_SUITE(multicopter_mpc_waypoint_test)
+
 BOOST_AUTO_TEST_CASE(constructors_test) {
-  int knots = 10;
+  std::size_t knots = 10;
   Eigen::Vector3d pos;
   pos << 1, 1, 1;
   Eigen::Quaterniond quaternion = Eigen::Quaterniond(1, 0, 0, 0);
@@ -28,3 +28,5 @@ BOOST_AUTO_TEST_CASE(constructors_test) {
   BOOST_CHECK(vel == wp01.vel->linear());
   BOOST_CHECK(rate == wp01.vel->angular());
 }
+
+BOOST_AUTO_TEST_SUITE_END()

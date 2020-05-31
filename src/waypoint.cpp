@@ -2,10 +2,10 @@
 
 namespace multicopter_mpc {
 
-WayPoint::WayPoint(int knots, Eigen::Vector3d& pos, Eigen::Quaterniond& quat)
+WayPoint::WayPoint(std::size_t knots, Eigen::Vector3d& pos, Eigen::Quaterniond& quat)
     : knots(knots), pose(pinocchio::SE3(quat.matrix(), pos)) {}
 
-WayPoint::WayPoint(int knots, Eigen::Vector3d& pos, Eigen::Quaterniond& quat, Eigen::Vector3d& vel,
+WayPoint::WayPoint(std::size_t knots, Eigen::Vector3d& pos, Eigen::Quaterniond& quat, Eigen::Vector3d& vel,
                    Eigen::Vector3d& rate)
     : knots(knots), pose(pinocchio::SE3(quat.matrix(), pos)), vel(pinocchio::Motion(vel, rate)) {}
 
