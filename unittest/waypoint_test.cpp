@@ -13,6 +13,7 @@ BOOST_AUTO_TEST_CASE(constructors_test) {
   Eigen::Quaterniond quaternion = Eigen::Quaterniond(1, 0, 0, 0);
 
   multicopter_mpc::WayPoint wp00(knots, pos, quaternion);
+  BOOST_CHECK(wp00.vel == boost::none);
   BOOST_CHECK(knots == wp00.knots);
   BOOST_CHECK(pos == wp00.pose.translation());
   BOOST_CHECK(quaternion.toRotationMatrix() == Eigen::Quaterniond(wp00.pose.rotation()).toRotationMatrix());
@@ -22,6 +23,7 @@ BOOST_AUTO_TEST_CASE(constructors_test) {
   Eigen::Vector3d rate;
   pos << 3, -3, 3;
   multicopter_mpc::WayPoint wp01(knots, pos, quaternion, vel, rate);
+  BOOST_CHECK(wp01.vel != boost::none);
   BOOST_CHECK(knots == wp01.knots);
   BOOST_CHECK(pos == wp01.pose.translation());
   BOOST_CHECK(quaternion.toRotationMatrix() == Eigen::Quaterniond(wp01.pose.rotation()).toRotationMatrix());

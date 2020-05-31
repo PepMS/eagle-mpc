@@ -9,7 +9,7 @@
 namespace multicopter_mpc {
 
 struct WayPoint {
-    int knots;
+    std::size_t knots;
     pinocchio::SE3 pose;
     boost::optional<pinocchio::Motion> vel;
 

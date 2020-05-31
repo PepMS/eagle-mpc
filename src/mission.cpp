@@ -1,7 +1,10 @@
 #include "multicopter_mpc/mission.hpp"
 
 namespace multicopter_mpc {
-Mission::Mission(const std::size_t& nx) { x0_ = Eigen::VectorXd::Zero(nx); }
+Mission::Mission(const std::size_t& nx) {
+  x0_ = Eigen::VectorXd::Zero(nx);
+  n_knots_ = 0;
+}
 Mission::~Mission() {}
 
 void Mission::fillWaypoints(const yaml_parser::ParamsServer& server) {
@@ -15,7 +18,7 @@ void Mission::fillWaypoints(const yaml_parser::ParamsServer& server) {
     Eigen::VectorXd quat = yaml_parser::converter<Eigen::VectorXd>::convert(waypoint["quat"]);
     Eigen::Quaterniond quater(static_cast<Eigen::Vector4d>(quat));
     quater.normalize();
-    int knots = yaml_parser::converter<int>::convert(waypoint["knots"]);
+    std::size_t knots = yaml_parser::converter<int>::convert(waypoint["knots"]);
 
     bool has_velocity = true;
     Eigen::Vector3d vel_lin;
@@ -35,6 +38,7 @@ void Mission::fillWaypoints(const yaml_parser::ParamsServer& server) {
     }
   }
 
+  countTotalKnots();
 }
 
 void Mission::fillInitialState(const yaml_parser::ParamsServer& server) {
@@ -68,6 +72,6 @@ void Mission::countTotalKnots() {
   n_knots_ = knots;
 }
 
-const size_t& Mission::getTotalKnots() const { return n_knots_; }
+const std::size_t& Mission::getTotalKnots() const { return n_knots_; }
 
 }  // namespace multicopter_mpc
