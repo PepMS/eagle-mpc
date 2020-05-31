@@ -3,8 +3,7 @@
 namespace multicopter_mpc {
 
 OcpAbstract::OcpAbstract(const boost::shared_ptr<pinocchio::Model> model,
-                         const boost::shared_ptr<MultiCopterBaseParams>& mc_params,
-                         const double& dt)
+                         const boost::shared_ptr<MultiCopterBaseParams>& mc_params, const double& dt)
     : model_(model), mc_params_(mc_params), dt_(dt) {
   state_ = boost::make_shared<crocoddyl::StateMultibody>(model_);
   actuation_ =
@@ -45,8 +44,6 @@ void OcpAbstract::setSolverCallbacks(const bool& activated) {
   solver_->setCallbacks(solver_callbacks_);
 }
 
-void OcpAbstract::solve() {
-  solver_->solve();
-}
+void OcpAbstract::solve() { solver_->solve(); }
 
 }  // namespace multicopter_mpc
