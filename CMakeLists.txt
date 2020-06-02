@@ -18,7 +18,10 @@ option(WITH_BENCHMARK "Compile benchmarks" OFF)
 
 # Testing purposes
 set(MULTICOPTER_MPC_CONFIG_DIR ${PROJECT_BINARY_DIR}/other/multicopter_mpc)
-set(_MULTICOPTER_MPC_ROOT_DIR ${CMAKE_SOURCE_DIR})
+set(MULTICOPTER_MPC_ROOT_DIR ${CMAKE_SOURCE_DIR})
+set(MULTICOPTER_MPC_MULTIROTOR_DIR ${CMAKE_INSTALL_PREFIX}/share/multicopter_mpc/multirotor)
+set(MULTICOPTER_MPC_MISSION_DIR ${CMAKE_INSTALL_PREFIX}/share/multicopter_mpc/mission)
+
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config/other/path.h "${MULTICOPTER_MPC_CONFIG_DIR}/path.h")
 message("CONFIG ${MULTICOPTER_MPC_CONFIG_DIR}/config.h")
 message("CONFIG DIRECTORY ${PROJECT_BINARY_DIR}")
