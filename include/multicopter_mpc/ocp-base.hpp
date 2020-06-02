@@ -32,8 +32,7 @@ namespace multicopter_mpc {
 class OcpAbstract {
  public:
   OcpAbstract(const boost::shared_ptr<pinocchio::Model> model,
-              const boost::shared_ptr<MultiCopterBaseParams>& mc_params,
-              const double& dt);
+              const boost::shared_ptr<MultiCopterBaseParams>& mc_params, const double& dt);
   ~OcpAbstract();
 
   virtual void createProblem(const SolverTypes::Type& solver_type) = 0;
@@ -41,6 +40,17 @@ class OcpAbstract {
   virtual void setSolver(const SolverTypes::Type& solver_type);
   virtual void setSolverCallbacks(const bool& activated);
   virtual void solve();
+
+  const boost::shared_ptr<const pinocchio::Model> getModel() const;
+  const boost::shared_ptr<const MultiCopterBaseParams> getMcParams() const;
+  const boost::shared_ptr<const crocoddyl::StateMultibody> getState() const;
+  const boost::shared_ptr<const crocoddyl::ActuationModelMultiCopterBase> getActuation() const;
+  const double& getTimeStep() const;
+  const Eigen::VectorXd& getActuationLowerBounds() const;
+  const Eigen::VectorXd& getActuationUpperBounds() const;
+  const int& getBaseLinkId() const;
+
+
 
  protected:
   boost::shared_ptr<MultiCopterBaseParams> mc_params_;
@@ -53,7 +63,7 @@ class OcpAbstract {
   boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model_terminal_;
   boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> int_model_terminal_;
   boost::shared_ptr<crocoddyl::ShootingProblem> problem_;
-  
+
   boost::shared_ptr<crocoddyl::SolverAbstract> solver_;
   std::vector<boost::shared_ptr<crocoddyl::CallbackAbstract>> solver_callbacks_;
 

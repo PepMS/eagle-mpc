@@ -46,4 +46,15 @@ void OcpAbstract::setSolverCallbacks(const bool& activated) {
 
 void OcpAbstract::solve() { solver_->solve(); }
 
+const boost::shared_ptr<const pinocchio::Model> OcpAbstract::getModel() const { return model_; }
+const boost::shared_ptr<const MultiCopterBaseParams> OcpAbstract::getMcParams() const { return mc_params_; }
+const boost::shared_ptr<const crocoddyl::StateMultibody> OcpAbstract::getState() const { return state_; }
+const boost::shared_ptr<const crocoddyl::ActuationModelMultiCopterBase> OcpAbstract::getActuation() const {
+  return actuation_;
+}
+const double& OcpAbstract::getTimeStep() const { return dt_; }
+const Eigen::VectorXd& OcpAbstract::getActuationLowerBounds() const { return tau_lb_; }
+const Eigen::VectorXd& OcpAbstract::getActuationUpperBounds() const { return tau_ub_; }
+const int& OcpAbstract::getBaseLinkId() const { return frame_base_link_id_; }
+
 }  // namespace multicopter_mpc
