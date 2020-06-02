@@ -23,6 +23,8 @@ class TrajectoryGenerator : public OcpAbstract {
 
   virtual boost::shared_ptr<crocoddyl::CostModelAbstract> createCostStateRegularization();
   virtual boost::shared_ptr<crocoddyl::CostModelAbstract> createCostControlRegularization();
+
+  const boost::shared_ptr<const Mission> getMission() const;
   
  private:
   boost::shared_ptr<Mission> mission_;

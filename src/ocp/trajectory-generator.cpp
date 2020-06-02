@@ -116,4 +116,6 @@ boost::shared_ptr<crocoddyl::CostModelAbstract> TrajectoryGenerator::createCostC
   return cost_reg_control;
 }
 
+const boost::shared_ptr<const Mission> TrajectoryGenerator::getMission() const { return mission_; }
+
 }  // namespace multicopter_mpc

@@ -83,6 +83,7 @@ BOOST_AUTO_TEST_CASE(trajectory_constructor_test, *boost::unit_test::tolerance(1
   double dt = 1e-2;
   multicopter_mpc::TrajectoryGenerator trajectory(mc_model, mc_params, dt, mission);
   // Finish loading
+  BOOST_CHECK(mission.get() == trajectory.getMission().get());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
