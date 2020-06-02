@@ -11,21 +11,22 @@
 #include "multicopter_mpc/mission.hpp"
 #include "multicopter_mpc/problem-mission.hpp"
 #include "multicopter_mpc/ocp/trajectory-generator.hpp"
+#include "multicopter_mpc/path.h"
+
 
 int main(void) {
   pinocchio::Model model;
   pinocchio::urdf::buildModel(EXAMPLE_ROBOT_DATA_MODEL_DIR "/iris_description/robots/iris_simple.urdf",
                               pinocchio::JointModelFreeFlyer(), model);
 
-  yaml_parser::ParserYAML yaml_file("/usr/local/share/multicopter_mpc/multirotor/iris.yaml", "", true);
+  yaml_parser::ParserYAML yaml_file(MULTICOPTER_MPC_MULTIROTOR_DIR "/iris.yaml", "", true);
   yaml_parser::ParamsServer server_params(yaml_file.getParams());
 
   boost::shared_ptr<multicopter_mpc::MultiCopterBaseParams> mc_params =
       boost::make_shared<multicopter_mpc::MultiCopterBaseParams>();
   mc_params->fill(server_params);
-  std::cout << mc_params->base_link_name_ << std::endl;
 
-  yaml_parser::ParserYAML yaml_mission("/usr/local/share/multicopter_mpc/mission/passthrough.yaml", "", true);
+  yaml_parser::ParserYAML yaml_mission(MULTICOPTER_MPC_MISSION_DIR "/passthrough.yaml", "", true);
   yaml_parser::ParamsServer server_mission(yaml_mission.getParams());
 
   boost::shared_ptr<multicopter_mpc::Mission> mission =
