@@ -14,6 +14,7 @@
 #include "crocoddyl/core/optctrl/shooting.hpp"
 #include "crocoddyl/core/solver-base.hpp"
 #include "crocoddyl/core/solvers/fddp.hpp"
+#include "crocoddyl/core/utils/callbacks.hpp"
 #include "crocoddyl/core/solvers/box-fddp.hpp"
 #include "crocoddyl/multibody/actions/free-fwddyn.hpp"
 #include "crocoddyl/multibody/actuations/multicopter-base.hpp"
@@ -25,9 +26,12 @@
 #include "crocoddyl/multibody/states/multibody.hpp"
 
 #include "multicopter_mpc/multicopter-base-params.hpp"
-#include "multicopter_mpc/mpc-main.hpp"
 
 namespace multicopter_mpc {
+
+struct SolverTypes {
+  enum Type { BoxFDDP, SquashBoxFDDP, NbSolverTypes };
+};
 
 class OcpAbstract {
  public:
@@ -48,9 +52,9 @@ class OcpAbstract {
   const double& getTimeStep() const;
   const Eigen::VectorXd& getActuationLowerBounds() const;
   const Eigen::VectorXd& getActuationUpperBounds() const;
+  const Eigen::VectorXd& getInitialState() const;
+  
   const int& getBaseLinkId() const;
-
-
 
  protected:
   boost::shared_ptr<MultiCopterBaseParams> mc_params_;
@@ -72,6 +76,8 @@ class OcpAbstract {
   double dt_;
   Eigen::VectorXd tau_ub_;
   Eigen::VectorXd tau_lb_;
+
+  Eigen::VectorXd state_initial_;
 };
 
 }  // namespace multicopter_mpc

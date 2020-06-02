@@ -6,8 +6,8 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include "multicopter_mpc/ocp-base.hpp"
 #include "multicopter_mpc/multicopter-base-params.hpp"
+#include "multicopter_mpc/ocp-base.hpp"
 
 namespace multicopter_mpc {
 

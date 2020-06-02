@@ -13,7 +13,8 @@ OcpAbstract::OcpAbstract(const boost::shared_ptr<pinocchio::Model> model,
   tau_ub_ = Eigen::VectorXd(actuation_->get_nu());
   tau_lb_.head(mc_params_->n_rotors_).fill(mc_params_->min_thrust_);
   tau_ub_.head(mc_params_->n_rotors_).fill(mc_params_->max_thrust_);
-
+  
+  state_initial_ = state_->zero();
   frame_base_link_id_ = model_->getFrameId(mc_params_->base_link_name_);
 }
 
@@ -55,6 +56,8 @@ const boost::shared_ptr<const crocoddyl::ActuationModelMultiCopterBase> OcpAbstr
 const double& OcpAbstract::getTimeStep() const { return dt_; }
 const Eigen::VectorXd& OcpAbstract::getActuationLowerBounds() const { return tau_lb_; }
 const Eigen::VectorXd& OcpAbstract::getActuationUpperBounds() const { return tau_ub_; }
+const Eigen::VectorXd& OcpAbstract::getInitialState() const { return state_initial_; }
+
 const int& OcpAbstract::getBaseLinkId() const { return frame_base_link_id_; }
 
 }  // namespace multicopter_mpc
