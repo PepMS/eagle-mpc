@@ -20,11 +20,12 @@ class LowLevelController : public OcpAbstract {
 
   virtual void createProblem(const SolverTypes::Type& solver_type);
 
-  void setInitialState(const Eigen::Ref<Eigen::VectorXd>& initial_state);
   void setReferenceStateTrajectory(const std::vector<Eigen::VectorXd>& state_trajectory);
   void updateReferenceStateTrajectory(const Eigen::Ref<Eigen::VectorXd>& state_new);
 
   virtual void solve() override;
+
+  const Eigen::VectorXd& getControls(const std::size_t& idx = 0) const;
  private:
   boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> createDifferentialModel(
       const unsigned int& trajectory_idx);
@@ -32,7 +33,6 @@ class LowLevelController : public OcpAbstract {
   boost::shared_ptr<crocoddyl::CostModelAbstract> createCostControlRegularization();
 
   std::vector<Eigen::VectorXd> state_ref_;
-  Eigen::VectorXd state_init_;
 };
 }  // namespace multicopter_mpc
 

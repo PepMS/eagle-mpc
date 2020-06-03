@@ -36,8 +36,18 @@ MpcMain::MpcMain(MultiCopterTypes::Type mc_type, SolverTypes::Type solver_type)
   low_level_controller_knots_ = 100;
   low_level_controller_ = boost::make_shared<LowLevelController>(model_, mc_params_, dt_, low_level_controller_knots_);
 
+  // HOVER test purposes
+  current_state_ = low_level_controller_->getState()->zero();
+  low_level_controller_->setInitialState(current_state_);
+  std::vector<Eigen::VectorXd> reference_trajectory(low_level_controller_->getKnots(), current_state_);
+  low_level_controller_->setReferenceStateTrajectory(reference_trajectory);
+  low_level_controller_->createProblem(solver_type_);
+  low_level_controller_->setSolverCallbacks(true);
+  low_level_controller_->solve();
+  // Do check to ensure that the guess of the solver is right
   std::cout << "MULTICOPTER MPC: MPC Main initialization complete" << std::endl;
 }
+}  // namespace multicopter_mpc
 
 MpcMain::MpcMain() {}
 

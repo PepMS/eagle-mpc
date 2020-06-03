@@ -48,6 +48,7 @@ class MpcMain {
   std::size_t low_level_controller_knots_;
   boost::shared_ptr<TrajectoryGenerator> trajectory_generator_;
 
+  Eigen::VectorXd current_state_;
   // void initBoxFDDP();
   // void initSquashBoxFDDP();
   // void init();

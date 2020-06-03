@@ -43,6 +43,7 @@ class OcpAbstract {
 
   virtual void setSolver(const SolverTypes::Type& solver_type);
   virtual void setSolverCallbacks(const bool& activated);
+  virtual void setSolverIters(const std::size_t& n_iters);
   virtual void solve();
 
   const boost::shared_ptr<const pinocchio::Model> getModel() const;
@@ -53,8 +54,10 @@ class OcpAbstract {
   const Eigen::VectorXd& getActuationLowerBounds() const;
   const Eigen::VectorXd& getActuationUpperBounds() const;
   const Eigen::VectorXd& getInitialState() const;
-  
   const int& getBaseLinkId() const;
+  const std::size_t& getKnots() const;
+
+  virtual void setInitialState(const Eigen::Ref<Eigen::VectorXd>& initial_state);
 
  protected:
   boost::shared_ptr<MultiCopterBaseParams> mc_params_;
@@ -70,6 +73,7 @@ class OcpAbstract {
 
   boost::shared_ptr<crocoddyl::SolverAbstract> solver_;
   std::vector<boost::shared_ptr<crocoddyl::CallbackAbstract>> solver_callbacks_;
+  std::size_t solver_iters_;
 
   int frame_base_link_id_;
   std::size_t n_knots_;

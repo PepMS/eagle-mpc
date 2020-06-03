@@ -34,7 +34,7 @@ void LowLevelController::createProblem(const SolverTypes::Type& solver_type) {
   diff_model_terminal_ = diff_model;
   int_model_terminal_ = int_model;
 
-  problem_ = boost::make_shared<crocoddyl::ShootingProblem>(state_init_, int_models_running_, int_model_terminal_);
+  problem_ = boost::make_shared<crocoddyl::ShootingProblem>(state_initial_, int_models_running_, int_model_terminal_);
   setSolver(solver_type);
 }
 
@@ -47,7 +47,7 @@ boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> LowLevelCon
   boost::shared_ptr<crocoddyl::CostModelAbstract> cost_reg_control = createCostControlRegularization();
 
   // Regularitzations
-  cost_model->addCost("x_cost", cost_state, 1e-4);
+  cost_model->addCost("x_cost", cost_state, 1e-2);
   cost_model->addCost("u_reg", cost_reg_control, 1e-4);
 
   boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model =
@@ -81,11 +81,6 @@ boost::shared_ptr<crocoddyl::CostModelAbstract> LowLevelController::createCostCo
   return cost_reg_control;
 }
 
-void LowLevelController::setInitialState(const Eigen::Ref<Eigen::VectorXd>& initial_state) {
-  assert(initial_state.size() == state_->get_nx());  // Might be not efficeient to do this here
-  state_init_ = initial_state;
-}
-
 void LowLevelController::setReferenceStateTrajectory(const std::vector<Eigen::VectorXd>& state_trajectory) {
   state_ref_.clear();
   std::copy(state_trajectory.begin(), state_trajectory.end(), std::back_inserter(state_ref_));
@@ -101,7 +96,14 @@ void LowLevelController::updateReferenceStateTrajectory(const Eigen::Ref<Eigen::
 }
 
 void LowLevelController::solve() {
-  
+  // solver_->solve(crocoddyl::DEFAULT_VECTOR, crocoddyl::DEFAULT_VECTOR, solver_iters_, false, 1e-9);
+  solver_->solve();
 }
+
+const Eigen::VectorXd& LowLevelController::getControls(const std::size_t& idx) const{
+  std::cout << "This is the index: " << idx << std::endl;
+  return solver_->get_us()[idx];
+}
+
 
 }  // namespace multicopter_mpc
