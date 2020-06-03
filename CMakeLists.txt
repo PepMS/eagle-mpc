@@ -10,6 +10,10 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/yaml_parser/cmak
 set(CMAKE_INSTALL_PREFIX /usr/local)
 set(CMAKE_BUILD_TYPE RELEASE)
 
+set(LIBRARY_DESTINATION "lib")
+set(INCLUDE_DESTINATION "include")
+set(SHARE_DESTINATION "share/multicopter_mpc")
+
 enable_testing()
 
 option(WITH_BINDINGS "Compile bindings" OFF)
@@ -28,6 +32,8 @@ message("CONFIG DIRECTORY ${PROJECT_BINARY_DIR}")
 include_directories("${PROJECT_BINARY_DIR}/other")
 
 find_package(eigenpy REQUIRED)
+find_package(pinocchio REQUIRED)
+find_package(crocoddyl REQUIRED)
 find_package(Eigen3 3.3 REQUIRED)
 find_package(YamlCpp REQUIRED)
 find_package(Boost COMPONENTS python3 filesystem unit_test_framework REQUIRED)
@@ -37,26 +43,19 @@ find_package(PythonLibs REQUIRED)
 
 SET(YAML_PARSER_LIB /usr/local/lib/libyaml_parser.so)
 SET(YAML_PARSER_INCLUDE_DIRS /usr/local/include/yaml_parser/)
-SET(CROCODDYL_LIB /usr/local/lib/libcrocoddyl.so)
-SET(CROCODDYL_INCLUDE_DIRS /usr/local/include/crocoddyl)
-SET(PINOCCHIO_LIB /usr/local/lib/libpinocchio.so)
-SET(PINOCCHIO_INCLUDE_DIRS /usr/local/include/pinocchio)
 SET(URDFDOM_LIB /usr/lib/x86_64-linux-gnu/liburdfdom_model.so)
 
 message(STATUS "Eigen library:" ${EIGEN3_INCLUDE_DIRS})
 
-add_subdirectory(src) # MultiCopter-MPC Library
 
+add_subdirectory(src) # MultiCopter-MPC Library
 if (WITH_EXAMPLES)
   add_subdirectory(examples)
 endif ()
-
 if (WITH_BINDINGS)
   add_subdirectory(bindings) 
 endif ()
-
 if (WITH_BENCHMARK)
   add_subdirectory(benchmark)
 endif ()
-
 add_subdirectory(unittest)
