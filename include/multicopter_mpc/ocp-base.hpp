@@ -35,9 +35,13 @@ struct SolverTypes {
 
 class OcpAbstract {
  public:
+  // Constructor & Destructor
   OcpAbstract(const boost::shared_ptr<pinocchio::Model> model,
               const boost::shared_ptr<MultiCopterBaseParams>& mc_params, const double& dt);
   ~OcpAbstract();
+
+  // Other methods
+  virtual void loadParameters(const yaml_parser::ParamsServer& server);
 
   virtual void createProblem(const SolverTypes::Type& solver_type) = 0;
 
@@ -46,6 +50,7 @@ class OcpAbstract {
   virtual void setSolverIters(const std::size_t& n_iters);
   virtual void solve();
 
+  // Getters
   const boost::shared_ptr<const pinocchio::Model> getModel() const;
   const boost::shared_ptr<const MultiCopterBaseParams> getMcParams() const;
   const boost::shared_ptr<const crocoddyl::StateMultibody> getState() const;
@@ -56,10 +61,13 @@ class OcpAbstract {
   const Eigen::VectorXd& getInitialState() const;
   const int& getBaseLinkId() const;
   const std::size_t& getKnots() const;
-
+  // Setters
   virtual void setInitialState(const Eigen::Ref<Eigen::VectorXd>& initial_state);
 
  protected:
+  // Methods
+  virtual void initializeDefaultParameters();
+  // Class members
   boost::shared_ptr<MultiCopterBaseParams> mc_params_;
 
   boost::shared_ptr<pinocchio::Model> model_;

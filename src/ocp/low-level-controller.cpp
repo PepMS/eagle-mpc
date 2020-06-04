@@ -106,11 +106,6 @@ boost::shared_ptr<crocoddyl::CostModelAbstract> LowLevelController::createCostCo
   return cost_reg_control;
 }
 
-void LowLevelController::setReferenceStateTrajectory(const std::vector<Eigen::VectorXd>& state_trajectory) {
-  state_ref_.clear();
-  std::copy(state_trajectory.begin(), state_trajectory.end(), std::back_inserter(state_ref_));
-}
-
 void LowLevelController::updateReferenceStateTrajectory(const Eigen::Ref<Eigen::VectorXd>& state_new) {
   assert(state_new.size() == state_->get_nx());
 
@@ -127,5 +122,10 @@ void LowLevelController::solve() {
 
 const Eigen::VectorXd& LowLevelController::getControls(const std::size_t& idx) const { return solver_->get_us()[idx]; }
 const std::vector<Eigen::VectorXd>& LowLevelController::getStateRef() const { return state_ref_; }
+const LowLevelControllerParams& LowLevelController::getParams() const { return params_; }
 
+void LowLevelController::setReferenceStateTrajectory(const std::vector<Eigen::VectorXd>& state_trajectory) {
+  state_ref_.clear();
+  std::copy(state_trajectory.begin(), state_trajectory.end(), std::back_inserter(state_ref_));
+}
 }  // namespace multicopter_mpc
