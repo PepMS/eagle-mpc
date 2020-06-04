@@ -15,6 +15,28 @@
 
 BOOST_AUTO_TEST_SUITE(multicopter_mpc_trajectory_generator_test)
 
+class LowLevelControllerDerived : public multicopter_mpc::LowLevelController {
+ public:
+  LowLevelControllerDerived(const boost::shared_ptr<pinocchio::Model>& model,
+                            const boost::shared_ptr<multicopter_mpc::MultiCopterBaseParams>& mc_params,
+                            const double& dt, std::size_t& n_knots)
+      : multicopter_mpc::LowLevelController(model, mc_params, dt, n_knots) {}
+
+  ~LowLevelControllerDerived(){};
+
+  const std::vector<boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics>>&
+  getDifferentialRunningModels() {
+    return diff_models_running_;
+  }
+  const std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>>& getIntegratedRunningModels() {
+    return int_models_running_;
+  }
+  const boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics>& getDifferentialTerminalModel() {
+    return diff_model_terminal_;
+  }
+  const boost::shared_ptr<crocoddyl::IntegratedActionModelEuler>& getIntegratedTerminalModel() { return int_model_terminal_; }
+};
+
 class LowLevelControllerTest {
  public:
   LowLevelControllerTest() {
@@ -33,8 +55,7 @@ class LowLevelControllerTest {
 
     dt_ = 1e-2;
     n_knots_ = 100;
-    low_level_controller_ =
-        boost::make_shared<multicopter_mpc::LowLevelController>(mc_model_, mc_params_, dt_, n_knots_);
+    low_level_controller_ = boost::make_shared<LowLevelControllerDerived>(mc_model_, mc_params_, dt_, n_knots_);
   }
 
   ~LowLevelControllerTest() {}
@@ -47,7 +68,7 @@ class LowLevelControllerTest {
   double dt_;
   std::size_t n_knots_;
 
-  boost::shared_ptr<multicopter_mpc::LowLevelController> low_level_controller_;
+  boost::shared_ptr<LowLevelControllerDerived> low_level_controller_;
 };
 
 BOOST_AUTO_TEST_CASE(constructor_test, *boost::unit_test::tolerance(1e-7)) {
@@ -101,7 +122,7 @@ BOOST_AUTO_TEST_CASE(initialize_default_parameters_test, *boost::unit_test::tole
   BOOST_CHECK(llc_test.low_level_controller_->getParams().w_control == 1e-4);
 }
 
-BOOST_AUTO_TEST_CASE(initialize_load_parameters_test, *boost::unit_test::tolerance(1e-7)) {
+BOOST_AUTO_TEST_CASE(load_parameters_test, *boost::unit_test::tolerance(1e-7)) {
   LowLevelControllerTest llc_test;
 
   std::string params_yaml_path = MULTICOPTER_MPC_ROOT_DIR "/unittest/config/low-level-controller-test.yaml";
@@ -125,6 +146,38 @@ BOOST_AUTO_TEST_CASE(initialize_load_parameters_test, *boost::unit_test::toleran
   BOOST_CHECK(llc_test.low_level_controller_->getParams().w_state_velocity_lin == w_velocity_lin);
   BOOST_CHECK(llc_test.low_level_controller_->getParams().w_state_velocity_ang == w_velocity_ang);
   BOOST_CHECK(llc_test.low_level_controller_->getParams().w_control == 2.3e-4);
+}
+
+BOOST_AUTO_TEST_CASE(create_problem_test, *boost::unit_test::tolerance(1e-7)) {
+  LowLevelControllerTest llc_test;
+
+  llc_test.low_level_controller_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
+
+  BOOST_CHECK(llc_test.low_level_controller_->getDifferentialRunningModels().size() ==
+              llc_test.low_level_controller_->getKnots() - 1);
+  BOOST_CHECK(llc_test.low_level_controller_->getIntegratedRunningModels().size() ==
+              llc_test.low_level_controller_->getKnots() - 1);
+  for (std::size_t i = 0; i < llc_test.low_level_controller_->getKnots() - 1; ++i) {
+    // Check that the data differential model that std_vecto<integrated> is pointing to is the same that the data
+    // member differential is pointing to
+    boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> int_model =
+        boost::static_pointer_cast<crocoddyl::IntegratedActionModelEuler>(
+            llc_test.low_level_controller_->getIntegratedRunningModels()[i]);
+    BOOST_CHECK(int_model->get_differential() == llc_test.low_level_controller_->getDifferentialRunningModels()[i]);
+    // Check the action model ptr of every node are pointing to different action model
+    if (i < llc_test.low_level_controller_->getKnots() - 2) {
+      BOOST_CHECK(llc_test.low_level_controller_->getDifferentialRunningModels()[i] !=
+                  llc_test.low_level_controller_->getDifferentialRunningModels()[i + 1]);
+      BOOST_CHECK(llc_test.low_level_controller_->getIntegratedRunningModels()[i] !=
+                  llc_test.low_level_controller_->getIntegratedRunningModels()[i + 1]);
+    } else {
+      BOOST_CHECK(llc_test.low_level_controller_->getDifferentialRunningModels()[i] !=
+                  llc_test.low_level_controller_->getDifferentialTerminalModel());
+      BOOST_CHECK(llc_test.low_level_controller_->getIntegratedRunningModels()[i] !=
+                  llc_test.low_level_controller_->getIntegratedTerminalModel());
+    }
+  }
+  BOOST_CHECK(llc_test.low_level_controller_->getIntegratedTerminalModel()->get_differential() == llc_test.low_level_controller_->getDifferentialTerminalModel());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
