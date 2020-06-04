@@ -37,26 +37,56 @@ MpcMain::MpcMain(MultiCopterTypes::Type mc_type, SolverTypes::Type solver_type)
   low_level_controller_ = boost::make_shared<LowLevelController>(model_, mc_params_, dt_, low_level_controller_knots_);
 
   // HOVER test purposes
+  Eigen::Quaterniond quat(1, 0, 0, 1);
+  quat.normalize();
+  current_motor_thrust_ = Eigen::VectorXd::Zero(low_level_controller_->getActuation()->get_nu());
+  current_motor_speed_ = current_motor_thrust_;
   current_state_ = low_level_controller_->getState()->zero();
   low_level_controller_->setInitialState(current_state_);
+  current_state_(2) = 0.3;
+  // current_state_(5) = quat.z();
+  // current_state_(6) = quat.w();
   std::vector<Eigen::VectorXd> reference_trajectory(low_level_controller_->getKnots(), current_state_);
   low_level_controller_->setReferenceStateTrajectory(reference_trajectory);
   low_level_controller_->createProblem(solver_type_);
   low_level_controller_->setSolverCallbacks(true);
+  low_level_controller_->setSolverIters(100);
   low_level_controller_->solve();
+  // set low level controller for continuous mode
+  low_level_controller_->setSolverIters(1);
+  low_level_controller_->setSolverCallbacks(true);
   // Do check to ensure that the guess of the solver is right
   std::cout << "MULTICOPTER MPC: MPC Main initialization complete" << std::endl;
 }
-}  // namespace multicopter_mpc
 
 MpcMain::MpcMain() {}
 
 MpcMain::~MpcMain() {}
 
-// const Eigen::VectorXd& MpcMain::getState(const size_t& n_node) const {
-//   // Check problem number of nodes!
-//   return solver_->get_xs()[n_node];
-// }
+const boost::shared_ptr<const LowLevelController> MpcMain::getLowLevelController() { return low_level_controller_; }
+
+void MpcMain::setCurrentState(const Eigen::Ref<Eigen::VectorXd>& current_state) { current_state_ = current_state; }
+
+const Eigen::VectorXd& MpcMain::runMpcStep() {
+  // 1. update the current state of the low-level-controller
+  low_level_controller_->setInitialState(current_state_);
+  // 2. solve with the current state
+  low_level_controller_->solve();
+  // 3. update control variable
+  current_motor_thrust_ = low_level_controller_->getControls();
+  computeSpeedControls();
+  // 4. update low_level->reference trajecotry with the next state from the mpc_main->reference trajectory
+  // TBD (not needed in the hovering case)
+  return current_motor_speed_;
+}
+
+void MpcMain::computeSpeedControls() {
+  current_motor_speed_ = (current_motor_thrust_.array() / mc_params_->cf_).sqrt();
+  // current_motor_speed_ = MOTOR_SPEED_MIN + (current_motor_thrust_.array() - mc_params_->min_thrust_) /
+  //                                              (mc_params_->max_thrust_ - mc_params_->min_thrust_) *
+  //                                              (MOTOR_SPEED_MAX - MOTOR_SPEED_MIN);
+}
+}  // namespace multicopter_mpc
 
 // const Eigen::VectorXd& MpcMain::getActuatorControls() const { return controls_; }
 // const Eigen::VectorXd& MpcMain::getActuatorControlsNormalized() const { return controls_normalized_; }
@@ -66,5 +96,3 @@ MpcMain::~MpcMain() {}
 //                                                  (params_->max_thrust_ - params_->min_thrust_) *
 //                                                  (MOTOR_TH_NORM_MAX - MOTOR_TH_NORM_MIN);
 // }
-
-}  // namespace multicopter_mpc

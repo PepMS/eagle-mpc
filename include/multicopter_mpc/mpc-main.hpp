@@ -4,7 +4,12 @@
 #define MOTOR_TH_NORM_MIN -1.0
 #define MOTOR_TH_NORM_MAX 1.0
 
+#define MOTOR_SPEED_MAX 838.0  
+#define MOTOR_SPEED_MIN 0.0
+
 #include <string>
+
+// #include <Eigen/Core>
 
 #include "pinocchio/parsers/urdf.hpp"
 #include "pinocchio/multibody/model.hpp"
@@ -35,7 +40,13 @@ class MpcMain {
   MpcMain(MultiCopterTypes::Type mc_type, SolverTypes::Type solver_type);
   ~MpcMain();
 
+  const boost::shared_ptr<const LowLevelController> getLowLevelController();
+  void setCurrentState(const Eigen::Ref<Eigen::VectorXd>& current_state);
+  const Eigen::VectorXd& runMpcStep();
+
  private:
+  void computeSpeedControls();
+
   MultiCopterTypes::Type mc_type_;
   SolverTypes::Type solver_type_;
 
@@ -49,24 +60,8 @@ class MpcMain {
   boost::shared_ptr<TrajectoryGenerator> trajectory_generator_;
 
   Eigen::VectorXd current_state_;
-  // void initBoxFDDP();
-  // void initSquashBoxFDDP();
-  // void init();
-  // void computeNormalizedControls();
-
-  // MissionTypes::Type mission_type_;
-  // std::string model_frame_name_;
-
-  // // DDP related
-  // boost::shared_ptr<crocoddyl::StateMultibody> state_;
-  // boost::shared_ptr<crocoddyl::ActuationModelMultiCopterBase> actuation_;
-  // boost::shared_ptr<crocoddyl::SolverAbstract> solver_;
-  // boost::shared_ptr<crocoddyl::ShootingProblem> problem_opt_;
-
-  // Eigen::VectorXd controls_normalized_;
-  // Eigen::VectorXd controls_;
-
-  // boost::shared_ptr<ProblemMission> problem_;
+  Eigen::VectorXd current_motor_thrust_;
+  Eigen::VectorXd current_motor_speed_;
 };
 
 }  // namespace multicopter_mpc

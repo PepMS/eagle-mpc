@@ -35,7 +35,7 @@ mc_params = multicopter_mpc.MultiCopterBaseParams()
 mc_params.fill(server_uav)
 
 # Mission
-yaml_mission = yaml_parser.ParserYAML("/home/pepms/robotics/libraries/multicopter_mpc/config/mission/passthrough.yaml", "",
+yaml_mission = yaml_parser.ParserYAML("/home/pepms/robotics/libraries/multicopter_mpc/config/mission/simple.yaml", "",
                                       True)
 server_mission = yaml_parser.ParamsServer(yaml_mission.getParams())
 mission = multicopter_mpc.Mission(uav.nq + uav.nv)

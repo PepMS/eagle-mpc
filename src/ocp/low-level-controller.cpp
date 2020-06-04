@@ -47,8 +47,8 @@ boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> LowLevelCon
   boost::shared_ptr<crocoddyl::CostModelAbstract> cost_reg_control = createCostControlRegularization();
 
   // Regularitzations
-  cost_model->addCost("x_cost", cost_state, 1e-2);
-  cost_model->addCost("u_reg", cost_reg_control, 1e-4);
+  cost_model->addCost("x_cost", cost_state, 1);
+  cost_model->addCost("u_reg", cost_reg_control, 0.1);
 
   boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model =
       boost::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(state_, actuation_, cost_model);
@@ -61,9 +61,9 @@ boost::shared_ptr<crocoddyl::CostModelAbstract> LowLevelController::createCostSt
   Eigen::VectorXd state_weights(state_->get_ndx());
 
   state_weights.head(3).fill(1.);                     // Position 1.
-  state_weights.segment(3, 3).fill(1.);               // Orientation 1.
+  state_weights.segment(3, 3).fill(0.1);               // Orientation 1.
   state_weights.segment(model_->nv, 3).fill(1.);      // Linear velocity 1.
-  state_weights.segment(model_->nv + 3, 3).fill(1.);  // Angular velocity 1.
+  state_weights.segment(model_->nv + 3, 3).fill(0.1);  // Angular velocity 1.
 
   boost::shared_ptr<crocoddyl::ActivationModelWeightedQuad> activation_state =
       boost::make_shared<crocoddyl::ActivationModelWeightedQuad>(state_weights);
@@ -96,12 +96,11 @@ void LowLevelController::updateReferenceStateTrajectory(const Eigen::Ref<Eigen::
 }
 
 void LowLevelController::solve() {
-  // solver_->solve(crocoddyl::DEFAULT_VECTOR, crocoddyl::DEFAULT_VECTOR, solver_iters_, false, 1e-9);
-  solver_->solve();
+  problem_->set_x0(state_initial_);
+  solver_->solve(solver_->get_xs(), solver_->get_us(), solver_iters_, false, 1e-9);
 }
 
 const Eigen::VectorXd& LowLevelController::getControls(const std::size_t& idx) const{
-  std::cout << "This is the index: " << idx << std::endl;
   return solver_->get_us()[idx];
 }
 
