@@ -6,6 +6,9 @@
 
 #include <boost/shared_ptr.hpp>
 
+#include "yaml_parser/params_server.hpp"
+#include "yaml_parser/parser_yaml.h"
+
 #include "multicopter_mpc/multicopter-base-params.hpp"
 #include "multicopter_mpc/ocp-base.hpp"
 
@@ -13,26 +16,40 @@ namespace multicopter_mpc {
 
 class LowLevelController : public OcpAbstract {
  public:
-  LowLevelController(const boost::shared_ptr<pinocchio::Model> model,
+  LowLevelController(const boost::shared_ptr<pinocchio::Model>& model,
                      const boost::shared_ptr<MultiCopterBaseParams>& mc_params, const double& dt,
                      std::size_t& n_knots);
   ~LowLevelController();
 
-  virtual void createProblem(const SolverTypes::Type& solver_type);
+  void loadParameters(const yaml_parser::ParamsServer& server);
+
+  void createProblem(const SolverTypes::Type& solver_type);
+  void solve() override;
 
   void setReferenceStateTrajectory(const std::vector<Eigen::VectorXd>& state_trajectory);
   void updateReferenceStateTrajectory(const Eigen::Ref<Eigen::VectorXd>& state_new);
 
-  virtual void solve() override;
-
   const Eigen::VectorXd& getControls(const std::size_t& idx = 0) const;
+  const std::vector<Eigen::VectorXd>& getStateRef() const;
  private:
+  struct {
+    double w_state;                        // General penalization for the state error
+    Eigen::Vector3d w_state_position;      // Importance of the position error in the cost function
+    Eigen::Vector3d w_state_orientation;   // Importance of the orientation error in the cost function
+    Eigen::Vector3d w_state_velocity_lin;  // Importance of the linear velocity error in the cost function
+    Eigen::Vector3d w_state_velocity_ang;  // Importance of the angular velocity in the cost function
+
+    double w_control;  // General penalization for the control
+  } params_;
+
+  void initializeDefaultParameters();
+
   boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> createDifferentialModel(
       const unsigned int& trajectory_idx);
   boost::shared_ptr<crocoddyl::CostModelAbstract> createCostState(const unsigned int& trajectory_idx);
   boost::shared_ptr<crocoddyl::CostModelAbstract> createCostControlRegularization();
 
-  std::vector<Eigen::VectorXd> state_ref_;
+  std::vector<Eigen::VectorXd> state_ref_;  // Vector containing the state reference for each node
 };
 }  // namespace multicopter_mpc
 

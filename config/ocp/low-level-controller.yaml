@@ -1,0 +1,8 @@
+ocp:
+  state: 1e-3
+  control: 1e-4
+  $state_weights:
+    - position: [1.0, 1.0, 2.5]
+      orientation: [1.0, 1.0, 1.0]
+      velocity_lin: [1.0, 1.0, 1.0]
+      velocity_ang: [1.0, 1.0, 1.0]
