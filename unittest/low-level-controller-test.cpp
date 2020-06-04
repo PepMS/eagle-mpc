@@ -84,6 +84,26 @@ BOOST_AUTO_TEST_CASE(constructor_test, *boost::unit_test::tolerance(1e-7)) {
 BOOST_AUTO_TEST_CASE(initialize_default_parameters_test, *boost::unit_test::tolerance(1e-7)) {
   LowLevelControllerTest llc_test;
 
+  Eigen::Vector3d w_position;
+  Eigen::Vector3d w_orientation;
+  Eigen::Vector3d w_velocity_lin;
+  Eigen::Vector3d w_velocity_ang;
+  w_position.fill(1.0);
+  w_orientation.fill(1.0);
+  w_velocity_lin.fill(1.0);
+  w_velocity_ang.fill(1.0);
+
+  BOOST_CHECK(llc_test.low_level_controller_->getParams().w_state == 1e-2);
+  BOOST_CHECK(llc_test.low_level_controller_->getParams().w_state_position == w_position);
+  BOOST_CHECK(llc_test.low_level_controller_->getParams().w_state_orientation == w_orientation);
+  BOOST_CHECK(llc_test.low_level_controller_->getParams().w_state_velocity_lin == w_velocity_lin);
+  BOOST_CHECK(llc_test.low_level_controller_->getParams().w_state_velocity_ang == w_velocity_ang);
+  BOOST_CHECK(llc_test.low_level_controller_->getParams().w_control == 1e-4);
+}
+
+BOOST_AUTO_TEST_CASE(initialize_load_parameters_test, *boost::unit_test::tolerance(1e-7)) {
+  LowLevelControllerTest llc_test;
+
   std::string params_yaml_path = MULTICOPTER_MPC_ROOT_DIR "/unittest/config/low-level-controller-test.yaml";
   yaml_parser::ParserYAML yaml_file(params_yaml_path, "", true);
   yaml_parser::ParamsServer server_params(yaml_file.getParams());
@@ -105,26 +125,6 @@ BOOST_AUTO_TEST_CASE(initialize_default_parameters_test, *boost::unit_test::tole
   BOOST_CHECK(llc_test.low_level_controller_->getParams().w_state_velocity_lin == w_velocity_lin);
   BOOST_CHECK(llc_test.low_level_controller_->getParams().w_state_velocity_ang == w_velocity_ang);
   BOOST_CHECK(llc_test.low_level_controller_->getParams().w_control == 2.3e-4);
-}
-
-BOOST_AUTO_TEST_CASE(initialize_load_parameters_test, *boost::unit_test::tolerance(1e-7)) {
-  LowLevelControllerTest llc_test;
-
-  Eigen::Vector3d w_position;
-  Eigen::Vector3d w_orientation;
-  Eigen::Vector3d w_velocity_lin;
-  Eigen::Vector3d w_velocity_ang;
-  w_position.fill(1.0);
-  w_orientation.fill(1.0);
-  w_velocity_lin.fill(1.0);
-  w_velocity_ang.fill(1.0);
-
-  BOOST_CHECK(llc_test.low_level_controller_->getParams().w_state == 1e-2);
-  BOOST_CHECK(llc_test.low_level_controller_->getParams().w_state_position == w_position);
-  BOOST_CHECK(llc_test.low_level_controller_->getParams().w_state_orientation == w_orientation);
-  BOOST_CHECK(llc_test.low_level_controller_->getParams().w_state_velocity_lin == w_velocity_lin);
-  BOOST_CHECK(llc_test.low_level_controller_->getParams().w_state_velocity_ang == w_velocity_ang);
-  BOOST_CHECK(llc_test.low_level_controller_->getParams().w_control == 1e-4);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
