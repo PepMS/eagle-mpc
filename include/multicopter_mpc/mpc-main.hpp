@@ -4,7 +4,7 @@
 #define MOTOR_TH_NORM_MIN -1.0
 #define MOTOR_TH_NORM_MAX 1.0
 
-#define MOTOR_SPEED_MAX 838.0  
+#define MOTOR_SPEED_MAX 838.0
 #define MOTOR_SPEED_MIN 0.0
 
 #include <string>
@@ -52,6 +52,7 @@ class MpcMain {
 
   boost::shared_ptr<pinocchio::Model> model_;
   boost::shared_ptr<MultiCopterBaseParams> mc_params_;
+  boost::shared_ptr<Mission> mission_;
 
   double dt_;
 
@@ -60,8 +61,10 @@ class MpcMain {
   boost::shared_ptr<TrajectoryGenerator> trajectory_generator_;
 
   Eigen::VectorXd current_state_;
+  Eigen::VectorXd next_state_;
   Eigen::VectorXd current_motor_thrust_;
   Eigen::VectorXd current_motor_speed_;
+  std::size_t trajectory_cursor_;
 };
 
 }  // namespace multicopter_mpc

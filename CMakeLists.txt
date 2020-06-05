@@ -25,6 +25,7 @@ set(MULTICOPTER_MPC_CONFIG_DIR ${PROJECT_BINARY_DIR}/other/multicopter_mpc)
 set(MULTICOPTER_MPC_ROOT_DIR ${CMAKE_SOURCE_DIR})
 set(MULTICOPTER_MPC_MULTIROTOR_DIR ${CMAKE_INSTALL_PREFIX}/share/multicopter_mpc/multirotor)
 set(MULTICOPTER_MPC_MISSION_DIR ${CMAKE_INSTALL_PREFIX}/share/multicopter_mpc/mission)
+set(MULTICOPTER_MPC_OCP_DIR ${CMAKE_INSTALL_PREFIX}/share/multicopter_mpc/ocp)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config/other/path.h "${MULTICOPTER_MPC_CONFIG_DIR}/path.h")
 message("CONFIG ${MULTICOPTER_MPC_CONFIG_DIR}/config.h")

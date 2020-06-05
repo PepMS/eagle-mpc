@@ -43,7 +43,9 @@ void OcpAbstract::setSolver(const SolverTypes::Type& solver_type) {
 
 void OcpAbstract::setSolverCallbacks(const bool& activated) {
   if (activated) {
-    solver_callbacks_.push_back(boost::make_shared<crocoddyl::CallbackVerbose>());
+    if (solver_callbacks_.size() == 0) {
+      solver_callbacks_.push_back(boost::make_shared<crocoddyl::CallbackVerbose>());
+    }
   } else {
     solver_callbacks_.clear();
   }
