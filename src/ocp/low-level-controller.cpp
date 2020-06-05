@@ -77,6 +77,7 @@ boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> LowLevelCon
 
   diff_model->set_u_lb(tau_lb_);
   diff_model->set_u_ub(tau_ub_);
+  
   return diff_model;
 }
 

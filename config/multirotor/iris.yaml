@@ -2,8 +2,8 @@ multirotor:
     cf: 8.54858e-06
     # cm: 5.129148e-07 (don't know where it came from)
     cm: 1.3677728e-7 # (from Gazebo plugin: 1.6e-2*cf)
-    # max_thrust: 10.3437818 # (1100 rad/s)
-    max_thrust: 6.0031890135 # (838 rad/s)
+    max_thrust: 10.3437818 # (1100 rad/s)
+    # max_thrust: 6.0031890135 # (838 rad/s)
     # min_thrust: 0.0854858 # (100 rad/s)
     min_thrust: 0.0 # (0 rad/s)
     base_link_name: "iris__base_link"

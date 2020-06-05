@@ -64,7 +64,7 @@ MpcMain::MpcMain(MultiCopterTypes::Type mc_type, SolverTypes::Type solver_type)
   low_level_controller_->solve();
   // set low level controller for continuous mode
   low_level_controller_->setSolverIters(1);
-  low_level_controller_->setSolverCallbacks(false);
+  low_level_controller_->setSolverCallbacks(true);
 
   current_motor_thrust_ = Eigen::VectorXd::Zero(low_level_controller_->getActuation()->get_nu());
   current_motor_speed_ = current_motor_thrust_;
@@ -94,11 +94,7 @@ const Eigen::VectorXd& MpcMain::runMpcStep() {
   next_state_ = trajectory_generator_->getTrajectoryState(trajectory_cursor_);
   low_level_controller_->updateReferenceStateTrajectory(next_state_);
   ++trajectory_cursor_;
-  if (trajectory_cursor_ == 200) {
-    std::cout << "Reached 200!" << std::endl;
-  } else if (trajectory_cursor_ == 300) {
-    std::cout << "Reached 300!" << std::endl;
-  }
+  
   return current_motor_speed_;
 }  // namespace multicopter_mpc
 
