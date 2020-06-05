@@ -312,11 +312,58 @@ BOOST_AUTO_TEST_CASE(set_reference_test_2, *boost::unit_test::tolerance(1e-7)) {
 }
 
 // Set reference after creating the problem
+BOOST_AUTO_TEST_CASE(update_reference_trajectory_test, *boost::unit_test::tolerance(1e-7)) {
+  LowLevelControllerTest llc_test;
+
+  llc_test.low_level_controller_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
+
+  std::vector<Eigen::VectorXd> reference_trajectory(llc_test.low_level_controller_->getKnots(),
+                                                    llc_test.low_level_controller_->getState()->zero());
+
+  for (std::size_t i = 0; i < llc_test.low_level_controller_->getKnots() - 1; ++i) {
+    reference_trajectory[i](0) = i;
+  }
+
+  llc_test.low_level_controller_->setReferenceStateTrajectory(reference_trajectory);
+  Eigen::VectorXd state = llc_test.low_level_controller_->getState()->zero();
+  state(4) = 0.4563;
+  llc_test.low_level_controller_->updateReferenceStateTrajectory(state);
+
+  boost::shared_ptr<crocoddyl::CostModelState> cost_state = boost::static_pointer_cast<crocoddyl::CostModelState>(
+      llc_test.low_level_controller_->getDifferentialTerminalModel()
+          ->get_costs()
+          ->get_costs()
+          .find("state_error")
+          ->second->cost);
+  BOOST_CHECK(state == llc_test.low_level_controller_->getStateRef()[llc_test.low_level_controller_->getKnots() - 1]);
+  BOOST_CHECK(cost_state->get_xref() ==
+              llc_test.low_level_controller_->getStateRef()[llc_test.low_level_controller_->getKnots() - 1]);
+}
+
+// Set reference after creating the problem
 BOOST_AUTO_TEST_CASE(set_solver_test, *boost::unit_test::tolerance(1e-7)) {
   LowLevelControllerTest llc_test;
 
   llc_test.low_level_controller_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
   BOOST_CHECK(llc_test.low_level_controller_->getSolver() != nullptr);
+}
+
+BOOST_AUTO_TEST_CASE(solve_test, *boost::unit_test::tolerance(1e-7)) {
+  LowLevelControllerTest llc_test;
+
+  llc_test.low_level_controller_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
+
+  Eigen::VectorXd reference = llc_test.low_level_controller_->getState()->zero();
+  reference(2) = 0.3;
+  std::vector<Eigen::VectorXd> reference_trajectory(llc_test.low_level_controller_->getKnots(), reference);
+  llc_test.low_level_controller_->setReferenceStateTrajectory(reference_trajectory);
+
+  llc_test.low_level_controller_->setInitialState(reference);
+  BOOST_CHECK(llc_test.low_level_controller_->getInitialState() == reference);
+
+  llc_test.low_level_controller_->solve();
+  BOOST_CHECK(llc_test.low_level_controller_->getProblem()->get_x0() == reference);
+  BOOST_CHECK(llc_test.low_level_controller_->getSolver()->get_stop() < 1e-7 );
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -60,6 +60,7 @@ const boost::shared_ptr<const crocoddyl::StateMultibody> OcpAbstract::getState()
 const boost::shared_ptr<const crocoddyl::ActuationModelMultiCopterBase> OcpAbstract::getActuation() const {
   return actuation_;
 }
+const boost::shared_ptr<const crocoddyl::ShootingProblem> OcpAbstract::getProblem() const { return problem_; }
 const double& OcpAbstract::getTimeStep() const { return dt_; }
 const Eigen::VectorXd& OcpAbstract::getActuationLowerBounds() const { return tau_lb_; }
 const Eigen::VectorXd& OcpAbstract::getActuationUpperBounds() const { return tau_ub_; }

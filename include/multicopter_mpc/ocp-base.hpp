@@ -54,6 +54,7 @@ class OcpAbstract {
   const boost::shared_ptr<const MultiCopterBaseParams> getMcParams() const;
   const boost::shared_ptr<const crocoddyl::StateMultibody> getState() const;
   const boost::shared_ptr<const crocoddyl::ActuationModelMultiCopterBase> getActuation() const;
+  const boost::shared_ptr<const crocoddyl::ShootingProblem> getProblem() const;
   const double& getTimeStep() const;
   const Eigen::VectorXd& getActuationLowerBounds() const;
   const Eigen::VectorXd& getActuationUpperBounds() const;
