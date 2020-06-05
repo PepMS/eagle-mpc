@@ -35,31 +35,42 @@ struct SolverTypes {
 
 class OcpAbstract {
  public:
+  // Constructor & Destructor
   OcpAbstract(const boost::shared_ptr<pinocchio::Model> model,
               const boost::shared_ptr<MultiCopterBaseParams>& mc_params, const double& dt);
   ~OcpAbstract();
 
+  // Other methods
+  virtual void loadParameters(const yaml_parser::ParamsServer& server);
+
   virtual void createProblem(const SolverTypes::Type& solver_type) = 0;
 
-  virtual void setSolver(const SolverTypes::Type& solver_type);
   virtual void setSolverCallbacks(const bool& activated);
   virtual void setSolverIters(const std::size_t& n_iters);
   virtual void solve();
 
+  // Getters
   const boost::shared_ptr<const pinocchio::Model> getModel() const;
   const boost::shared_ptr<const MultiCopterBaseParams> getMcParams() const;
   const boost::shared_ptr<const crocoddyl::StateMultibody> getState() const;
   const boost::shared_ptr<const crocoddyl::ActuationModelMultiCopterBase> getActuation() const;
+  const boost::shared_ptr<const crocoddyl::ShootingProblem> getProblem() const;
   const double& getTimeStep() const;
   const Eigen::VectorXd& getActuationLowerBounds() const;
   const Eigen::VectorXd& getActuationUpperBounds() const;
   const Eigen::VectorXd& getInitialState() const;
   const int& getBaseLinkId() const;
   const std::size_t& getKnots() const;
-
+  // Setters
   virtual void setInitialState(const Eigen::Ref<Eigen::VectorXd>& initial_state);
 
  protected:
+  // Methods
+  virtual void initializeDefaultParameters();
+
+  virtual void setSolver(const SolverTypes::Type& solver_type);
+  
+  // Class members
   boost::shared_ptr<MultiCopterBaseParams> mc_params_;
 
   boost::shared_ptr<pinocchio::Model> model_;

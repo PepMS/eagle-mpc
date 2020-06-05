@@ -20,6 +20,10 @@ OcpAbstract::OcpAbstract(const boost::shared_ptr<pinocchio::Model> model,
 
 OcpAbstract::~OcpAbstract() {}
 
+void OcpAbstract::initializeDefaultParameters(){};
+
+void OcpAbstract::loadParameters(const yaml_parser::ParamsServer& server){};
+
 void OcpAbstract::setSolver(const SolverTypes::Type& solver_type) {
   assert(problem_ != nullptr);
 
@@ -56,17 +60,18 @@ const boost::shared_ptr<const crocoddyl::StateMultibody> OcpAbstract::getState()
 const boost::shared_ptr<const crocoddyl::ActuationModelMultiCopterBase> OcpAbstract::getActuation() const {
   return actuation_;
 }
+const boost::shared_ptr<const crocoddyl::ShootingProblem> OcpAbstract::getProblem() const { return problem_; }
 const double& OcpAbstract::getTimeStep() const { return dt_; }
 const Eigen::VectorXd& OcpAbstract::getActuationLowerBounds() const { return tau_lb_; }
 const Eigen::VectorXd& OcpAbstract::getActuationUpperBounds() const { return tau_ub_; }
 const Eigen::VectorXd& OcpAbstract::getInitialState() const { return state_initial_; }
 const int& OcpAbstract::getBaseLinkId() const { return frame_base_link_id_; }
-const std::size_t& OcpAbstract::getKnots() const { 
-  if (n_knots_ == 0)
-  {
+const std::size_t& OcpAbstract::getKnots() const {
+  if (n_knots_ == 0) {
     std::cout << "WARN: number of knots is 0" << std::endl;
   }
-  return n_knots_; }
+  return n_knots_;
+}
 
 void OcpAbstract::setInitialState(const Eigen::Ref<Eigen::VectorXd>& initial_state) {
   assert(initial_state.size() == state_->get_nx());  // Might not be efficient to do this here
