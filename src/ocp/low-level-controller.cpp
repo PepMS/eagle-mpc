@@ -37,8 +37,8 @@ void LowLevelController::loadParameters(const yaml_parser::ParamsServer& server)
   params_.w_state_velocity_lin = yaml_parser::converter<Eigen::VectorXd>::convert(current_state["velocity_lin"]);
   params_.w_state_velocity_ang = yaml_parser::converter<Eigen::VectorXd>::convert(current_state["velocity_ang"]);
 
-  params_.w_state = server.getParam<double>("ocp/state");
-  params_.w_control = server.getParam<double>("ocp/control");
+  params_.w_state = server.getParam<double>("ocp/cost_state_weight");
+  params_.w_control = server.getParam<double>("ocp/cost_control_weight");
 }
 
 void LowLevelController::createProblem(const SolverTypes::Type& solver_type) {
@@ -72,8 +72,8 @@ boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> LowLevelCon
   boost::shared_ptr<crocoddyl::CostModelAbstract> cost_reg_control = createCostControlRegularization();
 
   // Regularitzations
-  cost_model->addCost("x_cost", cost_state, 1);
-  cost_model->addCost("u_reg", cost_reg_control, 0.1);
+  cost_model->addCost("state_error", cost_state, params_.w_state);
+  cost_model->addCost("control", cost_reg_control, params_.w_control);
 
   boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model =
       boost::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(state_, actuation_, cost_model);
@@ -85,10 +85,10 @@ boost::shared_ptr<crocoddyl::CostModelAbstract> LowLevelController::createCostSt
     const unsigned int& trajectory_idx) {
   Eigen::VectorXd state_weights(state_->get_ndx());
 
-  state_weights.head(3).fill(1.);                      // Position 1.
-  state_weights.segment(3, 3).fill(0.1);               // Orientation 1.
-  state_weights.segment(model_->nv, 3).fill(1.);       // Linear velocity 1.
-  state_weights.segment(model_->nv + 3, 3).fill(0.1);  // Angular velocity 1.
+  state_weights.head(3) = params_.w_state_position;
+  state_weights.segment(3, 3) = params_.w_state_orientation;
+  state_weights.segment(model_->nv, 3) = params_.w_state_velocity_lin;
+  state_weights.segment(model_->nv + 3, 3) = params_.w_state_velocity_lin;
 
   boost::shared_ptr<crocoddyl::ActivationModelWeightedQuad> activation_state =
       boost::make_shared<crocoddyl::ActivationModelWeightedQuad>(state_weights);
@@ -111,8 +111,15 @@ void LowLevelController::updateReferenceStateTrajectory(const Eigen::Ref<Eigen::
 
   for (std::size_t t = 0; t < n_knots_ - 1; ++t) {
     state_ref_[t] = state_ref_[t + 1];
+
+    boost::shared_ptr<crocoddyl::CostModelState> cost_state = boost::static_pointer_cast<crocoddyl::CostModelState>(
+        diff_models_running_[t]->get_costs()->get_costs().find("state_error")->second->cost);
+    cost_state->set_xref(state_ref_[t]);
   }
   state_ref_[n_knots_ - 1] = state_new;
+  boost::shared_ptr<crocoddyl::CostModelState> cost_state = boost::static_pointer_cast<crocoddyl::CostModelState>(
+      diff_model_terminal_->get_costs()->get_costs().find("state_error")->second->cost);
+  cost_state->set_xref(state_ref_[n_knots_ - 1]);
 }
 
 void LowLevelController::solve() {
@@ -127,5 +134,16 @@ const LowLevelControllerParams& LowLevelController::getParams() const { return p
 void LowLevelController::setReferenceStateTrajectory(const std::vector<Eigen::VectorXd>& state_trajectory) {
   state_ref_.clear();
   std::copy(state_trajectory.begin(), state_trajectory.end(), std::back_inserter(state_ref_));
+
+  if (problem_ != nullptr) {
+    for (std::size_t t = 0; t < n_knots_ - 1; ++t) {
+      boost::shared_ptr<crocoddyl::CostModelState> cost_state = boost::static_pointer_cast<crocoddyl::CostModelState>(
+          diff_models_running_[t]->get_costs()->get_costs().find("state_error")->second->cost);
+      cost_state->set_xref(state_ref_[t]);
+    }
+    boost::shared_ptr<crocoddyl::CostModelState> cost_state = boost::static_pointer_cast<crocoddyl::CostModelState>(
+        diff_model_terminal_->get_costs()->get_costs().find("state_error")->second->cost);
+    cost_state->set_xref(state_ref_[n_knots_ - 1]);
+  }
 }
 }  // namespace multicopter_mpc

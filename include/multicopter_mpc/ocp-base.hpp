@@ -45,7 +45,6 @@ class OcpAbstract {
 
   virtual void createProblem(const SolverTypes::Type& solver_type) = 0;
 
-  virtual void setSolver(const SolverTypes::Type& solver_type);
   virtual void setSolverCallbacks(const bool& activated);
   virtual void setSolverIters(const std::size_t& n_iters);
   virtual void solve();
@@ -67,6 +66,9 @@ class OcpAbstract {
  protected:
   // Methods
   virtual void initializeDefaultParameters();
+
+  virtual void setSolver(const SolverTypes::Type& solver_type);
+  
   // Class members
   boost::shared_ptr<MultiCopterBaseParams> mc_params_;
 

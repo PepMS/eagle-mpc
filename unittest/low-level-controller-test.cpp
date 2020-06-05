@@ -34,7 +34,11 @@ class LowLevelControllerDerived : public multicopter_mpc::LowLevelController {
   const boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics>& getDifferentialTerminalModel() {
     return diff_model_terminal_;
   }
-  const boost::shared_ptr<crocoddyl::IntegratedActionModelEuler>& getIntegratedTerminalModel() { return int_model_terminal_; }
+  const boost::shared_ptr<crocoddyl::IntegratedActionModelEuler>& getIntegratedTerminalModel() {
+    return int_model_terminal_;
+  }
+
+  const boost::shared_ptr<crocoddyl::SolverAbstract>& getSolver() { return solver_; }
 };
 
 class LowLevelControllerTest {
@@ -177,7 +181,142 @@ BOOST_AUTO_TEST_CASE(create_problem_test, *boost::unit_test::tolerance(1e-7)) {
                   llc_test.low_level_controller_->getIntegratedTerminalModel());
     }
   }
-  BOOST_CHECK(llc_test.low_level_controller_->getIntegratedTerminalModel()->get_differential() == llc_test.low_level_controller_->getDifferentialTerminalModel());
+  BOOST_CHECK(llc_test.low_level_controller_->getIntegratedTerminalModel()->get_differential() ==
+              llc_test.low_level_controller_->getDifferentialTerminalModel());
+}
+
+BOOST_AUTO_TEST_CASE(create_costs_test, *boost::unit_test::tolerance(1e-7)) {
+  LowLevelControllerTest llc_test;
+
+  llc_test.low_level_controller_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
+
+  for (std::size_t i = 0; i < llc_test.low_level_controller_->getKnots() - 1; ++i) {
+    BOOST_CHECK(llc_test.low_level_controller_->getDifferentialRunningModels()[i]
+                    ->get_costs()
+                    ->get_costs()
+                    .find("state_error")
+                    ->second->weight == llc_test.low_level_controller_->getParams().w_state);
+    BOOST_CHECK(llc_test.low_level_controller_->getDifferentialRunningModels()[i]
+                    ->get_costs()
+                    ->get_costs()
+                    .find("control")
+                    ->second->weight == llc_test.low_level_controller_->getParams().w_control);
+  }
+  BOOST_CHECK(llc_test.low_level_controller_->getDifferentialTerminalModel()
+                  ->get_costs()
+                  ->get_costs()
+                  .find("state_error")
+                  ->second->weight == llc_test.low_level_controller_->getParams().w_state);
+  BOOST_CHECK(llc_test.low_level_controller_->getDifferentialTerminalModel()
+                  ->get_costs()
+                  ->get_costs()
+                  .find("control")
+                  ->second->weight == llc_test.low_level_controller_->getParams().w_control);
+}
+
+BOOST_AUTO_TEST_CASE(create_cost_state_test, *boost::unit_test::tolerance(1e-7)) {
+  LowLevelControllerTest llc_test;
+
+  llc_test.low_level_controller_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
+
+  for (std::size_t i = 0; i < llc_test.low_level_controller_->getKnots() - 1; ++i) {
+    boost::shared_ptr<crocoddyl::ActivationModelWeightedQuad> activation =
+        boost::static_pointer_cast<crocoddyl::ActivationModelWeightedQuad>(
+            llc_test.low_level_controller_->getDifferentialRunningModels()[i]
+                ->get_costs()
+                ->get_costs()
+                .find("state_error")
+                ->second->cost->get_activation());
+    Eigen::VectorXd weights(llc_test.low_level_controller_->getParams().w_state_position.size() +
+                            llc_test.low_level_controller_->getParams().w_state_orientation.size() +
+                            llc_test.low_level_controller_->getParams().w_state_velocity_lin.size() +
+                            llc_test.low_level_controller_->getParams().w_state_velocity_ang.size());
+    weights << llc_test.low_level_controller_->getParams().w_state_position,
+        llc_test.low_level_controller_->getParams().w_state_orientation,
+        llc_test.low_level_controller_->getParams().w_state_velocity_lin,
+        llc_test.low_level_controller_->getParams().w_state_velocity_ang;
+    BOOST_CHECK(activation->get_weights() == weights);
+  }
+}
+
+// Set reference before creating the problem
+BOOST_AUTO_TEST_CASE(set_reference_test_1, *boost::unit_test::tolerance(1e-7)) {
+  LowLevelControllerTest llc_test;
+
+  std::vector<Eigen::VectorXd> reference_trajectory(llc_test.low_level_controller_->getKnots(),
+                                                    llc_test.low_level_controller_->getState()->zero());
+  for (std::size_t i = 0; i < llc_test.low_level_controller_->getKnots() - 1; ++i) {
+    reference_trajectory[i](0) = i;
+  }
+
+  llc_test.low_level_controller_->setReferenceStateTrajectory(reference_trajectory);
+  llc_test.low_level_controller_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
+
+  for (std::size_t i = 0; i < llc_test.low_level_controller_->getKnots() - 1; ++i) {
+    boost::shared_ptr<crocoddyl::CostModelState> cost_state = boost::static_pointer_cast<crocoddyl::CostModelState>(
+        llc_test.low_level_controller_->getDifferentialRunningModels()[i]
+            ->get_costs()
+            ->get_costs()
+            .find("state_error")
+            ->second->cost);
+    BOOST_CHECK(reference_trajectory[i] == llc_test.low_level_controller_->getStateRef()[i]);
+    BOOST_CHECK(cost_state->get_xref() == llc_test.low_level_controller_->getStateRef()[i]);
+  }
+  boost::shared_ptr<crocoddyl::CostModelState> cost_state = boost::static_pointer_cast<crocoddyl::CostModelState>(
+      llc_test.low_level_controller_->getDifferentialTerminalModel()
+          ->get_costs()
+          ->get_costs()
+          .find("state_error")
+          ->second->cost);
+  BOOST_CHECK(reference_trajectory[llc_test.low_level_controller_->getKnots() - 1] ==
+              llc_test.low_level_controller_->getStateRef()[llc_test.low_level_controller_->getKnots() - 1]);
+  BOOST_CHECK(cost_state->get_xref() ==
+              llc_test.low_level_controller_->getStateRef()[llc_test.low_level_controller_->getKnots() - 1]);
+}
+
+// Set reference after creating the problem
+BOOST_AUTO_TEST_CASE(set_reference_test_2, *boost::unit_test::tolerance(1e-7)) {
+  LowLevelControllerTest llc_test;
+
+  llc_test.low_level_controller_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
+
+  std::vector<Eigen::VectorXd> reference_trajectory(llc_test.low_level_controller_->getKnots(),
+                                                    llc_test.low_level_controller_->getState()->zero());
+
+  for (std::size_t i = 0; i < llc_test.low_level_controller_->getKnots() - 1; ++i) {
+    reference_trajectory[i](0) = i;
+  }
+
+  llc_test.low_level_controller_->setReferenceStateTrajectory(reference_trajectory);
+
+  for (std::size_t i = 0; i < llc_test.low_level_controller_->getKnots() - 1; ++i) {
+    boost::shared_ptr<crocoddyl::CostModelState> cost_state = boost::static_pointer_cast<crocoddyl::CostModelState>(
+        llc_test.low_level_controller_->getDifferentialRunningModels()[i]
+            ->get_costs()
+            ->get_costs()
+            .find("state_error")
+            ->second->cost);
+    BOOST_CHECK(reference_trajectory[i] == llc_test.low_level_controller_->getStateRef()[i]);
+    BOOST_CHECK(cost_state->get_xref() == llc_test.low_level_controller_->getStateRef()[i]);
+  }
+  boost::shared_ptr<crocoddyl::CostModelState> cost_state = boost::static_pointer_cast<crocoddyl::CostModelState>(
+      llc_test.low_level_controller_->getDifferentialTerminalModel()
+          ->get_costs()
+          ->get_costs()
+          .find("state_error")
+          ->second->cost);
+  BOOST_CHECK(reference_trajectory[llc_test.low_level_controller_->getKnots() - 1] ==
+              llc_test.low_level_controller_->getStateRef()[llc_test.low_level_controller_->getKnots() - 1]);
+  BOOST_CHECK(cost_state->get_xref() ==
+              llc_test.low_level_controller_->getStateRef()[llc_test.low_level_controller_->getKnots() - 1]);
+}
+
+// Set reference after creating the problem
+BOOST_AUTO_TEST_CASE(set_solver_test, *boost::unit_test::tolerance(1e-7)) {
+  LowLevelControllerTest llc_test;
+
+  llc_test.low_level_controller_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
+  BOOST_CHECK(llc_test.low_level_controller_->getSolver() != nullptr);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
