@@ -43,6 +43,7 @@ class LowLevelController : public OcpAbstract {
   const LowLevelControllerParams& getParams() const;
   void setReferenceStateTrajectory(const std::vector<Eigen::VectorXd>& state_trajectory);
 
+  void printCosts();
  private:
   void initializeDefaultParameters() override;
 
@@ -52,6 +53,7 @@ class LowLevelController : public OcpAbstract {
   boost::shared_ptr<crocoddyl::CostModelAbstract> createCostControlRegularization();
 
   std::vector<Eigen::VectorXd> state_ref_;  // Vector containing the state reference for each node
+
   LowLevelControllerParams params_;
 };
 }  // namespace multicopter_mpc

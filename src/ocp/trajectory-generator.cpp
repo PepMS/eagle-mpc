@@ -3,8 +3,7 @@
 namespace multicopter_mpc {
 
 TrajectoryGenerator::TrajectoryGenerator(const boost::shared_ptr<pinocchio::Model> model,
-                                         const boost::shared_ptr<MultiCopterBaseParams>& mc_params,
-                                         const double& dt,
+                                         const boost::shared_ptr<MultiCopterBaseParams>& mc_params, const double& dt,
                                          const boost::shared_ptr<Mission>& mission)
     : OcpAbstract(model, mc_params, dt), mission_(mission) {}
 
@@ -89,6 +88,8 @@ void TrajectoryGenerator::createProblem(const SolverTypes::Type& solver_type) {
   }
   problem_ = boost::make_shared<crocoddyl::ShootingProblem>(mission_->x0_, int_models_running_, int_model_terminal_);
   setSolver(solver_type);
+
+  state_trajectory_ = std::vector<Eigen::VectorXd>(n_knots_, state_->zero());
 }
 
 boost::shared_ptr<crocoddyl::CostModelAbstract> TrajectoryGenerator::createCostStateRegularization() {
@@ -109,13 +110,37 @@ boost::shared_ptr<crocoddyl::CostModelAbstract> TrajectoryGenerator::createCostS
 }
 
 boost::shared_ptr<crocoddyl::CostModelAbstract> TrajectoryGenerator::createCostControlRegularization() {
-  
   boost::shared_ptr<crocoddyl::CostModelAbstract> cost_reg_control =
       boost::make_shared<crocoddyl::CostModelControl>(state_, actuation_->get_nu());
 
   return cost_reg_control;
 }
 
+void TrajectoryGenerator::solve() {
+  problem_->set_x0(mission_->x0_);
+  solver_->solve();
+  // in the unit test check that the solve trajecotry and the stae_trajectory have the same size
+  std::copy(solver_->get_xs().begin(), solver_->get_xs().end(), state_trajectory_.begin());
+  state_hover_ = state_->zero();
+  state_hover_.head(7) = solver_->get_xs().back().head(7);
+}
+
 const boost::shared_ptr<const Mission> TrajectoryGenerator::getMission() const { return mission_; }
+
+std::vector<Eigen::VectorXd> TrajectoryGenerator::getTrajectoryPortion(const std::size_t& idx_init,
+                                                                       const std::size_t& idx_end) const {
+  assert(idx_init < idx_end);
+  std::vector<Eigen::VectorXd>::const_iterator first = state_trajectory_.begin() + idx_init;
+  std::vector<Eigen::VectorXd>::const_iterator last = state_trajectory_.begin() + idx_end + 1;
+  return std::vector<Eigen::VectorXd>(first, last);
+}
+
+const Eigen::VectorXd& TrajectoryGenerator::getTrajectoryState(const std::size_t& cursor) const {
+  if (cursor < state_trajectory_.size()) {
+    return state_trajectory_[cursor];
+  } else {
+    return state_hover_;
+  }
+}
 
 }  // namespace multicopter_mpc

@@ -24,10 +24,16 @@ class TrajectoryGenerator : public OcpAbstract {
   virtual boost::shared_ptr<crocoddyl::CostModelAbstract> createCostStateRegularization();
   virtual boost::shared_ptr<crocoddyl::CostModelAbstract> createCostControlRegularization();
 
+  void solve() override;
+
   const boost::shared_ptr<const Mission> getMission() const;
-  
+  std::vector<Eigen::VectorXd> getTrajectoryPortion(const std::size_t& idx_init, const std::size_t& idx_end) const;
+  const Eigen::VectorXd& getTrajectoryState(const std::size_t& cursor) const;
+
  private:
   boost::shared_ptr<Mission> mission_;
+  std::vector<Eigen::VectorXd> state_trajectory_;
+  Eigen::VectorXd state_hover_;
 };
 }  // namespace multicopter_mpc
 
