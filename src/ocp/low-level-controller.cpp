@@ -8,10 +8,7 @@ LowLevelController::LowLevelController(const boost::shared_ptr<pinocchio::Model>
     : OcpAbstract(model, mc_params, dt) {
   n_knots_ = n_knots;
 
-  state_ref_.resize(n_knots_);
-  for (std::size_t t = 0; t < n_knots_; ++t) {
-    state_ref_[t] = state_->zero();
-  }
+  state_ref_.resize(n_knots_, state_->zero());
 
   initializeDefaultParameters();
 }
@@ -132,8 +129,8 @@ const std::vector<Eigen::VectorXd>& LowLevelController::getStateRef() const { re
 const LowLevelControllerParams& LowLevelController::getParams() const { return params_; }
 
 void LowLevelController::setReferenceStateTrajectory(const std::vector<Eigen::VectorXd>& state_trajectory) {
-  state_ref_.clear();
-  std::copy(state_trajectory.begin(), state_trajectory.end(), std::back_inserter(state_ref_));
+  assert(state_ref_.size() == state_trajectory.size());
+  std::copy(state_trajectory.begin(), state_trajectory.end(), state_ref_.begin());
 
   if (problem_ != nullptr) {
     for (std::size_t t = 0; t < n_knots_ - 1; ++t) {
@@ -145,5 +142,17 @@ void LowLevelController::setReferenceStateTrajectory(const std::vector<Eigen::Ve
         diff_model_terminal_->get_costs()->get_costs().find("state_error")->second->cost);
     cost_state->set_xref(state_ref_[n_knots_ - 1]);
   }
+}
+
+void LowLevelController::printCosts() {
+  for (std::size_t t = 0; t < n_knots_ - 1; ++t) {
+    boost::shared_ptr<crocoddyl::CostModelState> cost_state = boost::static_pointer_cast<crocoddyl::CostModelState>(
+        diff_models_running_[t]->get_costs()->get_costs().find("state_error")->second->cost);
+    std::cout << "Node number " << t << ": \n" << cost_state->get_xref() << std::endl;
+  }
+  boost::shared_ptr<crocoddyl::CostModelState> cost_state = boost::static_pointer_cast<crocoddyl::CostModelState>(
+      diff_model_terminal_->get_costs()->get_costs().find("state_error")->second->cost);
+  std::cout << "Node number " << n_knots_ - 1 << ": \n" << cost_state->get_xref() << std::endl;
+
 }
 }  // namespace multicopter_mpc

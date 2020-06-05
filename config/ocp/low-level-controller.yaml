@@ -1,5 +1,5 @@
 ocp:
-  cost_state_weight: 1.0
+  cost_state_weight: 10.0
   cost_control_weight: 0.1
   $state_weights:
     - position: [1.0, 1.0, 1.0]
