@@ -78,6 +78,8 @@ boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> LowLevelCon
   boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model =
       boost::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(state_, actuation_, cost_model);
 
+  diff_model->set_u_lb(tau_lb_);
+  diff_model->set_u_ub(tau_ub_);
   return diff_model;
 }
 
