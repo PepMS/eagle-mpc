@@ -11,7 +11,8 @@ namespace multicopter_mpc {
 class MultiCopterBaseParams {
  public:
   MultiCopterBaseParams();
-  MultiCopterBaseParams(double cf, double cm, Eigen::MatrixXd tau_f, double max_th, double min_th, const std::string& base_link);
+  MultiCopterBaseParams(double cf, double cm, Eigen::MatrixXd tau_f, double max_th, double min_th,
+                        const std::string& base_link);
   // MultiCopterBaseParams(double cf, double cm, Eigen::MatrixXd tau_f, double max_th, double min_th,
   //                       Eigen::VectorXd max_torque, Eigen::VectorXd min_torque, const std::string& base_link);
   ~MultiCopterBaseParams();
@@ -24,7 +25,7 @@ class MultiCopterBaseParams {
   Eigen::MatrixXd tau_f_;       // From propellers thrust to body net force & torque
   double max_thrust_;           // Max thrust produced by the motor/propeller
   double min_thrust_;           // Max thrust produced by the motor/propeller
-  std::string base_link_name_;   // Flying platform base_link name
+  std::string base_link_name_;  // Flying platform base_link name
 
   // To be used when dealing with UAM
   // Eigen::VectorXd max_torque_;  // Max torque for each manipulator's joint

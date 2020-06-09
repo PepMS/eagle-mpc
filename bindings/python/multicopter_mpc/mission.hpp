@@ -3,6 +3,7 @@
 
 #include "multicopter_mpc/mission.hpp"
 #include "multicopter_mpc/waypoint.hpp"
+
 #include "python/multicopter_mpc/vector-converter.hpp"
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
@@ -15,7 +16,7 @@ namespace bp = boost::python;
 
 void exposeMission() {
   bp::class_<std::vector<WayPoint>>("WayPoints").def(bp::vector_indexing_suite<std::vector<WayPoint>>());
-  // bp::to_python_converter<std::vector<WayPoint, std::allocator<WayPoint> >, vector_to_list<WayPoint, false> >();
+  bp::to_python_converter<std::vector<WayPoint, std::allocator<WayPoint> >, vector_to_list<WayPoint, false> >();
   list_to_vector().from_python<std::vector<WayPoint, std::allocator<WayPoint> > >();
 
   bp::register_ptr_to_python<boost::shared_ptr<Mission>>();

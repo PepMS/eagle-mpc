@@ -17,7 +17,8 @@ target_include_directories(${PROJECT_NAME}_pywrap PUBLIC  ${Boost_INCLUDE_DIRS}
 target_link_libraries(${PROJECT_NAME}_pywrap ${Boost_LIBRARIES} 
                                              ${PYTHON_LIBRARIES}
                                              ${YAML_PARSER_LIB}
-                                             multicopter_mpc)
+                                             multicopter_mpc
+                                             ${eigenpy_LIBRARIES})
 
 target_compile_options(${PROJECT_NAME}_pywrap PRIVATE "-Wno-conversion")
 
