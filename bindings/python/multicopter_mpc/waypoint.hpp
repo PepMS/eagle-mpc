@@ -5,8 +5,7 @@
 
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
-#include "python/multicopter_mpc/vector-converter.hpp"
-#include "python/multicopter_mpc/optional-converter.hpp"
+#include "python/multicopter_mpc/utils/optional-converter.hpp"
 
 namespace multicopter_mpc {
 namespace python {

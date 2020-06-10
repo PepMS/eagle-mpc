@@ -4,8 +4,7 @@
 #include "multicopter_mpc/mission.hpp"
 #include "multicopter_mpc/waypoint.hpp"
 
-#include "python/multicopter_mpc/vector-converter.hpp"
-#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#include "python/multicopter_mpc/utils/vector-converter.hpp"
 
 #include <Eigen/Dense>
 
