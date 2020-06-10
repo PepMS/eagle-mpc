@@ -19,10 +19,10 @@ class TrajectoryGenerator : public OcpAbstract {
                       const boost::shared_ptr<Mission>& mission);
   ~TrajectoryGenerator();
 
-  virtual void createProblem(const SolverTypes::Type& solver_type);
+  void createProblem(const SolverTypes::Type& solver_type) override;
 
-  virtual boost::shared_ptr<crocoddyl::CostModelAbstract> createCostStateRegularization();
-  virtual boost::shared_ptr<crocoddyl::CostModelAbstract> createCostControlRegularization();
+  boost::shared_ptr<crocoddyl::CostModelAbstract> createCostStateRegularization();
+  boost::shared_ptr<crocoddyl::CostModelAbstract> createCostControlRegularization();
 
   void solve() override;
 
