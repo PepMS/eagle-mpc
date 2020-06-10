@@ -21,7 +21,7 @@ void exposeMultiCopterBaseParams() {
       //     bp::args("cf", "cm", "torque_force", "max_th", "min_th", "max torque", "min torque"),
       //     "Initialize multicopter params"))
       .def(bp::init<>(bp::args("self"), "Default initialization"))
-      // .def("fill", &MultiCopterBaseParams::fill, bp::args("server"))
+      .def("fill", &MultiCopterBaseParams::fill, bp::args("server"))
       .add_property("cf", bp::make_getter(&MultiCopterBaseParams::cf_, bp::return_value_policy<bp::return_by_value>()),
                     bp::make_setter(&MultiCopterBaseParams::cf_), "cf coefficient")
       .add_property("cm", bp::make_getter(&MultiCopterBaseParams::cm_, bp::return_value_policy<bp::return_by_value>()),

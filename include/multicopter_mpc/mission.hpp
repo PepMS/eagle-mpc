@@ -24,4 +24,4 @@ class Mission {
 };
 }  // namespace multicopter_mpc
 
-#endif
+#endif // MULTICOPTER_MPC_MISSION_HPP_

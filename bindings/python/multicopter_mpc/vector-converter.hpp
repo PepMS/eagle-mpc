@@ -14,6 +14,11 @@
 #include <boost/python/stl_iterator.hpp>
 #include <boost/python/to_python_converter.hpp>
 
+#include <Eigen/Dense>
+#include <vector>
+#include <boost/python/stl_iterator.hpp>
+#include <boost/python/to_python_converter.hpp>
+
 namespace multicopter_mpc {
 namespace python {
 
@@ -21,7 +26,6 @@ namespace bp = boost::python;
 
 /// @note Registers converter from a provided type to the python
 ///       iterable type to the.
-
 template <class T, bool NoProxy = true>
 struct vector_to_list {
   static PyObject* convert(const std::vector<T>& vec) {

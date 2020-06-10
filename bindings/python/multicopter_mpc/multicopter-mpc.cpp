@@ -10,6 +10,7 @@
 
 #include "python/multicopter_mpc/waypoint.hpp"
 #include "python/multicopter_mpc/multicopter-base-params.hpp"
+#include "python/multicopter_mpc/mission.hpp"
 
 namespace multicopter_mpc {
 namespace python {
@@ -21,7 +22,7 @@ BOOST_PYTHON_MODULE(libmulticopter_mpc_pywrap) {
 
   exposeWayPoint();
   exposeMultiCopterBaseParams();
-  // exposeMission();
+  exposeMission();
   // exposeProblemMission();
 }
 
