@@ -3,6 +3,8 @@
 
 #include "multicopter_mpc/multicopter-base-params.hpp"
 
+#include <boost/python.hpp>
+
 #include <Eigen/Dense>
 
 namespace multicopter_mpc {
