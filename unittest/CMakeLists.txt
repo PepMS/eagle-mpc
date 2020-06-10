@@ -1,5 +1,7 @@
 ADD_DEFINITIONS(-DBOOST_TEST_DYN_LINK) 
 
+add_subdirectory(python)
+
 set(INCLUDE_UNITTEST
 ../include
 )
