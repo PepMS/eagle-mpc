@@ -1,10 +1,10 @@
-#ifndef BINDINGS_PYTHON_MULTICOPTER_MPC_ALGORITHMS_WAYPOINT_HPP_
-#define BINDINGS_PYTHON_MULTICOPTER_MPC_ALGORITHMS_WAYPOINT_HPP_
+#ifndef BINDINGS_PYTHON_MULTICOPTER_MPC_WAYPOINT_HPP_
+#define BINDINGS_PYTHON_MULTICOPTER_MPC_WAYPOINT_HPP_
 
-#include "multicopter_mpc/waypoint.hpp"
-
+#include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
+#include "multicopter_mpc/waypoint.hpp"
 #include "python/multicopter_mpc/utils/optional-converter.hpp"
 
 namespace multicopter_mpc {
@@ -33,4 +33,4 @@ void exposeWayPoint() {
 }  // namespace python
 }  // namespace multicopter_mpc
 
-#endif  // BINDINGS_PYTHON_OPTIUAVM_ALGORITHMS_WAYPOINT_HPP_
+#endif  // BINDINGS_PYTHON_MULTICOPTER_MPC_WAYPOINT_HPP_
