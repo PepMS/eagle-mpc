@@ -80,6 +80,7 @@ void TrajectoryGenerator::createProblem(const SolverTypes::Type& solver_type) {
       std::vector<boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics>> diff_models_running(
           wp->knots, diff_model_running);
       diff_models_running_.insert(diff_models_running_.end(), diff_models_running.begin(), diff_models_running.end());
+      diff_model_terminal_ = diff_model_terminal;
 
       std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> int_models_running(wp->knots, int_model_running);
       int_models_running_.insert(int_models_running_.end(), int_models_running.begin(), int_models_running.end());

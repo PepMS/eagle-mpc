@@ -11,6 +11,13 @@ namespace bp = boost::python;
 
 class OcpAbstract_wrap : public OcpAbstract, public bp::wrapper<OcpAbstract> {
  public:
+  using OcpAbstract::diff_model_terminal_;
+  using OcpAbstract::diff_models_running_;
+  using OcpAbstract::int_model_terminal_;
+  using OcpAbstract::int_models_running_;
+  using OcpAbstract::problem_;
+  using OcpAbstract::solver_;
+
   OcpAbstract_wrap(const boost::shared_ptr<pinocchio::Model> model,
                    const boost::shared_ptr<MultiCopterBaseParams>& mc_params, const double& dt)
       : OcpAbstract(model, mc_params, dt), bp::wrapper<OcpAbstract>() {}
@@ -63,7 +70,8 @@ void exposeOcpAbstract() {
       .add_property("actuation",
                     bp::make_function(&OcpAbstract_wrap::getActuation, bp::return_value_policy<bp::return_by_value>()))
       .add_property("problem",
-                    bp::make_function(&OcpAbstract_wrap::getProblem, bp::return_value_policy<bp::return_by_value>()))
+                    bp::make_function(&OcpAbstract_wrap::getProblem, bp::return_value_policy<bp::return_by_value>()),
+                    bp::make_setter(&OcpAbstract_wrap::problem_))
       .add_property("dt",
                     bp::make_function(&OcpAbstract_wrap::getTimeStep, bp::return_value_policy<bp::return_by_value>()))
       .add_property("u_lb", bp::make_function(&OcpAbstract_wrap::getActuationLowerBounds,
@@ -74,7 +82,27 @@ void exposeOcpAbstract() {
                                                       bp::return_value_policy<bp::return_by_value>()))
       .add_property("n_knots",
                     bp::make_function(&OcpAbstract_wrap::getKnots, bp::return_value_policy<bp::return_by_value>()))
-      .def("setInitialState", &OcpAbstract_wrap::setInitialState, bp::args("self", "initial_state"));
+      .def("setInitialState", &OcpAbstract_wrap::setInitialState, bp::args("self", "initial_state"))
+      .add_property(
+          "diff_models_running",
+          bp::make_getter(&OcpAbstract_wrap::diff_models_running_, bp::return_value_policy<bp::return_by_value>()),
+          bp::make_setter(&OcpAbstract_wrap::diff_models_running_))
+      .add_property(
+          "int_models_running",
+          bp::make_getter(&OcpAbstract_wrap::int_models_running_, bp::return_value_policy<bp::return_by_value>()),
+          bp::make_setter(&OcpAbstract_wrap::int_models_running_))
+      .add_property(
+          "diff_model_terminal",
+          bp::make_getter(&OcpAbstract_wrap::diff_model_terminal_, bp::return_value_policy<bp::return_by_value>()),
+          bp::make_setter(&OcpAbstract_wrap::diff_model_terminal_))
+      .add_property(
+          "int_model_terminal",
+          bp::make_getter(&OcpAbstract_wrap::int_model_terminal_, bp::return_value_policy<bp::return_by_value>()),
+          bp::make_setter(&OcpAbstract_wrap::int_model_terminal_))
+      .add_property(
+          "solver",
+          bp::make_getter(&OcpAbstract_wrap::solver_, bp::return_value_policy<bp::return_by_value>()),
+          bp::make_setter(&OcpAbstract_wrap::solver_));
 }
 
 }  // namespace python

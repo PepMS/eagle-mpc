@@ -26,3 +26,4 @@ install(TARGETS ${PROJECT_NAME}_pywrap
         LIBRARY DESTINATION lib/python3/dist-packages/multicopter_mpc)
 install(DIRECTORY python/multicopter_mpc/utils DESTINATION lib/python3/dist-packages/multicopter_mpc FILES_MATCHING PATTERN "*.py")
 install(FILES python/multicopter_mpc/__init__.py DESTINATION lib/python3/dist-packages/multicopter_mpc)
+install(FILES ${MULTICOPTER_MPC_CONFIG_DIR}/path.py DESTINATION lib/python3/dist-packages/multicopter_mpc/utils)
