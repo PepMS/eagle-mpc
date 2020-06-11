@@ -21,14 +21,13 @@ struct TrajectoryGeneratorParams {
   Eigen::Vector3d w_state_velocity_lin;  // Importance of the linear velocity in the state regularization
   Eigen::Vector3d w_state_velocity_ang;  // Importance of the angular velocity in the state regularization
 
-  double w_state_running; // General penalization for the state in running models
-  double w_control_running; // General penalization for the control in running models
-  double w_pos_running; // General penalization for the pose error in running models
-  double w_vel_running; // General penalization for the pose error in running models
-  
-  double w_pos_terminal; // General penalization for the pose error in terminal model
-  double w_vel_terminal; // General penalization for the pose error in terminal model
+  double w_state_running;    // General penalization for the state in running models
+  double w_control_running;  // General penalization for the control in running models
+  double w_pos_running;      // General penalization for the pose error in running models
+  double w_vel_running;      // General penalization for the pose error in running models
 
+  double w_pos_terminal;  // General penalization for the pose error in terminal model
+  double w_vel_terminal;  // General penalization for the pose error in terminal model
 };
 
 class TrajectoryGenerator : public OcpAbstract {
@@ -54,6 +53,8 @@ class TrajectoryGenerator : public OcpAbstract {
 
  private:
   void initializeDefaultParameters() override;
+  boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> createRunningDifferentialModel(const WayPoint& waypoint);
+  boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> createTerminalDifferentialModel(const WayPoint& waypoint, const bool& is_last_wp);
 
   boost::shared_ptr<Mission> mission_;
   std::vector<Eigen::VectorXd> state_trajectory_;

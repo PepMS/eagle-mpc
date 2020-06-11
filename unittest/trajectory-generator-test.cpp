@@ -163,11 +163,169 @@ BOOST_AUTO_TEST_CASE(load_parameters_test, *boost::unit_test::tolerance(1e-7)) {
   BOOST_CHECK(tg_test.trajectory_generator_->getParams().w_vel_terminal == 6.789);
 }
 
+BOOST_AUTO_TEST_CASE(trajectory_create_differential_model_test, *boost::unit_test::tolerance(1e-7)) {
+  TrajectoryGeneratorTest tg_test;
+
+  tg_test.trajectory_generator_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
+
+  std::size_t knot_cursor = 0;
+  for (std::vector<multicopter_mpc::WayPoint>::const_iterator wp =
+           tg_test.trajectory_generator_->getMission()->waypoints_.begin();
+       wp != tg_test.trajectory_generator_->getMission()->waypoints_.end(); ++wp) {
+    for (std::size_t i = knot_cursor; i < knot_cursor + wp->knots - 2; ++i) {
+      BOOST_CHECK(tg_test.trajectory_generator_->getDifferentialRunningModels()[i]
+                      ->get_costs()
+                      ->get_costs()
+                      .find("state_reg")
+                      ->second->weight == tg_test.trajectory_generator_->getParams().w_state_running);
+      BOOST_CHECK(tg_test.trajectory_generator_->getDifferentialRunningModels()[i]
+                      ->get_costs()
+                      ->get_costs()
+                      .find("control_reg")
+                      ->second->weight == tg_test.trajectory_generator_->getParams().w_control_running);
+      BOOST_CHECK(tg_test.trajectory_generator_->getDifferentialRunningModels()[i]
+                      ->get_costs()
+                      ->get_costs()
+                      .find("pos_desired")
+                      ->second->weight == tg_test.trajectory_generator_->getParams().w_pos_running);
+      if (wp->vel != boost::none) {
+        BOOST_CHECK(tg_test.trajectory_generator_->getDifferentialRunningModels()[i]
+                        ->get_costs()
+                        ->get_costs()
+                        .find("vel_desired")
+                        ->second->weight == tg_test.trajectory_generator_->getParams().w_vel_running);
+      }
+    }
+    if (std::next(wp) != tg_test.trajectory_generator_->getMission()->waypoints_.end()) {
+      BOOST_CHECK(tg_test.trajectory_generator_->getDifferentialRunningModels()[knot_cursor + wp->knots - 1]
+                      ->get_costs()
+                      ->get_costs()
+                      .find("pos_desired")
+                      ->second->weight == tg_test.trajectory_generator_->getParams().w_pos_terminal);
+      if (wp->vel != boost::none) {
+        BOOST_CHECK(tg_test.trajectory_generator_->getDifferentialRunningModels()[knot_cursor + wp->knots - 1]
+                        ->get_costs()
+                        ->get_costs()
+                        .find("vel_desired")
+                        ->second->weight == tg_test.trajectory_generator_->getParams().w_vel_terminal);
+      }
+    } else {
+      BOOST_CHECK(tg_test.trajectory_generator_->getDifferentialTerminalModel()
+                      ->get_costs()
+                      ->get_costs()
+                      .find("pos_desired")
+                      ->second->weight == tg_test.trajectory_generator_->getParams().w_pos_terminal);
+      if (wp->vel != boost::none) {
+        BOOST_CHECK(tg_test.trajectory_generator_->getDifferentialTerminalModel()
+                        ->get_costs()
+                        ->get_costs()
+                        .find("vel_desired")
+                        ->second->weight == tg_test.trajectory_generator_->getParams().w_vel_terminal);
+      }
+    }
+    knot_cursor += wp->knots;
+  }
+}
+
+BOOST_AUTO_TEST_CASE(trajectory_create_differential_model_state_test, *boost::unit_test::tolerance(1e-7)) {
+  TrajectoryGeneratorTest tg_test;
+
+  tg_test.trajectory_generator_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
+
+  boost::shared_ptr<crocoddyl::ActivationModelWeightedQuad> activation =
+      boost::static_pointer_cast<crocoddyl::ActivationModelWeightedQuad>(
+          tg_test.trajectory_generator_->getDifferentialRunningModels()[0]
+              ->get_costs()
+              ->get_costs()
+              .find("state_reg")
+              ->second->cost->get_activation());
+
+  Eigen::VectorXd weights(tg_test.trajectory_generator_->getParams().w_state_position.size() +
+                          tg_test.trajectory_generator_->getParams().w_state_orientation.size() +
+                          tg_test.trajectory_generator_->getParams().w_state_velocity_lin.size() +
+                          tg_test.trajectory_generator_->getParams().w_state_velocity_ang.size());
+
+  weights << tg_test.trajectory_generator_->getParams().w_state_position,
+      tg_test.trajectory_generator_->getParams().w_state_orientation,
+      tg_test.trajectory_generator_->getParams().w_state_velocity_lin,
+      tg_test.trajectory_generator_->getParams().w_state_velocity_ang;
+
+  BOOST_CHECK(activation->get_weights() == weights);
+}
+
 BOOST_AUTO_TEST_CASE(trajectory_create_problem_action_models_test, *boost::unit_test::tolerance(1e-7)) {
   TrajectoryGeneratorTest tg_test;
 
   tg_test.trajectory_generator_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
-  
+
+  BOOST_CHECK(tg_test.trajectory_generator_->getDifferentialRunningModels().size() ==
+              tg_test.trajectory_generator_->getKnots());
+  BOOST_CHECK(tg_test.trajectory_generator_->getIntegratedRunningModels().size() ==
+              tg_test.trajectory_generator_->getKnots());
+
+  // Check that the data differential model that std_vector<integrated> is pointing to is the same that the data
+  // member differential is pointing to. Only with the 0 element as aftewrwards we will check that all in pointers in
+  // the vector are pointing at the same place
+
+  // Be aware that we could have several Waypoints, meaning different stages of the whole trajecotry. Each
+  // stage has its own models
+  std::size_t knot_cursor = 0;
+  for (std::vector<multicopter_mpc::WayPoint>::const_iterator wp =
+           tg_test.trajectory_generator_->getMission()->waypoints_.begin();
+       wp != tg_test.trajectory_generator_->getMission()->waypoints_.end(); ++wp) {
+    boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> int_model_0 =
+        boost::static_pointer_cast<crocoddyl::IntegratedActionModelEuler>(
+            tg_test.trajectory_generator_->getIntegratedRunningModels()[knot_cursor]);
+    BOOST_CHECK(int_model_0->get_differential() ==
+                tg_test.trajectory_generator_->getDifferentialRunningModels()[knot_cursor]);
+    if (knot_cursor > 0) {
+      BOOST_CHECK(int_model_0 != tg_test.trajectory_generator_->getIntegratedRunningModels()[knot_cursor - 1]);
+    }
+    for (std::size_t i = knot_cursor; i < knot_cursor + wp->knots - 1; ++i) {
+      // Check the action model ptr of every node are pointing to different action model
+      BOOST_CHECK(tg_test.trajectory_generator_->getDifferentialRunningModels()[i] == int_model_0->get_differential());
+      BOOST_CHECK(tg_test.trajectory_generator_->getIntegratedRunningModels()[i] == int_model_0);
+    }
+    knot_cursor += wp->knots;
+  }
+  BOOST_CHECK(tg_test.trajectory_generator_->getIntegratedTerminalModel()->get_differential() ==
+              tg_test.trajectory_generator_->getDifferentialTerminalModel());
+  BOOST_CHECK(tg_test.trajectory_generator_->getMission()->x0_ == tg_test.trajectory_generator_->getInitialState());
+}
+
+BOOST_AUTO_TEST_CASE(set_solver_test, *boost::unit_test::tolerance(1e-7)) {
+  TrajectoryGeneratorTest tg_test;
+
+  tg_test.trajectory_generator_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
+  BOOST_CHECK(tg_test.trajectory_generator_->getSolver() != nullptr);
+}
+
+BOOST_AUTO_TEST_CASE(solve_test, *boost::unit_test::tolerance(1e-7)) {
+  TrajectoryGeneratorTest tg_test;
+
+  tg_test.trajectory_generator_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
+  tg_test.trajectory_generator_->setSolverCallbacks(true);
+  tg_test.trajectory_generator_->solve();
+  BOOST_CHECK(tg_test.trajectory_generator_->getSolver()->get_xs().size() ==
+              tg_test.trajectory_generator_->getKnots() + 1);
+  BOOST_CHECK(tg_test.trajectory_generator_->getProblem()->get_x0() ==
+              tg_test.trajectory_generator_->getInitialState());
+  BOOST_CHECK(tg_test.trajectory_generator_->getSolver()->get_stop() < 1e-4);
+}
+
+BOOST_AUTO_TEST_CASE(hover_test, *boost::unit_test::tolerance(1e-7)) {
+  TrajectoryGeneratorTest tg_test;
+
+  tg_test.trajectory_generator_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
+  tg_test.trajectory_generator_->setSolverCallbacks(true);
+  tg_test.trajectory_generator_->solve();
+
+  Eigen::VectorXd hover_state =
+      tg_test.trajectory_generator_->getTrajectoryState(tg_test.trajectory_generator_->getKnots() + 2);
+  BOOST_CHECK(hover_state.head(3) == tg_test.trajectory_generator_->getSolver()->get_xs().back().head(3));
+  BOOST_CHECK(hover_state.segment(3, 3) == Eigen::Vector3d::Zero());
+  BOOST_CHECK(hover_state(6) == 1);
+  BOOST_CHECK(hover_state.segment(7, 6) == Eigen::VectorXd::Zero(6));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
