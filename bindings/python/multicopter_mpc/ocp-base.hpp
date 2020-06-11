@@ -59,6 +59,7 @@ void exposeOcpAbstract() {
       .def("createProblem", pure_virtual(&OcpAbstract_wrap::createProblem), bp::args("self", "solver_type"))
       .def("loadParameters", &OcpAbstract::loadParameters, &OcpAbstract_wrap::default_loadParameters,
            bp::args("self", "server"))
+      .def("setSolverCallbacks", &OcpAbstract_wrap::setSolverCallbacks, bp::args("self", "activated"))
       .def("solve", &OcpAbstract::solve, &OcpAbstract_wrap::default_solve, bp::args("self"))
       .def("setSolverIters", &OcpAbstract_wrap::setSolverIters, bp::args("self", "num_iters"))
       .add_property("model",

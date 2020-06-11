@@ -26,7 +26,7 @@ BOOST_PYTHON_MODULE(libmulticopter_mpc_pywrap) {
   exposeMultiCopterBaseParams();
   exposeMission();
   exposeOcpAbstract();
-  // exposeTrajectoryGenerator();
+  exposeTrajectoryGenerator();
 }
 
 }  // namespace python

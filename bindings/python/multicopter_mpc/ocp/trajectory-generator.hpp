@@ -15,7 +15,7 @@ void exposeTrajectoryGenerator() {
   bp::class_<TrajectoryGenerator, bp::bases<OcpAbstract>>(
       "TrajectoryGenerator",
       bp::init<const boost::shared_ptr<pinocchio::Model>, const boost::shared_ptr<MultiCopterBaseParams>&,
-               const double&, const boost::shared_ptr<Mission>&>(bp::args("self", "mc_params", "dt", "mission"),
+               const double&, const boost::shared_ptr<Mission>&>(bp::args("self", "model", "mc_params", "dt", "mission"),
                                                                  "Initialize trajectory generation OCP"))
       .def("createProblem", &TrajectoryGenerator::createProblem, bp::args("self", "solver_type"))
       .def("createCostStateRegularization", &TrajectoryGenerator::createCostStateRegularization, bp::args("self"))
