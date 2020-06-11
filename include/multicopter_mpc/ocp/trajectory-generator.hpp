@@ -50,6 +50,7 @@ class TrajectoryGenerator : public OcpAbstract {
   const boost::shared_ptr<const Mission> getMission() const;
   std::vector<Eigen::VectorXd> getTrajectoryPortion(const std::size_t& idx_init, const std::size_t& idx_end) const;
   const Eigen::VectorXd& getTrajectoryState(const std::size_t& cursor) const;
+  const TrajectoryGeneratorParams& getParams() const;
 
  private:
   void initializeDefaultParameters() override;

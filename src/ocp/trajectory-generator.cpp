@@ -8,7 +8,7 @@ TrajectoryGenerator::TrajectoryGenerator(const boost::shared_ptr<pinocchio::Mode
     : OcpAbstract(model, mc_params, dt), mission_(mission) {
   n_knots_ = mission_->getTotalKnots();
 
-  initializeDefaultParameters() :
+  initializeDefaultParameters();
 }
 
 TrajectoryGenerator::~TrajectoryGenerator() {}
@@ -27,7 +27,6 @@ void TrajectoryGenerator::initializeDefaultParameters() {
   params_.w_pos_terminal = 100;
   params_.w_vel_terminal = 10;
 }
-
 
 void TrajectoryGenerator::loadParameters(const yaml_parser::ParamsServer& server) {
   std::vector<std::string> state_weights = server.getParam<std::vector<std::string>>("ocp/state_weights");
@@ -163,6 +162,8 @@ void TrajectoryGenerator::solve() {
 }
 
 const boost::shared_ptr<const Mission> TrajectoryGenerator::getMission() const { return mission_; }
+
+const TrajectoryGeneratorParams& TrajectoryGenerator::getParams() const { return params_; };
 
 std::vector<Eigen::VectorXd> TrajectoryGenerator::getTrajectoryPortion(const std::size_t& idx_init,
                                                                        const std::size_t& idx_end) const {
