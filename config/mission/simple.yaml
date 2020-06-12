@@ -8,6 +8,6 @@ mission:
   $waypoints:    
     - pos: [3.0, 0.0, 1.0]
       quat: [0.0, 0.0, 1.0, 1.0] # x, y, z, w
-      # vel_lin: [0.0, 0.0, 0.0]
-      # vel_rot: [0.0, 0.0, 0.0]
+      vel_lin: [0.0, 0.0, 0.0]
+      vel_rot: [0.0, 0.0, 0.0]
       knots: 100

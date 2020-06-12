@@ -29,7 +29,7 @@ mc_params = multicopter_mpc.MultiCopterBaseParams()
 mc_params.fill(server_uav)
 
 # Mission
-yaml_mission = yaml_parser.ParserYAML(MULTICOPTER_MPC_MISSION_DIR + "/simple.yaml", "", True)
+yaml_mission = yaml_parser.ParserYAML(MULTICOPTER_MPC_MISSION_DIR + "/passthrough.yaml", "", True)
 server_mission = yaml_parser.ParamsServer(yaml_mission.getParams())
 mission = multicopter_mpc.Mission(uav.nq + uav.nv)
 mission.fillWaypoints(server_mission)
@@ -41,12 +41,15 @@ trajectory.createProblem(multicopter_mpc.SolverType.SolverTypeBoxFDDP)
 trajectory.setSolverCallbacks(True)
 trajectory.solve()
 
+state_trajectory = trajectory.getTrajectoryPortion(0, trajectory.n_knots)
+time_lst = [trajectory.dt for i in range(0, trajectory.n_knots + 1)]
+
 if WITHDISPLAY:
     display = crocoddyl.GepettoDisplay(uav)
-    # for idx_wp, wp in enumerate(mission.waypoints):
-    #     name = 'world/wp' + str(idx_wp)
-    #     uav.viewer.gui.addXYZaxis(name, [1., 0., 0., 1.], .03, 0.5)
-    #     wp_pose = pinocchio.SE3ToXYZQUAT(wp.pose)
-    #     uav.viewer.gui.applyConfiguration(name, wp_pose.reshape(7).tolist()[0])
-
-    display.displayFromSolver(trajectory.solver)
+    for idx_wp, wp in enumerate(mission.waypoints):
+        name = 'world/wp' + str(idx_wp)
+        uav.viewer.gui.addXYZaxis(name, [1., 0., 0., 1.], .03, 0.5)
+        wp_pose = pinocchio.SE3ToXYZQUATtuple(wp.pose)
+        uav.viewer.gui.applyConfiguration(name, wp_pose)
+        
+    display.display(state_trajectory, [], [], time_lst, 1)
