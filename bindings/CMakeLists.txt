@@ -17,7 +17,8 @@ target_include_directories(${PROJECT_NAME}_pywrap PUBLIC  ${Boost_INCLUDE_DIRS}
 target_link_libraries(${PROJECT_NAME}_pywrap ${Boost_LIBRARIES} 
                                              ${PYTHON_LIBRARIES}
                                              ${YAML_PARSER_LIB}
-                                             multicopter_mpc)
+                                             multicopter_mpc
+                                             ${eigenpy_LIBRARIES})
 
 target_compile_options(${PROJECT_NAME}_pywrap PRIVATE "-Wno-conversion")
 
@@ -25,3 +26,4 @@ install(TARGETS ${PROJECT_NAME}_pywrap
         LIBRARY DESTINATION lib/python3/dist-packages/multicopter_mpc)
 install(DIRECTORY python/multicopter_mpc/utils DESTINATION lib/python3/dist-packages/multicopter_mpc FILES_MATCHING PATTERN "*.py")
 install(FILES python/multicopter_mpc/__init__.py DESTINATION lib/python3/dist-packages/multicopter_mpc)
+install(FILES ${MULTICOPTER_MPC_CONFIG_DIR}/path.py DESTINATION lib/python3/dist-packages/multicopter_mpc/utils)

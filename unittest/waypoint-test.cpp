@@ -19,9 +19,9 @@ BOOST_AUTO_TEST_CASE(constructors_test) {
   BOOST_CHECK(quaternion.toRotationMatrix() == Eigen::Quaterniond(wp00.pose.rotation()).toRotationMatrix());
 
   Eigen::Vector3d vel;
-  pos << 2, -2, 2;
+  vel << 2, -2, 2;
   Eigen::Vector3d rate;
-  pos << 3, -3, 3;
+  rate << 3, -3, 3;
   multicopter_mpc::WayPoint wp01(knots, pos, quaternion, vel, rate);
   BOOST_CHECK(wp01.vel != boost::none);
   BOOST_CHECK(knots == wp01.knots);
@@ -29,6 +29,31 @@ BOOST_AUTO_TEST_CASE(constructors_test) {
   BOOST_CHECK(quaternion.toRotationMatrix() == Eigen::Quaterniond(wp01.pose.rotation()).toRotationMatrix());
   BOOST_CHECK(vel == wp01.vel->linear());
   BOOST_CHECK(rate == wp01.vel->angular());
+}
+
+BOOST_AUTO_TEST_CASE(equal_operator_test) {
+  std::size_t knots = 10;
+  Eigen::Vector3d pos;
+  pos << 1, 1, 1;
+  Eigen::Quaterniond quaternion = Eigen::Quaterniond(1, 0, 0, 0);
+  Eigen::Vector3d vel;
+  vel << 2, -2, 2;
+  Eigen::Vector3d rate;
+  rate << 3, -3, 3;
+
+  multicopter_mpc::WayPoint wp_wo_vel_1(knots, pos, quaternion);
+  multicopter_mpc::WayPoint wp_wo_vel_2(wp_wo_vel_1);
+  wp_wo_vel_2.pose.translation()(2) = 0;
+
+  multicopter_mpc::WayPoint wp_vel_1(knots, pos, quaternion, vel, rate);
+  multicopter_mpc::WayPoint wp_vel_2(knots, pos, quaternion, vel, rate);
+  wp_vel_2.vel->linear()(2) = 0;
+  
+  BOOST_CHECK(wp_wo_vel_1 == wp_wo_vel_1);
+  BOOST_CHECK(wp_wo_vel_1 != wp_wo_vel_2);
+  BOOST_CHECK(wp_wo_vel_1 != wp_vel_1);
+  BOOST_CHECK(wp_vel_1 == wp_vel_1);
+  BOOST_CHECK(wp_vel_1 != wp_vel_2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

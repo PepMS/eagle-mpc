@@ -9,15 +9,17 @@
 namespace multicopter_mpc {
 
 struct WayPoint {
-    std::size_t knots;
-    pinocchio::SE3 pose;
-    boost::optional<pinocchio::Motion> vel;
+  std::size_t knots;
+  pinocchio::SE3 pose;
+  boost::optional<pinocchio::Motion> vel;
 
-    WayPoint(std::size_t knots, Eigen::Vector3d& pos, Eigen::Quaterniond& quat);
-    WayPoint(std::size_t knots, Eigen::Vector3d& pos, Eigen::Quaterniond& quat, Eigen::Vector3d& vel, Eigen::Vector3d& rate);
-    
-    bool operator==(const WayPoint& other) {return false;}
+  WayPoint(const std::size_t& knots, const Eigen::Vector3d& pos, const Eigen::Quaterniond& quat);
+  WayPoint(const std::size_t& knots, const Eigen::Vector3d& pos, const Eigen::Quaterniond& quat,
+           const Eigen::Vector3d& vel_linear, const Eigen::Vector3d& vel_angular);
+
+  bool operator==(const WayPoint& wp);
+  bool operator!=(const WayPoint& wp);
 };
-}
+}  // namespace multicopter_mpc
 
 #endif  // OPTIUAVM_ALGORITHMS_GOTO_HPP_

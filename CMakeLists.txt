@@ -19,6 +19,7 @@ enable_testing()
 option(WITH_BINDINGS "Compile bindings" OFF)
 option(WITH_EXAMPLES "Compile examples" OFF)
 option(WITH_BENCHMARK "Compile benchmarks" OFF)
+option(WITH_UNITTEST "Compile unittest" ON)
 
 # Testing purposes
 set(MULTICOPTER_MPC_CONFIG_DIR ${PROJECT_BINARY_DIR}/other/multicopter_mpc)
@@ -28,6 +29,7 @@ set(MULTICOPTER_MPC_MISSION_DIR ${CMAKE_INSTALL_PREFIX}/share/multicopter_mpc/mi
 set(MULTICOPTER_MPC_OCP_DIR ${CMAKE_INSTALL_PREFIX}/share/multicopter_mpc/ocp)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config/other/path.h "${MULTICOPTER_MPC_CONFIG_DIR}/path.h")
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config/other/path.py.in ${MULTICOPTER_MPC_CONFIG_DIR}/path.py)
 message("CONFIG ${MULTICOPTER_MPC_CONFIG_DIR}/config.h")
 message("CONFIG DIRECTORY ${PROJECT_BINARY_DIR}")
 include_directories("${PROJECT_BINARY_DIR}/other")
@@ -59,4 +61,6 @@ endif ()
 if (WITH_BENCHMARK)
   add_subdirectory(benchmark)
 endif ()
-add_subdirectory(unittest)
+if (WITH_UNITTEST)
+  add_subdirectory(unittest)
+endif ()

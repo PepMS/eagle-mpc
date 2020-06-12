@@ -36,18 +36,19 @@ struct SolverTypes {
 class OcpAbstract {
  public:
   // Constructor & Destructor
-  OcpAbstract(const boost::shared_ptr<pinocchio::Model> model,
+  OcpAbstract(const boost::shared_ptr<pinocchio::Model>& model,
               const boost::shared_ptr<MultiCopterBaseParams>& mc_params, const double& dt);
   ~OcpAbstract();
 
   // Other methods
-  virtual void loadParameters(const yaml_parser::ParamsServer& server);
-
   virtual void createProblem(const SolverTypes::Type& solver_type) = 0;
 
+  virtual void loadParameters(const yaml_parser::ParamsServer& server);
+
   virtual void setSolverCallbacks(const bool& activated);
-  virtual void setSolverIters(const std::size_t& n_iters);
   virtual void solve();
+  
+  void setSolverIters(const std::size_t& n_iters);
 
   // Getters
   const boost::shared_ptr<const pinocchio::Model> getModel() const;
