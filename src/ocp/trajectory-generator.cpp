@@ -197,6 +197,10 @@ void TrajectoryGenerator::solve() {
   std::copy(solver_->get_xs().begin(), solver_->get_xs().end(), state_trajectory_.begin());
   state_hover_ = state_->zero();
   state_hover_.head(3) = solver_->get_xs().back().head(3);
+  Eigen::Quaterniond quat = Eigen::Quaterniond(solver_->get_xs().back()(6), 0.0, 0.0, solver_->get_xs().back()(5));
+  quat.normalize();
+  state_hover_(5) = quat.z();
+  state_hover_(6) = quat.w();
 }
 
 const boost::shared_ptr<const Mission> TrajectoryGenerator::getMission() const { return mission_; }

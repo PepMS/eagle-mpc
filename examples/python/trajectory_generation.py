@@ -10,18 +10,10 @@ from multicopter_mpc.utils.path import MULTICOPTER_MPC_MULTIROTOR_DIR, MULTICOPT
 
 WITHDISPLAY = 'display' in sys.argv
 WITHPLOT = 'plot' in sys.argv
-HECTOR = 'hector' in sys.argv
 
-if HECTOR:
-    uav = example_robot_data.loadHector()
-    yaml_uav = yaml_parser.ParserYAML(MULTICOPTER_MPC_MULTIROTOR_DIR + "/hector.yaml", "", True)
-else:
-    uav = example_robot_data.loadIris()
-    link_name = "iris__base_link"
-    yaml_uav = yaml_parser.ParserYAML(MULTICOPTER_MPC_MULTIROTOR_DIR + "/iris.yaml", "", True)
-
+uav = example_robot_data.loadIris()
+yaml_uav = yaml_parser.ParserYAML(MULTICOPTER_MPC_MULTIROTOR_DIR + "/iris.yaml", "", True)
 uav_model = uav.model
-base_link = uav_model.getFrameId(link_name)
 
 # # UAV Params
 server_uav = yaml_parser.ParamsServer(yaml_uav.getParams())
@@ -29,7 +21,7 @@ mc_params = multicopter_mpc.MultiCopterBaseParams()
 mc_params.fill(server_uav)
 
 # Mission
-yaml_mission = yaml_parser.ParserYAML(MULTICOPTER_MPC_MISSION_DIR + "/passthrough.yaml", "", True)
+yaml_mission = yaml_parser.ParserYAML(MULTICOPTER_MPC_MISSION_DIR + "/takeoff.yaml", "", True)
 server_mission = yaml_parser.ParamsServer(yaml_mission.getParams())
 mission = multicopter_mpc.Mission(uav.nq + uav.nv)
 mission.fillWaypoints(server_mission)
@@ -51,5 +43,5 @@ if WITHDISPLAY:
         uav.viewer.gui.addXYZaxis(name, [1., 0., 0., 1.], .03, 0.5)
         wp_pose = pinocchio.SE3ToXYZQUATtuple(wp.pose)
         uav.viewer.gui.applyConfiguration(name, wp_pose)
-        
+
     display.display(state_trajectory, [], [], time_lst, 1)

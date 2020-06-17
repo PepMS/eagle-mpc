@@ -1,11 +1,11 @@
 #include "multicopter_mpc/mpc-main.hpp"
 
 namespace multicopter_mpc {
-MpcMain::MpcMain(MultiCopterTypes::Type mc_type, SolverTypes::Type solver_type)
+MpcMain::MpcMain(MultiCopterTypes::Type mc_type, SolverTypes::Type solver_type, std::string mission_name)
     : mc_type_(mc_type), solver_type_(solver_type) {
   std::string model_description_path;
   std::string model_yaml_path;
-  std::string mission_yaml_path = MULTICOPTER_MPC_MISSION_DIR "/takeoff.yaml";
+  std::string mission_yaml_path = MULTICOPTER_MPC_MISSION_DIR "/" + mission_name;
   std::string llc_params_yaml_path = MULTICOPTER_MPC_OCP_DIR "/low-level-controller.yaml";
 
   switch (mc_type_) {

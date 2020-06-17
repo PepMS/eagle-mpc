@@ -37,7 +37,7 @@ struct MultiCopterTypes {
 class MpcMain {
  public:
   MpcMain();
-  MpcMain(MultiCopterTypes::Type mc_type, SolverTypes::Type solver_type);
+  MpcMain(MultiCopterTypes::Type mc_type, SolverTypes::Type solver_type, std::string mission_name);
   ~MpcMain();
 
   const boost::shared_ptr<const LowLevelController> getLowLevelController();
