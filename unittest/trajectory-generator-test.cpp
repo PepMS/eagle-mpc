@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(ocp_constructor_test, *boost::unit_test::tolerance(1e-7)) {
   BOOST_CHECK(tg_test.mc_model_ == tg_test.trajectory_generator_->getModel());
   BOOST_CHECK(tg_test.mc_params_ == tg_test.trajectory_generator_->getMcParams());
   BOOST_CHECK(tg_test.dt_ == tg_test.trajectory_generator_->getTimeStep());
-  BOOST_CHECK(tg_test.trajectory_generator_->getState() != nullptr);
+  BOOST_CHECK(tg_test.trajectory_generator_->getStateMultibody() != nullptr);
   BOOST_CHECK(tg_test.trajectory_generator_->getActuation() != nullptr);
 
   Eigen::VectorXd tau_lb(tg_test.trajectory_generator_->getActuation()->get_nu());
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(ocp_constructor_test, *boost::unit_test::tolerance(1e-7)) {
   BOOST_CHECK(tg_test.mc_params_->n_rotors_ == tg_test.trajectory_generator_->getActuationUpperBounds().size());
   BOOST_CHECK(tau_lb == tg_test.trajectory_generator_->getActuationLowerBounds());
   BOOST_CHECK(tau_ub == tg_test.trajectory_generator_->getActuationUpperBounds());
-  BOOST_CHECK(tg_test.trajectory_generator_->getState()->zero() == tg_test.trajectory_generator_->getInitialState());
+  BOOST_CHECK(tg_test.trajectory_generator_->getStateMultibody()->zero() == tg_test.trajectory_generator_->getInitialState());
 
   BOOST_CHECK(tg_test.mc_model_->getFrameId(tg_test.mc_params_->base_link_name_) ==
               tg_test.trajectory_generator_->getBaseLinkId());
@@ -321,10 +321,14 @@ BOOST_AUTO_TEST_CASE(hover_test, *boost::unit_test::tolerance(1e-7)) {
   tg_test.trajectory_generator_->solve();
 
   Eigen::VectorXd hover_state =
-      tg_test.trajectory_generator_->getTrajectoryState(tg_test.trajectory_generator_->getKnots() + 2);
+      tg_test.trajectory_generator_->getState(tg_test.trajectory_generator_->getKnots() + 2);
   BOOST_CHECK(hover_state.head(3) == tg_test.trajectory_generator_->getSolver()->get_xs().back().head(3));
-  BOOST_CHECK(hover_state.segment(3, 3) == Eigen::Vector3d::Zero());
-  BOOST_CHECK(hover_state(6) == 1);
+  BOOST_CHECK(hover_state.segment(3, 2) == Eigen::Vector2d::Zero());
+  Eigen::Quaterniond quat(tg_test.trajectory_generator_->getSolver()->get_xs().back()(6), 0, 0,
+                          tg_test.trajectory_generator_->getSolver()->get_xs().back()(5));
+  quat.normalize();
+  BOOST_CHECK(hover_state(5) == quat.z());
+  BOOST_CHECK(hover_state(6) == quat.w());
   BOOST_CHECK(hover_state.segment(7, 6) == Eigen::VectorXd::Zero(6));
 }
 

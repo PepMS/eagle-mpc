@@ -58,7 +58,7 @@ void OcpAbstract::solve() { solver_->solve(); }
 
 const boost::shared_ptr<const pinocchio::Model> OcpAbstract::getModel() const { return model_; }
 const boost::shared_ptr<const MultiCopterBaseParams> OcpAbstract::getMcParams() const { return mc_params_; }
-const boost::shared_ptr<const crocoddyl::StateMultibody> OcpAbstract::getState() const { return state_; }
+const boost::shared_ptr<const crocoddyl::StateMultibody> OcpAbstract::getStateMultibody() const { return state_; }
 const boost::shared_ptr<const crocoddyl::ActuationModelMultiCopterBase> OcpAbstract::getActuation() const {
   return actuation_;
 }
