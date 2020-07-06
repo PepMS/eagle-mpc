@@ -29,12 +29,13 @@ mission.fillWaypoints(server_mission)
 mission.fillInitialState(server_mission)
 
 dt = 4e-3
+# dt = 1e-2
 trajectory = multicopter_mpc.TrajectoryGenerator(uav_model, mc_params, dt, mission)
 trajectory.createProblem(multicopter_mpc.SolverType.SolverTypeBoxFDDP)
 trajectory.setSolverCallbacks(True)
 trajectory.solve()
 
-state_trajectory = trajectory.getStateTrajectory(0, trajectory.n_knots)
+state_trajectory = trajectory.getStateTrajectory(0, trajectory.n_knots - 1)
 # control_trajectory = [trajectory.getCon]
 time_lst = [trajectory.dt for i in range(0, trajectory.n_knots + 1)]
 
