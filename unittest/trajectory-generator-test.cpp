@@ -99,7 +99,8 @@ BOOST_AUTO_TEST_CASE(ocp_constructor_test, *boost::unit_test::tolerance(1e-7)) {
   BOOST_CHECK(tg_test.mc_params_->n_rotors_ == tg_test.trajectory_generator_->getActuationUpperBounds().size());
   BOOST_CHECK(tau_lb == tg_test.trajectory_generator_->getActuationLowerBounds());
   BOOST_CHECK(tau_ub == tg_test.trajectory_generator_->getActuationUpperBounds());
-  BOOST_CHECK(tg_test.trajectory_generator_->getStateMultibody()->zero() == tg_test.trajectory_generator_->getInitialState());
+  BOOST_CHECK(tg_test.trajectory_generator_->getStateMultibody()->zero() ==
+              tg_test.trajectory_generator_->getInitialState());
 
   BOOST_CHECK(tg_test.mc_model_->getFrameId(tg_test.mc_params_->base_link_name_) ==
               tg_test.trajectory_generator_->getBaseLinkId());
@@ -259,15 +260,15 @@ BOOST_AUTO_TEST_CASE(trajectory_create_problem_action_models_test, *boost::unit_
   tg_test.trajectory_generator_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
 
   BOOST_CHECK(tg_test.trajectory_generator_->getDifferentialRunningModels().size() ==
-              tg_test.trajectory_generator_->getKnots());
+              tg_test.trajectory_generator_->getKnots() - 1);
   BOOST_CHECK(tg_test.trajectory_generator_->getIntegratedRunningModels().size() ==
-              tg_test.trajectory_generator_->getKnots());
+              tg_test.trajectory_generator_->getKnots() - 1);
 
   // Check that the data differential model that std_vector<integrated> is pointing to is the same that the data
   // member differential is pointing to. Only with the 0 element as aftewrwards we will check that all in pointers in
   // the vector are pointing at the same place
 
-  // Be aware that we could have several Waypoints, meaning different stages of the whole trajecotry. Each
+  // Be aware that we could have several Waypoints, meaning different stages of the whole trajectory. Each
   // stage has its own models
   std::size_t knot_cursor = 0;
   for (std::vector<multicopter_mpc::WayPoint>::const_iterator wp =
@@ -283,10 +284,13 @@ BOOST_AUTO_TEST_CASE(trajectory_create_problem_action_models_test, *boost::unit_
     }
     for (std::size_t i = knot_cursor; i < knot_cursor + wp->knots - 1; ++i) {
       // Check the action model ptr of every node are pointing to different action model
-      BOOST_CHECK(tg_test.trajectory_generator_->getDifferentialRunningModels()[i] == int_model_0->get_differential());
-      BOOST_CHECK(tg_test.trajectory_generator_->getIntegratedRunningModels()[i] == int_model_0);
+      if (i < tg_test.trajectory_generator_->getKnots() - 1) {
+        BOOST_CHECK(tg_test.trajectory_generator_->getDifferentialRunningModels()[i] ==
+                    int_model_0->get_differential());
+        BOOST_CHECK(tg_test.trajectory_generator_->getIntegratedRunningModels()[i] == int_model_0);
+      }
     }
-    knot_cursor += wp->knots;
+    knot_cursor = knot_cursor == 0 ? knot_cursor + wp->knots : knot_cursor + wp->knots - 1;
   }
   BOOST_CHECK(tg_test.trajectory_generator_->getIntegratedTerminalModel()->get_differential() ==
               tg_test.trajectory_generator_->getDifferentialTerminalModel());
@@ -307,7 +311,7 @@ BOOST_AUTO_TEST_CASE(solve_test, *boost::unit_test::tolerance(1e-7)) {
   tg_test.trajectory_generator_->setSolverCallbacks(true);
   tg_test.trajectory_generator_->solve();
   BOOST_CHECK(tg_test.trajectory_generator_->getSolver()->get_xs().size() ==
-              tg_test.trajectory_generator_->getKnots() + 1);
+              tg_test.trajectory_generator_->getKnots());
   BOOST_CHECK(tg_test.trajectory_generator_->getProblem()->get_x0() ==
               tg_test.trajectory_generator_->getInitialState());
   BOOST_CHECK(tg_test.trajectory_generator_->getSolver()->get_stop() < 1e-4);
@@ -320,8 +324,7 @@ BOOST_AUTO_TEST_CASE(hover_test, *boost::unit_test::tolerance(1e-7)) {
   tg_test.trajectory_generator_->setSolverCallbacks(true);
   tg_test.trajectory_generator_->solve();
 
-  Eigen::VectorXd hover_state =
-      tg_test.trajectory_generator_->getState(tg_test.trajectory_generator_->getKnots() + 2);
+  Eigen::VectorXd hover_state = tg_test.trajectory_generator_->getState(tg_test.trajectory_generator_->getKnots() + 2);
   BOOST_CHECK(hover_state.head(3) == tg_test.trajectory_generator_->getSolver()->get_xs().back().head(3));
   BOOST_CHECK(hover_state.segment(3, 2) == Eigen::Vector2d::Zero());
   Eigen::Quaterniond quat(tg_test.trajectory_generator_->getSolver()->get_xs().back()(6), 0, 0,

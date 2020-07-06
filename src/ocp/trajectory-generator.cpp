@@ -66,6 +66,8 @@ void TrajectoryGenerator::createProblem(const SolverTypes::Type& solver_type) {
     boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> int_model_terminal =
         boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_model_terminal, dt_);
 
+    int n_run_knots = wp == mission_->waypoints_.cbegin() ? wp->knots - 1 : wp->knots - 2;
+
     if (std::next(wp) != mission_->waypoints_.end()) {
       int_model_running->set_u_lb(tau_lb_);
       int_model_running->set_u_ub(tau_ub_);
@@ -73,11 +75,11 @@ void TrajectoryGenerator::createProblem(const SolverTypes::Type& solver_type) {
       int_model_terminal->set_u_ub(tau_ub_);
 
       std::vector<boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics>> diff_models_running(
-          wp->knots - 1, diff_model_running);
+          n_run_knots, diff_model_running);
       diff_models_running.push_back(diff_model_terminal);
       diff_models_running_.insert(diff_models_running_.end(), diff_models_running.begin(), diff_models_running.end());
 
-      std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> int_models_running(wp->knots - 1,
+      std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> int_models_running(n_run_knots,
                                                                                         int_model_running);
       int_models_running.push_back(int_model_terminal);
       int_models_running_.insert(int_models_running_.end(), int_models_running.begin(), int_models_running.end());
@@ -86,11 +88,12 @@ void TrajectoryGenerator::createProblem(const SolverTypes::Type& solver_type) {
       int_model_running->set_u_ub(tau_ub_);
 
       std::vector<boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics>> diff_models_running(
-          wp->knots, diff_model_running);
+          n_run_knots, diff_model_running);
       diff_models_running_.insert(diff_models_running_.end(), diff_models_running.begin(), diff_models_running.end());
       diff_model_terminal_ = diff_model_terminal;
 
-      std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> int_models_running(wp->knots, int_model_running);
+      std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> int_models_running(n_run_knots,
+                                                                                        int_model_running);
       int_models_running_.insert(int_models_running_.end(), int_models_running.begin(), int_models_running.end());
       int_model_terminal_ = int_model_terminal;
     }
@@ -252,6 +255,7 @@ const Eigen::VectorXd& TrajectoryGenerator::getControl(const std::size_t& cursor
   if (cursor < solver_->get_us().size()) {
     return solver_->get_us()[cursor];
   } else {
+    std::cout << "HOVERING! at state: " << state_hover_ << std::endl;
     return control_hover_;
   }
 }
