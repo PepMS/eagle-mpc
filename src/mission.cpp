@@ -65,13 +65,32 @@ void Mission::fillInitialState(const yaml_parser::ParamsServer& server) {
 void Mission::countTotalKnots() {
   size_t knots = 0;
 
+  wp_traj_idx_.clear();
+  int wp_count = 0;
   for (auto wp = waypoints_.begin(); wp != waypoints_.end(); wp++) {
-    knots += wp->knots;
+    wp_count += wp->knots - 1;
+    wp_traj_idx_.push_back(wp_count);
+
+    if (wp == waypoints_.begin()) {
+      knots += wp->knots;
+    } else {
+      knots += wp->knots - 1;
+    }
   }
 
   n_knots_ = knots;
 }
 
 const std::size_t& Mission::getTotalKnots() const { return n_knots_; }
+const std::vector<std::size_t>& Mission::getWpTrajIdx() const { return wp_traj_idx_; }
+
+std::size_t Mission::getWpFromTrajIdx(const std::size_t& traj_idx) const {
+  std::size_t idx = 0;
+  while (idx < wp_traj_idx_.size() && traj_idx > wp_traj_idx_[idx]) {
+    idx++;
+  }
+
+  return (idx > wp_traj_idx_.size() - 1 ? wp_traj_idx_.size() - 1 : idx);
+}
 
 }  // namespace multicopter_mpc

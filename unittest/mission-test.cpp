@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(fill_waypoints_number_waypoints) {
   yaml_parser::ParamsServer server_mission(yaml_mission.getParams());
   mission.fillWaypoints(server_mission);
 
-  BOOST_CHECK(mission.waypoints_.size() == 2);
+  BOOST_CHECK(mission.waypoints_.size() == 3);
 }
 
 BOOST_AUTO_TEST_CASE(fill_waypoints_waypoint_pose_motion) {
@@ -55,7 +55,8 @@ BOOST_AUTO_TEST_CASE(fill_waypoints_waypoint_pose_motion) {
   BOOST_CHECK(mission.waypoints_[0].vel != boost::none);
   BOOST_CHECK(knots == mission.waypoints_[0].knots);
   BOOST_CHECK(pos == mission.waypoints_[0].pose.translation());
-  BOOST_CHECK(quaternion.toRotationMatrix() == Eigen::Quaterniond(mission.waypoints_[0].pose.rotation()).toRotationMatrix());
+  BOOST_CHECK(quaternion.toRotationMatrix() ==
+              Eigen::Quaterniond(mission.waypoints_[0].pose.rotation()).toRotationMatrix());
   BOOST_CHECK(vel == mission.waypoints_[0].vel->linear());
   BOOST_CHECK(rate == mission.waypoints_[0].vel->angular());
 }
@@ -77,7 +78,8 @@ BOOST_AUTO_TEST_CASE(fill_waypoints_waypoint_pose) {
   BOOST_CHECK(mission.waypoints_[1].vel == boost::none);
   BOOST_CHECK(knots == mission.waypoints_[1].knots);
   BOOST_CHECK(pos == mission.waypoints_[1].pose.translation());
-  BOOST_CHECK(quaternion.toRotationMatrix() == Eigen::Quaterniond(mission.waypoints_[1].pose.rotation()).toRotationMatrix());
+  BOOST_CHECK(quaternion.toRotationMatrix() ==
+              Eigen::Quaterniond(mission.waypoints_[1].pose.rotation()).toRotationMatrix());
 }
 
 BOOST_AUTO_TEST_CASE(fill_initial_state) {
@@ -115,7 +117,32 @@ BOOST_AUTO_TEST_CASE(count_total_knots) {
 
   BOOST_CHECK(0 == mission.getTotalKnots());
   mission.fillWaypoints(server_mission);
-  BOOST_CHECK(200 == mission.getTotalKnots());
+  BOOST_CHECK(398 == mission.getTotalKnots());
+  BOOST_CHECK(mission.getWpTrajIdx()[0] == 99);
+  BOOST_CHECK(mission.getWpTrajIdx()[1] == 198);
+  BOOST_CHECK(mission.getWpTrajIdx()[2] == 397);
+}
+
+BOOST_AUTO_TEST_CASE(get_wp_from_traj_idx) {
+  std::size_t nx = 13;
+  multicopter_mpc::Mission mission(nx);
+
+  std::string mission_yaml_path = std::string(MULTICOPTER_MPC_ROOT_DIR) + "/unittest/config/mission-test.yaml";
+
+  yaml_parser::ParserYAML yaml_mission(mission_yaml_path, "", true);
+  yaml_parser::ParamsServer server_mission(yaml_mission.getParams());
+
+  BOOST_CHECK(0 == mission.getTotalKnots());
+  mission.fillWaypoints(server_mission);
+  BOOST_CHECK(mission.getWpFromTrajIdx(0) == 0);
+  BOOST_CHECK(mission.getWpFromTrajIdx(99) == 0);
+  BOOST_CHECK(mission.getWpFromTrajIdx(100) == 1);
+  BOOST_CHECK(mission.getWpFromTrajIdx(198) == 1);
+  BOOST_CHECK(mission.getWpFromTrajIdx(199) == 2);
+  BOOST_CHECK(mission.getWpFromTrajIdx(397) == 2);
+  BOOST_CHECK(mission.getWpFromTrajIdx(398) == 2);
+  BOOST_CHECK(mission.getWpFromTrajIdx(500) == 2);
+
 }
 
 BOOST_AUTO_TEST_SUITE_END()
