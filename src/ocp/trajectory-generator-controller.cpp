@@ -4,17 +4,17 @@ namespace multicopter_mpc {
 
 TrajectoryGeneratorController::TrajectoryGeneratorController(const boost::shared_ptr<pinocchio::Model>& model,
                                                              const boost::shared_ptr<MultiCopterBaseParams>& mc_params,
-                                                             const double& dt, const std::size_t& n_knots)
-    : OcpAbstract(model, mc_params, dt) {
+                                                             const double& dt,
+                                                             const boost::shared_ptr<Mission>& mission,
+                                                             const std::size_t& n_knots)
+    : OcpAbstract(model, mc_params, dt), mission_(mission) {
+  assert(mission->waypoints_.size() > 0);
+
   n_knots_ = n_knots;
 
-  pos_ref_ = Eigen::Vector3d::Zero();
-  quat_ref_ = Eigen::Quaterniond::Identity();
-  vel_lin_ref_ = Eigen::Vector3d::Zero();
-  vel_ang_ref_ = Eigen::Vector3d::Zero();
-
-  setPoseRef();  
-  setMotionRef();
+  has_motion_ref_ = false;
+  setPoseRef(0);
+  setMotionRef(0);
 
   initializeDefaultParameters();
 }
@@ -56,7 +56,7 @@ void TrajectoryGeneratorController::loadParameters(const yaml_parser::ParamsServ
 
 void TrajectoryGeneratorController::createProblem(const SolverTypes::Type& solver_type) {
   for (int i = 0; i < n_knots_ - 1; ++i) {
-    boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model = createDifferentialRunningModel();
+    boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model = createRunningDifferentialModel();
     boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> int_model =
         boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_model, dt_);
 
@@ -64,19 +64,26 @@ void TrajectoryGeneratorController::createProblem(const SolverTypes::Type& solve
     int_models_running_.push_back(int_model);
   }
 
-  boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model = createDifferentialTerminalModel();
+  boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model = createTerminalDifferentialModel();
   boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> int_model =
       boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_model, dt_);
+
+  // Here check in unittest that terminal and last item in vector are pointing at the same place
+  // check also that the size of the vectors are equal to n_knots_
+  diff_models_running_.push_back(diff_model);
+  int_models_running_.push_back(int_model);
 
   diff_model_terminal_ = diff_model;
   int_model_terminal_ = int_model;
 
   problem_ = boost::make_shared<crocoddyl::ShootingProblem>(state_initial_, int_models_running_, int_model_terminal_);
   setSolver(solver_type);
+
+  diff_model_iter_ = diff_models_running_.end() - 1;
 }
 
 boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics>
-TrajectoryGeneratorController::createDifferentialRunningModel() {
+TrajectoryGeneratorController::createRunningDifferentialModel() {
   boost::shared_ptr<crocoddyl::CostModelSum> cost_model =
       boost::make_shared<crocoddyl::CostModelSum>(state_, actuation_->get_nu());
 
@@ -92,9 +99,11 @@ TrajectoryGeneratorController::createDifferentialRunningModel() {
       boost::make_shared<crocoddyl::CostModelFramePlacement>(state_, pose_ref_, actuation_->get_nu());
   cost_model->addCost("pose_desired", cost_pose, params_.w_pos_running);
 
-  boost::shared_ptr<crocoddyl::CostModelAbstract> cost_vel =
-      boost::make_shared<crocoddyl::CostModelFrameVelocity>(state_, motion_ref_, actuation_->get_nu());
-  cost_model->addCost("vel_desired", cost_vel, params_.w_vel_running);
+  if (has_motion_ref_) {
+    boost::shared_ptr<crocoddyl::CostModelAbstract> cost_vel =
+        boost::make_shared<crocoddyl::CostModelFrameVelocity>(state_, motion_ref_, actuation_->get_nu());
+    cost_model->addCost("vel_desired", cost_vel, params_.w_vel_running);
+  }
 
   boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model =
       boost::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(state_, actuation_, cost_model);
@@ -106,7 +115,7 @@ TrajectoryGeneratorController::createDifferentialRunningModel() {
 }
 
 boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics>
-TrajectoryGeneratorController::createDifferentialTerminalModel() {
+TrajectoryGeneratorController::createTerminalDifferentialModel() {
   boost::shared_ptr<crocoddyl::CostModelSum> cost_model =
       boost::make_shared<crocoddyl::CostModelSum>(state_, actuation_->get_nu());
 
@@ -115,9 +124,11 @@ TrajectoryGeneratorController::createDifferentialTerminalModel() {
       boost::make_shared<crocoddyl::CostModelFramePlacement>(state_, pose_ref_, actuation_->get_nu());
   cost_model->addCost("pose_desired", cost_pose, params_.w_pos_terminal);
 
-  boost::shared_ptr<crocoddyl::CostModelAbstract> cost_vel =
-      boost::make_shared<crocoddyl::CostModelFrameVelocity>(state_, motion_ref_, actuation_->get_nu());
-  cost_model->addCost("vel_desired", cost_vel, params_.w_vel_terminal);
+  if (has_motion_ref_) {
+    boost::shared_ptr<crocoddyl::CostModelAbstract> cost_vel =
+        boost::make_shared<crocoddyl::CostModelFrameVelocity>(state_, motion_ref_, actuation_->get_nu());
+    cost_model->addCost("vel_desired", cost_vel, params_.w_vel_terminal);
+  }
 
   boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model =
       boost::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(state_, actuation_, cost_model);
@@ -157,59 +168,116 @@ void TrajectoryGeneratorController::solve() {
   solver_->solve(solver_->get_xs(), solver_->get_us(), solver_iters_, false, 1e-9);
 }
 
-void TrajectoryGeneratorController::updateReferences(const Eigen::Ref<Eigen::VectorXd>& state_new) {
-  assert(state_new.size() == state_->get_nx());
-  assert(problem_ != nullptr);
+void TrajectoryGeneratorController::updateProblem(const std::size_t idx_trajectory) {
+  (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->weight = params_.w_pos_running;
+  if (has_motion_ref_) {
+    (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->weight = params_.w_vel_running;
+  }
 
-  pos_ref_ = state_new.head(3);
-  quat_ref_.x() = state_new(3);
-  quat_ref_.y() = state_new(4);
-  quat_ref_.z() = state_new(5);
-  quat_ref_.w() = state_new(6);
-  vel_lin_ref_ = state_new.segment(7, 3);
-  vel_ang_ref_ = state_new.tail(3);
+  setPoseRef(idx_trajectory);
+  setMotionRef(idx_trajectory);
 
-  setPoseRef();
-  setMotionRef();
-
-  // Running models
-  for (std::size_t t = 0; t < n_knots_ - 1; ++t) {
-    boost::shared_ptr<crocoddyl::CostModelFramePlacement> cost_pose =
-        boost::static_pointer_cast<crocoddyl::CostModelFramePlacement>(
-            diff_models_running_[t]->get_costs()->get_costs().find("pose_desired")->second->cost);
+  boost::shared_ptr<crocoddyl::CostModelFramePlacement> cost_pose =
+      boost::static_pointer_cast<crocoddyl::CostModelFramePlacement>(
+          (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->cost);
+  cost_pose->set_Mref(pose_ref_);
+  if (has_motion_ref_) {
     boost::shared_ptr<crocoddyl::CostModelFrameVelocity> cost_vel =
         boost::static_pointer_cast<crocoddyl::CostModelFrameVelocity>(
-            diff_models_running_[t]->get_costs()->get_costs().find("vel_desired")->second->cost);
-    cost_pose->set_Mref(pose_ref_);
+            (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->cost);
     cost_vel->set_vref(motion_ref_);
   }
 
-  // Terminal models
+  if (diff_model_iter_ - 1 == diff_models_running_.begin()) {
+    diff_model_iter_ = diff_models_running_.end() - 1;
+  } else {
+    diff_model_iter_ -= 1;
+  }
+
+  // Increase the weight for the next node
+  (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->weight = params_.w_pos_terminal;
+  if (has_motion_ref_) {
+    (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->weight = params_.w_vel_terminal;
+  }
+  // updateWeights(idx_trajectory);
+  // updateTerminalCost(idx_trajectory);
+}
+
+void TrajectoryGeneratorController::updateWeights(const std::size_t& idx_trajectory) {
+  // Update weights
+  // Decrease the current weight value of the cost (if the trajectory is not at its end)
+  // if (idx_trajectory < mission_->getTotalKnots()) {
+  //   (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->weight = params_.w_pos_running;
+  //   if (has_motion_ref_) {
+  //     (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->weight = params_.w_vel_running;
+  //   }
+
+  //   if (diff_model_iter_ - 1 == diff_models_running_.begin()) {
+  //     diff_model_iter_ = diff_models_running_.end() - 1;
+  //   } else {
+  //     diff_model_iter_ -= 1;
+  //   }
+  // } else {
+  //   if (diff_model_iter_ != diff_models_running_.begin()) {
+  //     diff_model_iter_ -= 1;
+  //   } else {
+  //   }
+  // }
+
+  (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->weight = params_.w_pos_running;
+  if (has_motion_ref_) {
+    (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->weight = params_.w_vel_running;
+  }
+
+  if (diff_model_iter_ - 1 == diff_models_running_.begin()) {
+    diff_model_iter_ = diff_models_running_.end() - 1;
+  } else {
+    diff_model_iter_ -= 1;
+  }
+
+  // Increase the weight for the next node
+  (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->weight = params_.w_pos_terminal;
+  if (has_motion_ref_) {
+    (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->weight = params_.w_vel_terminal;
+  }
+}
+
+void TrajectoryGeneratorController::updateTerminalCost(const std::size_t idx_trajectory) {
+  // update Cost Reference
+  setPoseRef(idx_trajectory);
+  setMotionRef(idx_trajectory);
+
   boost::shared_ptr<crocoddyl::CostModelFramePlacement> cost_pose =
       boost::static_pointer_cast<crocoddyl::CostModelFramePlacement>(
-          diff_model_terminal_->get_costs()->get_costs().find("pose_desired")->second->cost);
-  boost::shared_ptr<crocoddyl::CostModelFrameVelocity> cost_vel =
-      boost::static_pointer_cast<crocoddyl::CostModelFrameVelocity>(
-          diff_model_terminal_->get_costs()->get_costs().find("vel_desired")->second->cost);
+          (*(diff_models_running_.end() - 1))->get_costs()->get_costs().find("pose_desired")->second->cost);
   cost_pose->set_Mref(pose_ref_);
-  cost_vel->set_vref(motion_ref_);
+  if (has_motion_ref_) {
+    boost::shared_ptr<crocoddyl::CostModelFrameVelocity> cost_vel =
+        boost::static_pointer_cast<crocoddyl::CostModelFrameVelocity>(
+            (*(diff_models_running_.end() - 1))->get_costs()->get_costs().find("vel_desired")->second->cost);
+    cost_vel->set_vref(motion_ref_);
+  }
 }
 
 const crocoddyl::FramePlacement& TrajectoryGeneratorController::getPoseRef() const { return pose_ref_; }
 const crocoddyl::FrameMotion& TrajectoryGeneratorController::getVelocityRef() const { return motion_ref_; }
 const TrajectoryGeneratorParams& TrajectoryGeneratorController::getParams() const { return params_; };
-const Eigen::VectorXd& TrajectoryGeneratorController::getControls(const std::size_t& idx) const { return solver_->get_us()[idx]; }
+const Eigen::VectorXd& TrajectoryGeneratorController::getControls(const std::size_t& idx) const {
+  return solver_->get_us()[idx];
+}
+const boost::shared_ptr<const Mission> TrajectoryGeneratorController::getMission() const { return mission_; }
 
-void TrajectoryGeneratorController::setPoseRef() {
+void TrajectoryGeneratorController::setPoseRef(const std::size_t& idx_trajectory) {
   pose_ref_.frame = frame_base_link_id_;
-  pose_ref_.oMf.translation() = pos_ref_;
-  pose_ref_.oMf.rotation() = quat_ref_.toRotationMatrix();
+  pose_ref_.oMf = mission_->waypoints_[mission_->getWpFromTrajIdx(idx_trajectory)].pose;
 }
 
-void TrajectoryGeneratorController::setMotionRef() {
-  motion_ref_.frame = frame_base_link_id_;
-  motion_ref_.oMf.linear() = vel_lin_ref_;
-  motion_ref_.oMf.angular() = vel_ang_ref_;
+void TrajectoryGeneratorController::setMotionRef(const std::size_t& idx_trajectory) {
+  has_motion_ref_ = mission_->waypoints_[mission_->getWpFromTrajIdx(idx_trajectory)].vel != boost::none;
+  if (has_motion_ref_) {
+    motion_ref_.frame = frame_base_link_id_;
+    motion_ref_.oMf = mission_->waypoints_[mission_->getWpFromTrajIdx(idx_trajectory)].vel.get();
+  }
 }
 
 }  // namespace multicopter_mpc

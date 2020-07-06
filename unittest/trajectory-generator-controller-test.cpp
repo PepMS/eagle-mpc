@@ -12,6 +12,7 @@
 
 #include "multicopter_mpc/path.h"
 #include "multicopter_mpc/ocp/trajectory-generator-controller.hpp"
+#include "multicopter_mpc/mission.hpp"
 
 BOOST_AUTO_TEST_SUITE(multicopter_mpc_trajectory_generator_test)
 
@@ -19,8 +20,8 @@ class TGControllerDerived : public multicopter_mpc::TrajectoryGeneratorControlle
  public:
   TGControllerDerived(const boost::shared_ptr<pinocchio::Model>& model,
                       const boost::shared_ptr<multicopter_mpc::MultiCopterBaseParams>& mc_params, const double& dt,
-                      std::size_t& n_knots)
-      : multicopter_mpc::TrajectoryGeneratorController(model, mc_params, dt, n_knots) {}
+                      const boost::shared_ptr<multicopter_mpc::Mission>& mission, std::size_t& n_knots)
+      : multicopter_mpc::TrajectoryGeneratorController(model, mc_params, dt, mission, n_knots) {}
 
   ~TGControllerDerived(){};
 
@@ -37,14 +38,20 @@ class TGControllerDerived : public multicopter_mpc::TrajectoryGeneratorControlle
   const boost::shared_ptr<crocoddyl::IntegratedActionModelEuler>& getIntegratedTerminalModel() {
     return int_model_terminal_;
   }
+  const std::vector<boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics>>::iterator& getIterator() {
+    return diff_model_iter_;
+  }
 
   const boost::shared_ptr<crocoddyl::SolverAbstract>& getSolver() { return solver_; }
+
+  const bool& getHasMotionRef() { return has_motion_ref_; }
 };
 
 class TGControllerTest {
  public:
-  TGControllerTest() {
+  TGControllerTest(const std::string& mission_name) {
     std::string multirotor_yaml_path = MULTICOPTER_MPC_ROOT_DIR "/unittest/config/iris.yaml";
+    std::string mission_yaml_path = MULTICOPTER_MPC_ROOT_DIR "/unittest/config/" + mission_name;
 
     pinocchio::urdf::buildModel(EXAMPLE_ROBOT_DATA_MODEL_DIR "/iris_description/robots/iris_simple.urdf",
                                 pinocchio::JointModelFreeFlyer(), model_);
@@ -52,14 +59,21 @@ class TGControllerTest {
     yaml_parser::ParserYAML yaml_file(multirotor_yaml_path, "", true);
     yaml_parser::ParamsServer server_params(yaml_file.getParams());
 
+    yaml_parser::ParserYAML mission_yaml_file(mission_yaml_path, "", true);
+    yaml_parser::ParamsServer mission_server_params(mission_yaml_file.getParams());
+
     mc_params_ = boost::make_shared<multicopter_mpc::MultiCopterBaseParams>();
     mc_params_->fill(server_params);
 
     mc_model_ = boost::make_shared<pinocchio::Model>(model_);
 
+    mc_mission_ = boost::make_shared<multicopter_mpc::Mission>(mc_model_->nq + mc_model_->nv);
+    mc_mission_->fillWaypoints(mission_server_params);
+    mc_mission_->fillInitialState(mission_server_params);
+
     dt_ = 1e-2;
     n_knots_ = 100;
-    tg_controller_ = boost::make_shared<TGControllerDerived>(mc_model_, mc_params_, dt_, n_knots_);
+    tg_controller_ = boost::make_shared<TGControllerDerived>(mc_model_, mc_params_, dt_, mc_mission_, n_knots_);
   }
 
   ~TGControllerTest() {}
@@ -68,6 +82,7 @@ class TGControllerTest {
 
   boost::shared_ptr<multicopter_mpc::MultiCopterBaseParams> mc_params_;
   boost::shared_ptr<pinocchio::Model> mc_model_;
+  boost::shared_ptr<multicopter_mpc::Mission> mc_mission_;
 
   double dt_;
   std::size_t n_knots_;
@@ -76,7 +91,7 @@ class TGControllerTest {
 };
 
 BOOST_AUTO_TEST_CASE(constructor_test, *boost::unit_test::tolerance(1e-7)) {
-  TGControllerTest tgc_test;
+  TGControllerTest tgc_test("mission-test.yaml");
 
   // Ocp_Base constructor
   BOOST_CHECK(tgc_test.mc_model_ == tgc_test.tg_controller_->getModel());
@@ -99,13 +114,14 @@ BOOST_AUTO_TEST_CASE(constructor_test, *boost::unit_test::tolerance(1e-7)) {
               tgc_test.tg_controller_->getBaseLinkId());
 
   // Low Level constructor
+  BOOST_CHECK(tgc_test.tg_controller_->getMission() != nullptr);
   BOOST_CHECK(tgc_test.n_knots_ == tgc_test.tg_controller_->getKnots());
   BOOST_CHECK(tgc_test.tg_controller_->getPoseRef().frame == tgc_test.tg_controller_->getBaseLinkId());
-  BOOST_CHECK(tgc_test.tg_controller_->getPoseRef().oMf == pinocchio::SE3::Identity());
+  BOOST_CHECK(tgc_test.tg_controller_->getPoseRef().oMf == tgc_test.mc_mission_->waypoints_[0].pose);
 }
 
 BOOST_AUTO_TEST_CASE(initialize_default_parameters_test, *boost::unit_test::tolerance(1e-7)) {
-  TGControllerTest tgc_test;
+  TGControllerTest tgc_test("mission-test.yaml");
 
   Eigen::Vector3d w_position;
   Eigen::Vector3d w_orientation;
@@ -129,7 +145,7 @@ BOOST_AUTO_TEST_CASE(initialize_default_parameters_test, *boost::unit_test::tole
 }
 
 BOOST_AUTO_TEST_CASE(load_parameters_test, *boost::unit_test::tolerance(1e-7)) {
-  TGControllerTest tgc_test;
+  TGControllerTest tgc_test("mission-test.yaml");
 
   std::string params_yaml_path = MULTICOPTER_MPC_ROOT_DIR "/unittest/config/trajectory-generator-test.yaml";
   yaml_parser::ParserYAML yaml_file(params_yaml_path, "", true);
@@ -159,13 +175,14 @@ BOOST_AUTO_TEST_CASE(load_parameters_test, *boost::unit_test::tolerance(1e-7)) {
 }
 
 BOOST_AUTO_TEST_CASE(create_problem_test, *boost::unit_test::tolerance(1e-7)) {
-  TGControllerTest tgc_test;
+  TGControllerTest tgc_test("mission-test.yaml");
 
   tgc_test.tg_controller_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
 
-  BOOST_CHECK(tgc_test.tg_controller_->getDifferentialRunningModels().size() ==
-              tgc_test.tg_controller_->getKnots() - 1);
-  BOOST_CHECK(tgc_test.tg_controller_->getIntegratedRunningModels().size() == tgc_test.tg_controller_->getKnots() - 1);
+  BOOST_CHECK(tgc_test.tg_controller_->getDifferentialRunningModels().size() == tgc_test.tg_controller_->getKnots());
+  BOOST_CHECK(tgc_test.tg_controller_->getIntegratedRunningModels().size() == tgc_test.tg_controller_->getKnots());
+
+  // Differential and Integrated->Differential are pointing at the same place
   for (std::size_t i = 0; i < tgc_test.tg_controller_->getKnots() - 1; ++i) {
     // Check that the data differential model that std_vector<integrated> is pointing to is the same that the data
     // member differential is pointing to
@@ -188,10 +205,16 @@ BOOST_AUTO_TEST_CASE(create_problem_test, *boost::unit_test::tolerance(1e-7)) {
   }
   BOOST_CHECK(tgc_test.tg_controller_->getIntegratedTerminalModel()->get_differential() ==
               tgc_test.tg_controller_->getDifferentialTerminalModel());
+
+  // Last of running and terminal are pointing at the same place
+  BOOST_CHECK(tgc_test.tg_controller_->getIntegratedTerminalModel() ==
+              tgc_test.tg_controller_->getIntegratedRunningModels().back());
+  BOOST_CHECK(tgc_test.tg_controller_->getDifferentialTerminalModel() ==
+              tgc_test.tg_controller_->getDifferentialRunningModels().back());
 }
 
 BOOST_AUTO_TEST_CASE(create_costs_weights_test, *boost::unit_test::tolerance(1e-7)) {
-  TGControllerTest tgc_test;
+  TGControllerTest tgc_test("mission-test.yaml");
 
   tgc_test.tg_controller_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
 
@@ -229,8 +252,10 @@ BOOST_AUTO_TEST_CASE(create_costs_weights_test, *boost::unit_test::tolerance(1e-
                   ->second->weight == tgc_test.tg_controller_->getParams().w_vel_terminal);
 }
 
+// This test checks whether the reference in the placement cost (from problem) are the same as in the class. This
+// should be probably be removed since it might phappen that all references are not the same for all the nodes
 BOOST_AUTO_TEST_CASE(create_costs_reference_test, *boost::unit_test::tolerance(1e-7)) {
-  TGControllerTest tgc_test;
+  TGControllerTest tgc_test("mission-test.yaml");
 
   tgc_test.tg_controller_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
 
@@ -276,8 +301,9 @@ BOOST_AUTO_TEST_CASE(create_costs_reference_test, *boost::unit_test::tolerance(1
   BOOST_CHECK(cost_vel->get_vref().frame == tgc_test.tg_controller_->getVelocityRef().frame);
 }
 
+// This checks that the weights for the weighted quadratic barrier in the state costs are probperly set
 BOOST_AUTO_TEST_CASE(create_cost_state_test, *boost::unit_test::tolerance(1e-7)) {
-  TGControllerTest tgc_test;
+  TGControllerTest tgc_test("mission-test.yaml");
 
   tgc_test.tg_controller_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
 
@@ -301,30 +327,139 @@ BOOST_AUTO_TEST_CASE(create_cost_state_test, *boost::unit_test::tolerance(1e-7))
   }
 }
 
-// Set reference before creating the problem
-BOOST_AUTO_TEST_CASE(set_reference_test_1, *boost::unit_test::tolerance(1e-7)) {
-  TGControllerTest tgc_test;
+// This test is to check that the weights are properly updated when the method updateWeights() is called
+BOOST_AUTO_TEST_CASE(update_weights_test, *boost::unit_test::tolerance(1e-7)) {
+  TGControllerTest tgc_test("mission-test.yaml");
 
-  Eigen::Vector3d pos_ref;
-  pos_ref << 1, 2, 3;
-  Eigen::Vector3d vel_lin_ref;
-  vel_lin_ref << 4, 5, 6;
-  Eigen::Vector3d vel_ang_ref;
-  vel_ang_ref << 7, 8, 9;
-  Eigen::Quaterniond quat_ref(0, 0, 1, 0);
-
-  Eigen::VectorXd state_new(13);
-  state_new << pos_ref, quat_ref.vec(), quat_ref.w(), vel_lin_ref, vel_ang_ref;
-  
-  pinocchio::SE3 pose_ref(quat_ref, pos_ref);
-  pinocchio::Motion motion_ref(state_new.segment(7, 3), state_new.segment(10, 3));
   tgc_test.tg_controller_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
-  tgc_test.tg_controller_->updateReferences(state_new);
-  
-  BOOST_CHECK(pose_ref == tgc_test.tg_controller_->getPoseRef().oMf);
-  BOOST_CHECK(motion_ref == tgc_test.tg_controller_->getVelocityRef().oMf);
+
+  // Before calling the updateProblem() last node should have the terminal weight
+  BOOST_CHECK(tgc_test.tg_controller_->getDifferentialRunningModels()
+                  .back()
+                  ->get_costs()
+                  ->get_costs()
+                  .find("pose_desired")
+                  ->second->weight == tgc_test.tg_controller_->getParams().w_pos_terminal);
+  BOOST_CHECK(tgc_test.tg_controller_->getDifferentialRunningModels()
+                  .back()
+                  ->get_costs()
+                  ->get_costs()
+                  .find("vel_desired")
+                  ->second->weight == tgc_test.tg_controller_->getParams().w_vel_terminal);
+  BOOST_CHECK(tgc_test.tg_controller_->getDifferentialRunningModels()[tgc_test.tg_controller_->getKnots() - 2]
+                  ->get_costs()
+                  ->get_costs()
+                  .find("pose_desired")
+                  ->second->weight == tgc_test.tg_controller_->getParams().w_pos_running);
+  BOOST_CHECK(tgc_test.tg_controller_->getDifferentialRunningModels()[tgc_test.tg_controller_->getKnots() - 2]
+                  ->get_costs()
+                  ->get_costs()
+                  .find("vel_desired")
+                  ->second->weight == tgc_test.tg_controller_->getParams().w_vel_running);
+
+  tgc_test.tg_controller_->updateProblem(tgc_test.tg_controller_->getKnots());
+
+  // After calling, last node running weights and the penultimate terminal weights
+  BOOST_CHECK(tgc_test.tg_controller_->getDifferentialRunningModels()
+                  .back()
+                  ->get_costs()
+                  ->get_costs()
+                  .find("pose_desired")
+                  ->second->weight == tgc_test.tg_controller_->getParams().w_pos_running);
+  BOOST_CHECK(tgc_test.tg_controller_->getDifferentialRunningModels()
+                  .back()
+                  ->get_costs()
+                  ->get_costs()
+                  .find("vel_desired")
+                  ->second->weight == tgc_test.tg_controller_->getParams().w_vel_running);
+  BOOST_CHECK(tgc_test.tg_controller_->getDifferentialRunningModels()[tgc_test.tg_controller_->getKnots() - 2]
+                  ->get_costs()
+                  ->get_costs()
+                  .find("pose_desired")
+                  ->second->weight == tgc_test.tg_controller_->getParams().w_pos_terminal);
+  BOOST_CHECK(tgc_test.tg_controller_->getDifferentialRunningModels()[tgc_test.tg_controller_->getKnots() - 2]
+                  ->get_costs()
+                  ->get_costs()
+                  .find("vel_desired")
+                  ->second->weight == tgc_test.tg_controller_->getParams().w_vel_terminal);
+}
+
+BOOST_AUTO_TEST_CASE(update_weights_steady_test, *boost::unit_test::tolerance(1e-7)) {
+  TGControllerTest tgc_test("mission-test.yaml");
+
+  tgc_test.tg_controller_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
+
+  std::size_t trajectory_cursor = tgc_test.tg_controller_->getKnots() - 1;
+
+  for (int i = 0; i < tgc_test.tg_controller_->getKnots() - 1; ++i) {
+    tgc_test.tg_controller_->updateProblem(tgc_test.tg_controller_->getKnots());
+  }
+
+  BOOST_CHECK(tgc_test.tg_controller_->getIterator() ==
+              tgc_test.tg_controller_->getDifferentialRunningModels().end() - 1);
+}
+
+// This test is to check that the iterator indicating the terminal weight is the last node after calling
+// updateProblem() n_knots - 1 times
+BOOST_AUTO_TEST_CASE(update_weights_iterator_test, *boost::unit_test::tolerance(1e-7)) {
+  TGControllerTest tgc_test("mission-test.yaml");
+
+  tgc_test.tg_controller_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
+
+  for (int i = 0; i < tgc_test.tg_controller_->getKnots() - 1; ++i) {
+    tgc_test.tg_controller_->updateProblem(tgc_test.tg_controller_->getKnots());
+  }
+
+  BOOST_CHECK(tgc_test.tg_controller_->getIterator() ==
+              tgc_test.tg_controller_->getDifferentialRunningModels().end() - 1);
+}
+
+BOOST_AUTO_TEST_CASE(update_terminal_cost_test, *boost::unit_test::tolerance(1e-7)) {
+  TGControllerTest tgc_test("mission-test.yaml");
+
+  tgc_test.tg_controller_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
+
+  std::size_t trajectory_cursor = tgc_test.tg_controller_->getKnots();
+
+  tgc_test.tg_controller_->updateProblem(trajectory_cursor);
+
+  boost::shared_ptr<crocoddyl::CostModelFramePlacement> cost_pose =
+      boost::static_pointer_cast<crocoddyl::CostModelFramePlacement>(
+          tgc_test.tg_controller_->getDifferentialRunningModels()
+              .back()
+              ->get_costs()
+              ->get_costs()
+              .find("pose_desired")
+              ->second->cost);
+  BOOST_CHECK(cost_pose->get_Mref().oMf == tgc_test.tg_controller_->getMission()->waypoints_[1].pose);
+  BOOST_CHECK(tgc_test.tg_controller_->getHasMotionRef() == false);
+
+  trajectory_cursor += tgc_test.tg_controller_->getMission()->waypoints_[1].knots - 1;
+  tgc_test.tg_controller_->updateProblem(trajectory_cursor);
+  cost_pose = boost::static_pointer_cast<crocoddyl::CostModelFramePlacement>(
+      tgc_test.tg_controller_->getDifferentialRunningModels()
+          .back()
+          ->get_costs()
+          ->get_costs()
+          .find("pose_desired")
+          ->second->cost);
+  BOOST_CHECK(cost_pose->get_Mref().oMf == tgc_test.tg_controller_->getMission()->waypoints_[2].pose);
+  BOOST_CHECK(tgc_test.tg_controller_->getHasMotionRef() == false);
+}
+
+BOOST_AUTO_TEST_CASE(hovering_state_test, *boost::unit_test::tolerance(1e-7)) {
+  TGControllerTest tgc_test("mission-1wp-test.yaml");
+
+  tgc_test.tg_controller_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
+
+  std::size_t trajectory_cursor = tgc_test.tg_controller_->getKnots() - 1;
 
   for (std::size_t i = 0; i < tgc_test.tg_controller_->getKnots() - 1; ++i) {
+    ++trajectory_cursor;
+    tgc_test.tg_controller_->updateProblem(trajectory_cursor);
+  }
+
+  for (std::size_t i = 0; i < tgc_test.tg_controller_->getDifferentialRunningModels().size(); ++i) {
     boost::shared_ptr<crocoddyl::CostModelFramePlacement> cost_pose =
         boost::static_pointer_cast<crocoddyl::CostModelFramePlacement>(
             tgc_test.tg_controller_->getDifferentialRunningModels()[i]
@@ -340,45 +475,19 @@ BOOST_AUTO_TEST_CASE(set_reference_test_1, *boost::unit_test::tolerance(1e-7)) {
                 .find("vel_desired")
                 ->second->cost);
 
-    BOOST_CHECK(cost_pose->get_Mref().oMf == tgc_test.tg_controller_->getPoseRef().oMf);
-    BOOST_CHECK(cost_pose->get_Mref().frame == tgc_test.tg_controller_->getPoseRef().frame);
-    BOOST_CHECK(cost_vel->get_vref().oMf == tgc_test.tg_controller_->getVelocityRef().oMf);
-    BOOST_CHECK(cost_vel->get_vref().frame == tgc_test.tg_controller_->getVelocityRef().frame);
+    BOOST_CHECK(tgc_test.tg_controller_->getDifferentialRunningModels()[i]
+                    ->get_costs()
+                    ->get_costs()
+                    .find("pose_desired")
+                    ->second->weight == tgc_test.tg_controller_->getParams().w_pos_terminal);
+    BOOST_CHECK(tgc_test.tg_controller_->getDifferentialRunningModels()[i]
+                    ->get_costs()
+                    ->get_costs()
+                    .find("vel_desired")
+                    ->second->weight == tgc_test.tg_controller_->getParams().w_vel_terminal);
+    BOOST_CHECK(cost_pose->get_Mref().oMf == tgc_test.tg_controller_->getMission()->waypoints_.back().pose);
+    BOOST_CHECK(cost_vel->get_vref().oMf == tgc_test.tg_controller_->getMission()->waypoints_.back().vel);
   }
-  boost::shared_ptr<crocoddyl::CostModelFramePlacement> cost_pose =
-      boost::static_pointer_cast<crocoddyl::CostModelFramePlacement>(
-          tgc_test.tg_controller_->getDifferentialTerminalModel()
-              ->get_costs()
-              ->get_costs()
-              .find("pose_desired")
-              ->second->cost);
-  boost::shared_ptr<crocoddyl::CostModelFrameVelocity> cost_vel =
-      boost::static_pointer_cast<crocoddyl::CostModelFrameVelocity>(
-          tgc_test.tg_controller_->getDifferentialTerminalModel()
-              ->get_costs()
-              ->get_costs()
-              .find("vel_desired")
-              ->second->cost);
-
-  BOOST_CHECK(cost_pose->get_Mref().oMf == tgc_test.tg_controller_->getPoseRef().oMf);
-  BOOST_CHECK(cost_pose->get_Mref().frame == tgc_test.tg_controller_->getPoseRef().frame);
-  BOOST_CHECK(cost_vel->get_vref().oMf == tgc_test.tg_controller_->getVelocityRef().oMf);
-  BOOST_CHECK(cost_vel->get_vref().frame == tgc_test.tg_controller_->getVelocityRef().frame);
 }
-
-// Set reference after creating the problem
-BOOST_AUTO_TEST_CASE(set_reference_test_2, *boost::unit_test::tolerance(1e-7)) {}
-
-// BOOST_AUTO_TEST_CASE(update_reference_trajectory_test, *boost::unit_test::tolerance(1e-7)) {
-
-// }
-
-// BOOST_AUTO_TEST_CASE(set_solver_test, *boost::unit_test::tolerance(1e-7)) {
-
-// }
-
-// BOOST_AUTO_TEST_CASE(solve_test, *boost::unit_test::tolerance(1e-7)) {
-
-// }
 
 BOOST_AUTO_TEST_SUITE_END()

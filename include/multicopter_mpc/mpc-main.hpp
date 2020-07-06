@@ -23,7 +23,6 @@
 #include "multicopter_mpc/ocp/trajectory-generator.hpp"
 #include "multicopter_mpc/ocp/trajectory-generator-controller.hpp"
 #include "multicopter_mpc/path.h"
-#include "multicopter_mpc/problem-mission.hpp"
 
 namespace multicopter_mpc {
 
@@ -37,8 +36,7 @@ class MpcMain {
   MpcMain(MultiCopterTypes::Type mc_type, SolverTypes::Type solver_type, std::string mission_name);
   ~MpcMain();
 
-  const boost::shared_ptr<const LowLevelController> getLowLevelController();
-  // const boost::shared_ptr<const TrajectoryGeneratorController> getLowLevelController();
+  const boost::shared_ptr<const TrajectoryGeneratorController> getLowLevelController();
   void setCurrentState(const Eigen::Ref<Eigen::VectorXd>& current_state);
   const Eigen::VectorXd& runMpcStep();
 
@@ -54,8 +52,8 @@ class MpcMain {
 
   double dt_;
 
-  boost::shared_ptr<LowLevelController> low_level_controller_;
-  // boost::shared_ptr<TrajectoryGeneratorController> low_level_controller_;
+  // boost::shared_ptr<LowLevelController> low_level_controller_;
+  boost::shared_ptr<TrajectoryGeneratorController> low_level_controller_;
   std::size_t low_level_controller_knots_;
   boost::shared_ptr<TrajectoryGenerator> trajectory_generator_;
 
