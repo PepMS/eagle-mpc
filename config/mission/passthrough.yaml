@@ -10,10 +10,10 @@ mission:
       quat: [1.0, 0.0, 0.0, 1.0] # x, y, z, w
       vel_lin: [6.0, 0.0, 0.0]
       vel_rot: [0.0, 0.0, 0.0]
-      knots: 115
+      knots: 130
 
     - pos: [8.0, 0.0, 2.0]
       quat: [0.0, 0.0, 0.0, 1.0] # x, y, z, w
       vel_lin: [0.0, 0.0, 0.0]
       vel_rot: [0.0, 0.0, 0.0]
-      knots: 140
+      knots: 150

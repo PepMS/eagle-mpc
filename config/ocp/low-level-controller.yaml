@@ -1,8 +1,8 @@
 ocp:
   cost_state_weight: 1
-  cost_control_weight: 0.05
+  cost_control_weight: 20
   $state_weights:
-    - position: [10.0, 10.0, 10.0]
-      orientation: [3.0, 3.0, 3.0]
-      velocity_lin: [0.05, 0.05, 0.05]
-      velocity_ang: [0.1, 0.1, 0.1]
+    - position: [25.0, 25.0, 15.0]
+      orientation: [250.0, 250.0, 250.0]
+      velocity_lin: [100.0, 100.0, 100.0]
+      velocity_ang: [50.0, 50.0, 50.0]
