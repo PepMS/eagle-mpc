@@ -28,8 +28,8 @@ mission = multicopter_mpc.Mission(uav.nq + uav.nv)
 mission.fillWaypoints(server_mission)
 mission.fillInitialState(server_mission)
 
-dt = 4e-3
-# dt = 1e-2
+# dt = 4e-3
+dt = 1e-2
 trajectory = multicopter_mpc.TrajectoryGenerator(uav_model, mc_params, dt, mission)
 trajectory.createProblem(multicopter_mpc.SolverType.SolverTypeBoxFDDP)
 trajectory.setSolverCallbacks(True)

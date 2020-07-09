@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(constructor_test, *boost::unit_test::tolerance(1e-7)) {
   BOOST_CHECK(tgc_test.tg_controller_->getMission() != nullptr);
   BOOST_CHECK(tgc_test.n_knots_ == tgc_test.tg_controller_->getKnots());
   BOOST_CHECK(tgc_test.tg_controller_->getPoseRef().frame == tgc_test.tg_controller_->getBaseLinkId());
-  BOOST_CHECK(tgc_test.tg_controller_->getPoseRef().oMf == tgc_test.mc_mission_->waypoints_[0].pose);
+  BOOST_CHECK(tgc_test.tg_controller_->getPoseRef().oMf == tgc_test.mc_mission_->getWaypoints()[0].pose);
 }
 
 BOOST_AUTO_TEST_CASE(initialize_default_parameters_test, *boost::unit_test::tolerance(1e-7)) {
@@ -431,10 +431,10 @@ BOOST_AUTO_TEST_CASE(update_terminal_cost_test, *boost::unit_test::tolerance(1e-
               ->get_costs()
               .find("pose_desired")
               ->second->cost);
-  BOOST_CHECK(cost_pose->get_Mref().oMf == tgc_test.tg_controller_->getMission()->waypoints_[1].pose);
+  BOOST_CHECK(cost_pose->get_Mref().oMf == tgc_test.tg_controller_->getMission()->getWaypoints()[1].pose);
   BOOST_CHECK(tgc_test.tg_controller_->getHasMotionRef() == false);
 
-  trajectory_cursor += tgc_test.tg_controller_->getMission()->waypoints_[1].knots - 1;
+  trajectory_cursor += tgc_test.tg_controller_->getMission()->getWaypoints()[1].knots - 1;
   tgc_test.tg_controller_->updateProblem(trajectory_cursor);
   cost_pose = boost::static_pointer_cast<crocoddyl::CostModelFramePlacement>(
       tgc_test.tg_controller_->getDifferentialRunningModels()
@@ -443,7 +443,7 @@ BOOST_AUTO_TEST_CASE(update_terminal_cost_test, *boost::unit_test::tolerance(1e-
           ->get_costs()
           .find("pose_desired")
           ->second->cost);
-  BOOST_CHECK(cost_pose->get_Mref().oMf == tgc_test.tg_controller_->getMission()->waypoints_[2].pose);
+  BOOST_CHECK(cost_pose->get_Mref().oMf == tgc_test.tg_controller_->getMission()->getWaypoints()[2].pose);
   BOOST_CHECK(tgc_test.tg_controller_->getHasMotionRef() == false);
 }
 
@@ -485,8 +485,8 @@ BOOST_AUTO_TEST_CASE(hovering_state_test, *boost::unit_test::tolerance(1e-7)) {
                     ->get_costs()
                     .find("vel_desired")
                     ->second->weight == tgc_test.tg_controller_->getParams().w_vel_terminal);
-    BOOST_CHECK(cost_pose->get_Mref().oMf == tgc_test.tg_controller_->getMission()->waypoints_.back().pose);
-    BOOST_CHECK(cost_vel->get_vref().oMf == tgc_test.tg_controller_->getMission()->waypoints_.back().vel);
+    BOOST_CHECK(cost_pose->get_Mref().oMf == tgc_test.tg_controller_->getMission()->getWaypoints().back().pose);
+    BOOST_CHECK(cost_vel->get_vref().oMf == tgc_test.tg_controller_->getMission()->getWaypoints().back().vel);
   }
 }
 

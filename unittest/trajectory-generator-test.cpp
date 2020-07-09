@@ -59,13 +59,13 @@ class TrajectoryGeneratorTest {
     yaml_parser::ParserYAML yaml_mission(mission_yaml_path, "", true);
     yaml_parser::ParamsServer server_mission(yaml_mission.getParams());
 
+    dt_ = 1e-2;
     mission_ = boost::make_shared<multicopter_mpc::Mission>(model_.nq + model_.nv);
-    mission_->fillWaypoints(server_mission);
+    mission_->fillWaypoints(server_mission, dt_);
     mission_->fillInitialState(server_mission);
 
     mc_model_ = boost::make_shared<pinocchio::Model>(model_);
 
-    dt_ = 1e-2;
     trajectory_generator_ = boost::make_shared<TrajectoryGeneratorDerived>(mc_model_, mc_params_, dt_, mission_);
   }
 
@@ -171,8 +171,8 @@ BOOST_AUTO_TEST_CASE(trajectory_create_differential_model_test, *boost::unit_tes
 
   std::size_t knot_cursor = 0;
   for (std::vector<multicopter_mpc::WayPoint>::const_iterator wp =
-           tg_test.trajectory_generator_->getMission()->waypoints_.begin();
-       wp != tg_test.trajectory_generator_->getMission()->waypoints_.end(); ++wp) {
+           tg_test.trajectory_generator_->getMission()->getWaypoints().begin();
+       wp != tg_test.trajectory_generator_->getMission()->getWaypoints().end(); ++wp) {
     for (std::size_t i = knot_cursor; i < knot_cursor + wp->knots - 2; ++i) {
       BOOST_CHECK(tg_test.trajectory_generator_->getDifferentialRunningModels()[i]
                       ->get_costs()
@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE(trajectory_create_differential_model_test, *boost::unit_tes
                         ->second->weight == tg_test.trajectory_generator_->getParams().w_vel_running);
       }
     }
-    if (std::next(wp) != tg_test.trajectory_generator_->getMission()->waypoints_.end()) {
+    if (std::next(wp) != tg_test.trajectory_generator_->getMission()->getWaypoints().end()) {
       BOOST_CHECK(tg_test.trajectory_generator_->getDifferentialRunningModels()[knot_cursor + wp->knots - 1]
                       ->get_costs()
                       ->get_costs()
@@ -272,8 +272,8 @@ BOOST_AUTO_TEST_CASE(trajectory_create_problem_action_models_test, *boost::unit_
   // stage has its own models
   std::size_t knot_cursor = 0;
   for (std::vector<multicopter_mpc::WayPoint>::const_iterator wp =
-           tg_test.trajectory_generator_->getMission()->waypoints_.begin();
-       wp != tg_test.trajectory_generator_->getMission()->waypoints_.end(); ++wp) {
+           tg_test.trajectory_generator_->getMission()->getWaypoints().begin();
+       wp != tg_test.trajectory_generator_->getMission()->getWaypoints().end(); ++wp) {
     boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> int_model_0 =
         boost::static_pointer_cast<crocoddyl::IntegratedActionModelEuler>(
             tg_test.trajectory_generator_->getIntegratedRunningModels()[knot_cursor]);
@@ -294,7 +294,7 @@ BOOST_AUTO_TEST_CASE(trajectory_create_problem_action_models_test, *boost::unit_
   }
   BOOST_CHECK(tg_test.trajectory_generator_->getIntegratedTerminalModel()->get_differential() ==
               tg_test.trajectory_generator_->getDifferentialTerminalModel());
-  BOOST_CHECK(tg_test.trajectory_generator_->getMission()->x0_ == tg_test.trajectory_generator_->getInitialState());
+  BOOST_CHECK(tg_test.trajectory_generator_->getMission()->getInitialState() == tg_test.trajectory_generator_->getInitialState());
 }
 
 BOOST_AUTO_TEST_CASE(set_solver_test, *boost::unit_test::tolerance(1e-7)) {

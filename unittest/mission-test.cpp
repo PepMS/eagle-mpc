@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_CASE(constructors_test) {
 
   multicopter_mpc::Mission m00(nx);
 
-  BOOST_CHECK(x0 == m00.x0_);
+  BOOST_CHECK(x0 == m00.getInitialState());
 }
 
 BOOST_AUTO_TEST_CASE(fill_waypoints_number_waypoints) {
@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(fill_waypoints_number_waypoints) {
   yaml_parser::ParamsServer server_mission(yaml_mission.getParams());
   mission.fillWaypoints(server_mission);
 
-  BOOST_CHECK(mission.waypoints_.size() == 3);
+  BOOST_CHECK(mission.getWaypoints().size() == 3);
 }
 
 BOOST_AUTO_TEST_CASE(fill_waypoints_waypoint_pose_motion) {
@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(fill_waypoints_waypoint_pose_motion) {
   yaml_parser::ParamsServer server_mission(yaml_mission.getParams());
   mission.fillWaypoints(server_mission);
 
-  std::size_t knots = 100;
+  double time = 1.0;
   Eigen::Vector3d pos;
   pos << 0.0, 0.0, 2.5;
   Eigen::Quaterniond quaternion = Eigen::Quaterniond(1, 0, 0, 0);
@@ -52,13 +52,13 @@ BOOST_AUTO_TEST_CASE(fill_waypoints_waypoint_pose_motion) {
   Eigen::Vector3d rate;
   rate << -3.0, -2.0, -1.0;
 
-  BOOST_CHECK(mission.waypoints_[0].vel != boost::none);
-  BOOST_CHECK(knots == mission.waypoints_[0].knots);
-  BOOST_CHECK(pos == mission.waypoints_[0].pose.translation());
+  BOOST_CHECK(mission.getWaypoints()[0].vel != boost::none);
+  BOOST_CHECK(time == mission.getWaypoints()[0].time);
+  BOOST_CHECK(pos == mission.getWaypoints()[0].pose.translation());
   BOOST_CHECK(quaternion.toRotationMatrix() ==
-              Eigen::Quaterniond(mission.waypoints_[0].pose.rotation()).toRotationMatrix());
-  BOOST_CHECK(vel == mission.waypoints_[0].vel->linear());
-  BOOST_CHECK(rate == mission.waypoints_[0].vel->angular());
+              Eigen::Quaterniond(mission.getWaypoints()[0].pose.rotation()).toRotationMatrix());
+  BOOST_CHECK(vel == mission.getWaypoints()[0].vel->linear());
+  BOOST_CHECK(rate == mission.getWaypoints()[0].vel->angular());
 }
 
 BOOST_AUTO_TEST_CASE(fill_waypoints_waypoint_pose) {
@@ -71,15 +71,15 @@ BOOST_AUTO_TEST_CASE(fill_waypoints_waypoint_pose) {
   yaml_parser::ParamsServer server_mission(yaml_mission.getParams());
   mission.fillWaypoints(server_mission);
 
-  std::size_t knots = 100;
+  double time = 1.9;
   Eigen::Vector3d pos;
   pos << 0.0, 1.0, 2.5;
   Eigen::Quaterniond quaternion = Eigen::Quaterniond(0, 1, 0, 0);
-  BOOST_CHECK(mission.waypoints_[1].vel == boost::none);
-  BOOST_CHECK(knots == mission.waypoints_[1].knots);
-  BOOST_CHECK(pos == mission.waypoints_[1].pose.translation());
+  BOOST_CHECK(mission.getWaypoints()[1].vel == boost::none);
+  BOOST_CHECK(time == mission.getWaypoints()[1].time);
+  BOOST_CHECK(pos == mission.getWaypoints()[1].pose.translation());
   BOOST_CHECK(quaternion.toRotationMatrix() ==
-              Eigen::Quaterniond(mission.waypoints_[1].pose.rotation()).toRotationMatrix());
+              Eigen::Quaterniond(mission.getWaypoints()[1].pose.rotation()).toRotationMatrix());
 }
 
 BOOST_AUTO_TEST_CASE(fill_initial_state) {
@@ -99,11 +99,11 @@ BOOST_AUTO_TEST_CASE(fill_initial_state) {
   vel << -3.0, 0.0, 0.0;
   Eigen::Vector3d rate;
   rate << 0.0, 0.0, 0.0;
-  BOOST_CHECK(pos == mission.x0_.head(3));
+  BOOST_CHECK(pos == mission.getInitialState().head(3));
   BOOST_CHECK(quaternion.toRotationMatrix() ==
-              Eigen::Quaterniond(mission.x0_(6), mission.x0_(3), mission.x0_(4), mission.x0_(5)).toRotationMatrix());
-  BOOST_CHECK(vel == mission.x0_.segment(7, 3));
-  BOOST_CHECK(rate == mission.x0_.segment(10, 3));
+              Eigen::Quaterniond(mission.getInitialState()(6), mission.getInitialState()(3), mission.getInitialState()(4), mission.getInitialState()(5)).toRotationMatrix());
+  BOOST_CHECK(vel == mission.getInitialState().segment(7, 3));
+  BOOST_CHECK(rate == mission.getInitialState().segment(10, 3));
 }
 
 BOOST_AUTO_TEST_CASE(count_total_knots) {
@@ -116,11 +116,12 @@ BOOST_AUTO_TEST_CASE(count_total_knots) {
   yaml_parser::ParamsServer server_mission(yaml_mission.getParams());
 
   BOOST_CHECK(0 == mission.getTotalKnots());
-  mission.fillWaypoints(server_mission);
-  BOOST_CHECK(398 == mission.getTotalKnots());
-  BOOST_CHECK(mission.getWpTrajIdx()[0] == 99);
-  BOOST_CHECK(mission.getWpTrajIdx()[1] == 198);
-  BOOST_CHECK(mission.getWpTrajIdx()[2] == 397);
+  double dt = 0.01;
+  mission.fillWaypoints(server_mission, dt);
+  BOOST_CHECK(491 == mission.getTotalKnots());
+  BOOST_CHECK(mission.getWpTrajIdx()[0] == 100);
+  BOOST_CHECK(mission.getWpTrajIdx()[1] == 290);
+  BOOST_CHECK(mission.getWpTrajIdx()[2] == 490);
 }
 
 BOOST_AUTO_TEST_CASE(get_wp_from_traj_idx) {
@@ -133,15 +134,16 @@ BOOST_AUTO_TEST_CASE(get_wp_from_traj_idx) {
   yaml_parser::ParamsServer server_mission(yaml_mission.getParams());
 
   BOOST_CHECK(0 == mission.getTotalKnots());
-  mission.fillWaypoints(server_mission);
+  double dt = 0.01;
+  mission.fillWaypoints(server_mission, dt);
   BOOST_CHECK(mission.getWpFromTrajIdx(0) == 0);
-  BOOST_CHECK(mission.getWpFromTrajIdx(99) == 0);
-  BOOST_CHECK(mission.getWpFromTrajIdx(100) == 1);
-  BOOST_CHECK(mission.getWpFromTrajIdx(198) == 1);
-  BOOST_CHECK(mission.getWpFromTrajIdx(199) == 2);
-  BOOST_CHECK(mission.getWpFromTrajIdx(397) == 2);
-  BOOST_CHECK(mission.getWpFromTrajIdx(398) == 2);
-  BOOST_CHECK(mission.getWpFromTrajIdx(500) == 2);
+  BOOST_CHECK(mission.getWpFromTrajIdx(100) == 0);
+  BOOST_CHECK(mission.getWpFromTrajIdx(101) == 1);
+  BOOST_CHECK(mission.getWpFromTrajIdx(290) == 1);
+  BOOST_CHECK(mission.getWpFromTrajIdx(291) == 2);
+  BOOST_CHECK(mission.getWpFromTrajIdx(490) == 2);
+  BOOST_CHECK(mission.getWpFromTrajIdx(491) == 2);
+  BOOST_CHECK(mission.getWpFromTrajIdx(900) == 2);
 
 }
 
