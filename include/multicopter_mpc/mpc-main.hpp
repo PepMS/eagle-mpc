@@ -48,7 +48,8 @@ class MpcMain {
 
   boost::shared_ptr<pinocchio::Model> model_;
   boost::shared_ptr<MultiCopterBaseParams> mc_params_;
-  boost::shared_ptr<Mission> mission_;
+  boost::shared_ptr<Mission> mission_tg_;
+  boost::shared_ptr<Mission> mission_llc_;
 
   double dt_;
 

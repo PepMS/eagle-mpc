@@ -41,6 +41,28 @@ void Mission::fillWaypoints(const yaml_parser::ParamsServer& server) {
   countTotalKnots();
 }
 
+void Mission::fillWaypoints(const std::vector<Eigen::VectorXd>& state_trajectory,
+                            const std::size_t& llc_knots) {
+  std::size_t cursor = 0;
+  std::size_t num_wp = state_trajectory.size() / (llc_knots - 1);
+  
+  for (std::size_t i = 0; i < num_wp; ++i) {
+    cursor += llc_knots - 1;
+    
+    // To be removed: hardcoded indicies
+    Eigen::Vector3d pos = state_trajectory[cursor].head(3);
+    Eigen::Quaterniond quat(static_cast<Eigen::Vector4d>(state_trajectory[cursor].segment(3, 4)));
+    Eigen::Vector3d vel_lin = state_trajectory[cursor].segment(7, 3);
+    Eigen::Vector3d vel_rot = state_trajectory[cursor].segment(10, 3);
+    
+    WayPoint wp(llc_knots, pos, quat, vel_lin, vel_rot);
+    waypoints_.push_back(wp);
+  }
+
+  countTotalKnots();
+  x0_ = state_trajectory[0];
+}
+
 void Mission::fillInitialState(const yaml_parser::ParamsServer& server) {
   std::vector<std::string> initial_state = server.getParam<std::vector<std::string>>("mission/initial_state");
 

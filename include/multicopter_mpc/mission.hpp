@@ -12,6 +12,7 @@ class Mission {
   ~Mission();
 
   void fillWaypoints(const yaml_parser::ParamsServer& server);
+  void fillWaypoints(const std::vector<Eigen::VectorXd>& state_trajectory, const std::size_t& llc_knots);
   void fillInitialState(const yaml_parser::ParamsServer& server);
 
   const std::size_t& getTotalKnots() const;

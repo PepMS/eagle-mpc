@@ -39,22 +39,25 @@ MpcMain::MpcMain(MultiCopterTypes::Type mc_type, SolverTypes::Type solver_type, 
   // Multicopter mission and params
   mc_params_ = boost::make_shared<MultiCopterBaseParams>();
   mc_params_->fill(server_params);
-  mission_ = boost::make_shared<Mission>(model_->nq + model_->nv);
-  mission_->fillWaypoints(server_mission);
-  mission_->fillInitialState(server_mission);
+
+  mission_tg_ = boost::make_shared<Mission>(model_->nq + model_->nv);
+  mission_tg_->fillWaypoints(server_mission);
+  mission_tg_->fillInitialState(server_mission);
 
   dt_ = 4e-3;
 
   // TrajectoryGenerator initialization
-  trajectory_generator_ = boost::make_shared<TrajectoryGenerator>(model_, mc_params_, dt_, mission_);
+  trajectory_generator_ = boost::make_shared<TrajectoryGenerator>(model_, mc_params_, dt_, mission_tg_);
   trajectory_generator_->createProblem(solver_type_);
   trajectory_generator_->solve();
   // Safety checks for the solve should be done
 
   // Low Level Controller initialization
   low_level_controller_knots_ = 100;
-  std::cout << mission_->waypoints_.back().pose << std::endl;
-  low_level_controller_ = boost::make_shared<TrajectoryGeneratorController>(model_, mc_params_, dt_, mission_,
+  mission_llc_ = boost::make_shared<Mission>(model_->nq + model_->nv);
+  mission_llc_->fillWaypoints(trajectory_generator_->getSolver()->get_xs(), low_level_controller_knots_);
+
+  low_level_controller_ = boost::make_shared<TrajectoryGeneratorController>(model_, mc_params_, dt_, mission_llc_,
                                                                             low_level_controller_knots_);
   low_level_controller_->loadParameters(server_llc_params);
   current_state_ = low_level_controller_->getStateMultibody()->zero();

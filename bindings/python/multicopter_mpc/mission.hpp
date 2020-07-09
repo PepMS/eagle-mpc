@@ -19,14 +19,19 @@ void exposeMission() {
 
   bp::register_ptr_to_python<boost::shared_ptr<Mission>>();
 
+  void (Mission::*fillWP_yaml)(const yaml_parser::ParamsServer&) = &Mission::fillWaypoints;
+  void (Mission::*fillWP_state)(const std::vector<Eigen::VectorXd>&, const std::size_t&) = &Mission::fillWaypoints;
+
   bp::class_<Mission>("Mission", bp::init<int>(bp::args("self", "nx"), "Initialize mission params"))
-      .def("fillWaypoints", &Mission::fillWaypoints, bp::args("self", "server"))
+      .def("fillWaypoints", fillWP_yaml, bp::args("self", "server"))
+      .def("fillWaypoints", fillWP_state, bp::args("self", "state_trajectory", "llc_knots"))
       .def("fillInitialState", &Mission::fillInitialState, bp::args("self", "server"))
       .add_property("x0", bp::make_getter(&Mission::x0_, bp::return_internal_reference<>()),
                     bp::make_setter(&Mission::x0_), "Initial state")
       .add_property("waypoints", bp::make_getter(&Mission::waypoints_, bp::return_value_policy<bp::return_by_value>()),
                     bp::make_setter(&Mission::waypoints_), "List of waypoints")
-      .add_property("total_knots", bp::make_function(&Mission::getTotalKnots, bp::return_value_policy<bp::return_by_value>()));
+      .add_property("total_knots",
+                    bp::make_function(&Mission::getTotalKnots, bp::return_value_policy<bp::return_by_value>()));
 }
 }  // namespace python
 }  // namespace multicopter_mpc
