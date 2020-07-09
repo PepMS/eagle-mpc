@@ -75,7 +75,7 @@ const std::size_t& OcpAbstract::getKnots() const {
   return n_knots_;
 }
 
-void OcpAbstract::setInitialState(const Eigen::Ref<Eigen::VectorXd>& initial_state) {
+void OcpAbstract::setInitialState(const Eigen::VectorXd& initial_state) {
   assert(initial_state.size() == state_->get_nx());  // Might not be efficient to do this here
   state_initial_ = initial_state;
 }

@@ -6,6 +6,8 @@ TrajectoryGenerator::TrajectoryGenerator(const boost::shared_ptr<pinocchio::Mode
                                          const boost::shared_ptr<MultiCopterBaseParams>& mc_params, const double& dt,
                                          const boost::shared_ptr<Mission>& mission)
     : OcpAbstract(model, mc_params, dt), mission_(mission) {
+
+  mission_->fillWaypointsKnots(dt_);
   n_knots_ = mission_->getTotalKnots();
 
   initializeDefaultParameters();
@@ -50,11 +52,11 @@ void TrajectoryGenerator::loadParameters(const yaml_parser::ParamsServer& server
 }
 
 void TrajectoryGenerator::createProblem(const SolverTypes::Type& solver_type) {
-  assert(mission_->waypoints_.size() > 0);
+  assert(mission_->getWaypoints().size() > 0);
 
-  for (std::vector<WayPoint>::const_iterator wp = mission_->waypoints_.cbegin(); wp != mission_->waypoints_.cend();
-       ++wp) {
-    bool is_last_wp = std::next(wp) != mission_->waypoints_.end();
+  for (std::vector<WayPoint>::const_iterator wp = mission_->getWaypoints().cbegin();
+       wp != mission_->getWaypoints().cend(); ++wp) {
+    bool is_last_wp = std::next(wp) != mission_->getWaypoints().end();
 
     boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model_running =
         createRunningDifferentialModel(*wp);
@@ -66,9 +68,9 @@ void TrajectoryGenerator::createProblem(const SolverTypes::Type& solver_type) {
     boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> int_model_terminal =
         boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_model_terminal, dt_);
 
-    int n_run_knots = wp == mission_->waypoints_.cbegin() ? wp->knots - 1 : wp->knots - 2;
+    int n_run_knots = wp == mission_->getWaypoints().cbegin() ? wp->knots - 1 : wp->knots - 2;
 
-    if (std::next(wp) != mission_->waypoints_.end()) {
+    if (std::next(wp) != mission_->getWaypoints().end()) {
       int_model_running->set_u_lb(tau_lb_);
       int_model_running->set_u_ub(tau_ub_);
       int_model_terminal->set_u_lb(tau_lb_);
@@ -98,12 +100,10 @@ void TrajectoryGenerator::createProblem(const SolverTypes::Type& solver_type) {
       int_model_terminal_ = int_model_terminal;
     }
   }
-  problem_ = boost::make_shared<crocoddyl::ShootingProblem>(mission_->x0_, int_models_running_, int_model_terminal_);
+  problem_ = boost::make_shared<crocoddyl::ShootingProblem>(mission_->getInitialState(), int_models_running_, int_model_terminal_);
   setSolver(solver_type);
 
-  setInitialState(mission_->x0_);
-
-  // state_trajectory_ = std::vector<Eigen::VectorXd>(n_knots_ + 1, state_->zero());
+  setInitialState(mission_->getInitialState());
 }
 
 boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics>

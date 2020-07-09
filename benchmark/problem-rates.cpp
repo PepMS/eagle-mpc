@@ -86,7 +86,7 @@ int main(void) {
     double dt_ = 4e-3;
     multicopter_mpc::TrajectoryGenerator trajectory_generator(model_, mc_params_,dt_,mission_);
    
-    mission_->waypoints_[0].knots = n;
+    // mission_->getWaypoints()[0].knots = n;
 
     trajectory_generator.createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
 
@@ -95,7 +95,7 @@ int main(void) {
     Eigen::ArrayXd iterations(solve_trials);
     trajectory_generator.solve();
     for (int i = 0; i < solve_trials; i++) {
-      Eigen::VectorXd initial_state = mission_->x0_;
+      Eigen::VectorXd initial_state = mission_->getInitialState();
       applyRandomNoise(initial_state);
       crocoddyl::Timer timer;
       trajectory_generator.setInitialState(initial_state);
