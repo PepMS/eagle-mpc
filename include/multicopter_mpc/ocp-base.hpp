@@ -63,7 +63,7 @@ class OcpAbstract {
   const int& getBaseLinkId() const;
   const std::size_t& getKnots() const;
   // Setters
-  virtual void setInitialState(const Eigen::Ref<Eigen::VectorXd>& initial_state);
+  virtual void setInitialState(const Eigen::VectorXd& initial_state);
 
  protected:
   // Methods

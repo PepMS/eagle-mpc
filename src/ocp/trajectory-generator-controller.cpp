@@ -269,14 +269,14 @@ const boost::shared_ptr<const Mission> TrajectoryGeneratorController::getMission
 
 void TrajectoryGeneratorController::setPoseRef(const std::size_t& idx_trajectory) {
   pose_ref_.frame = frame_base_link_id_;
-  pose_ref_.oMf = mission_->waypoints_[mission_->getWpFromTrajIdx(idx_trajectory)].pose;
+  pose_ref_.oMf = mission_->getWaypoints()[mission_->getWpFromTrajIdx(idx_trajectory)].pose;
 }
 
 void TrajectoryGeneratorController::setMotionRef(const std::size_t& idx_trajectory) {
-  has_motion_ref_ = mission_->waypoints_[mission_->getWpFromTrajIdx(idx_trajectory)].vel != boost::none;
+  has_motion_ref_ = mission_->getWaypoints()[mission_->getWpFromTrajIdx(idx_trajectory)].vel != boost::none;
   if (has_motion_ref_) {
     motion_ref_.frame = frame_base_link_id_;
-    motion_ref_.oMf = mission_->waypoints_[mission_->getWpFromTrajIdx(idx_trajectory)].vel.get();
+    motion_ref_.oMf = mission_->getWaypoints()[mission_->getWpFromTrajIdx(idx_trajectory)].vel.get();
   }
 }
 
