@@ -41,6 +41,28 @@ void Mission::fillWaypoints(const yaml_parser::ParamsServer& server) {
   countTotalKnots();
 }
 
+void Mission::fillWaypoints(const std::vector<Eigen::VectorXd>& state_trajectory,
+                            const std::size_t& llc_knots) {
+  std::size_t cursor = 0;
+  std::size_t num_wp = state_trajectory.size() / (llc_knots - 1);
+  
+  for (std::size_t i = 0; i < num_wp; ++i) {
+    cursor += llc_knots - 1;
+    
+    // To be removed: hardcoded indicies
+    Eigen::Vector3d pos = state_trajectory[cursor].head(3);
+    Eigen::Quaterniond quat(static_cast<Eigen::Vector4d>(state_trajectory[cursor].segment(3, 4)));
+    Eigen::Vector3d vel_lin = state_trajectory[cursor].segment(7, 3);
+    Eigen::Vector3d vel_rot = state_trajectory[cursor].segment(10, 3);
+    
+    WayPoint wp(llc_knots, pos, quat, vel_lin, vel_rot);
+    waypoints_.push_back(wp);
+  }
+
+  countTotalKnots();
+  x0_ = state_trajectory[0];
+}
+
 void Mission::fillInitialState(const yaml_parser::ParamsServer& server) {
   std::vector<std::string> initial_state = server.getParam<std::vector<std::string>>("mission/initial_state");
 
@@ -65,13 +87,32 @@ void Mission::fillInitialState(const yaml_parser::ParamsServer& server) {
 void Mission::countTotalKnots() {
   size_t knots = 0;
 
+  wp_traj_idx_.clear();
+  int wp_count = 0;
   for (auto wp = waypoints_.begin(); wp != waypoints_.end(); wp++) {
-    knots += wp->knots;
+    wp_count += wp->knots - 1;
+    wp_traj_idx_.push_back(wp_count);
+
+    if (wp == waypoints_.begin()) {
+      knots += wp->knots;
+    } else {
+      knots += wp->knots - 1;
+    }
   }
 
   n_knots_ = knots;
 }
 
 const std::size_t& Mission::getTotalKnots() const { return n_knots_; }
+const std::vector<std::size_t>& Mission::getWpTrajIdx() const { return wp_traj_idx_; }
+
+std::size_t Mission::getWpFromTrajIdx(const std::size_t& traj_idx) const {
+  std::size_t idx = 0;
+  while (idx < wp_traj_idx_.size() && traj_idx > wp_traj_idx_[idx]) {
+    idx++;
+  }
+
+  return (idx > wp_traj_idx_.size() - 1 ? wp_traj_idx_.size() - 1 : idx);
+}
 
 }  // namespace multicopter_mpc

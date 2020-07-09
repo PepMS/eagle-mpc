@@ -16,17 +16,13 @@
 
 #include "example-robot-data/path.hpp"
 
-// #include "crocoddyl/core/fwd.hpp"
-// #include "crocoddyl/core/solver-base.hpp"
-// #include "crocoddyl/core/solvers/box-fddp.hpp"
-
 #include "yaml_parser/parser_yaml.h"
 #include "yaml_parser/params_server.hpp"
 
 #include "multicopter_mpc/ocp/low-level-controller.hpp"
 #include "multicopter_mpc/ocp/trajectory-generator.hpp"
+#include "multicopter_mpc/ocp/trajectory-generator-controller.hpp"
 #include "multicopter_mpc/path.h"
-#include "multicopter_mpc/problem-mission.hpp"
 
 namespace multicopter_mpc {
 
@@ -37,10 +33,10 @@ struct MultiCopterTypes {
 class MpcMain {
  public:
   MpcMain();
-  MpcMain(MultiCopterTypes::Type mc_type, SolverTypes::Type solver_type);
+  MpcMain(MultiCopterTypes::Type mc_type, SolverTypes::Type solver_type, std::string mission_name);
   ~MpcMain();
 
-  const boost::shared_ptr<const LowLevelController> getLowLevelController();
+  const boost::shared_ptr<const TrajectoryGeneratorController> getLowLevelController();
   void setCurrentState(const Eigen::Ref<Eigen::VectorXd>& current_state);
   const Eigen::VectorXd& runMpcStep();
 
@@ -52,11 +48,13 @@ class MpcMain {
 
   boost::shared_ptr<pinocchio::Model> model_;
   boost::shared_ptr<MultiCopterBaseParams> mc_params_;
-  boost::shared_ptr<Mission> mission_;
+  boost::shared_ptr<Mission> mission_tg_;
+  boost::shared_ptr<Mission> mission_llc_;
 
   double dt_;
 
-  boost::shared_ptr<LowLevelController> low_level_controller_;
+  // boost::shared_ptr<LowLevelController> low_level_controller_;
+  boost::shared_ptr<TrajectoryGeneratorController> low_level_controller_;
   std::size_t low_level_controller_knots_;
   boost::shared_ptr<TrajectoryGenerator> trajectory_generator_;
 
@@ -64,6 +62,7 @@ class MpcMain {
   Eigen::VectorXd next_state_;
   Eigen::VectorXd current_motor_thrust_;
   Eigen::VectorXd current_motor_speed_;
+  Eigen::VectorXd next_control_;
   std::size_t trajectory_cursor_;
 };
 

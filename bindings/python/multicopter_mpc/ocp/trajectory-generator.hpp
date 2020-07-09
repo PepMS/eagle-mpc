@@ -23,8 +23,8 @@ void exposeTrajectoryGenerator() {
       .def("solve", &TrajectoryGenerator::solve)
       .add_property("mission", bp::make_function(&TrajectoryGenerator::getMission,
                                                  bp::return_value_policy<bp::return_by_value>()))
-      .def("getTrajectoryPortion", &TrajectoryGenerator::getTrajectoryPortion, bp::args("self", "idx_init", "idx_end"))
-      .def("getTrajectoryState", &TrajectoryGenerator::getTrajectoryState, bp::return_internal_reference<>(),
+      .def("getStateTrajectory", &TrajectoryGenerator::getStateTrajectory, bp::args("self", "idx_init", "idx_end"))
+      .def("getState", &TrajectoryGenerator::getState, bp::return_internal_reference<>(),
            bp::args("self", "cursor"));
 }
 }  // namespace python

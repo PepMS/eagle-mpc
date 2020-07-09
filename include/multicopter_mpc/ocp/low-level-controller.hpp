@@ -36,23 +36,26 @@ class LowLevelController : public OcpAbstract {
   void createProblem(const SolverTypes::Type& solver_type);
   void solve() override;
 
-  void updateReferenceStateTrajectory(const Eigen::Ref<Eigen::VectorXd>& state_new);
+  void updateReferences(const Eigen::Ref<Eigen::VectorXd>& state_new, const Eigen::Ref<Eigen::VectorXd>& control_new);
 
   const Eigen::VectorXd& getControls(const std::size_t& idx = 0) const;
   const std::vector<Eigen::VectorXd>& getStateRef() const;
   const LowLevelControllerParams& getParams() const;
-  void setReferenceStateTrajectory(const std::vector<Eigen::VectorXd>& state_trajectory);
+  void setReferences(const std::vector<Eigen::VectorXd>& state_trajectory,
+                     const std::vector<Eigen::VectorXd>& control_trajectory);
 
   void printCosts();
+
  private:
   void initializeDefaultParameters() override;
 
   boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> createDifferentialModel(
       const unsigned int& trajectory_idx);
   boost::shared_ptr<crocoddyl::CostModelAbstract> createCostState(const unsigned int& trajectory_idx);
-  boost::shared_ptr<crocoddyl::CostModelAbstract> createCostControlRegularization();
+  boost::shared_ptr<crocoddyl::CostModelAbstract> createCostControl(const unsigned int& trajectory_idx);
 
-  std::vector<Eigen::VectorXd> state_ref_;  // Vector containing the state reference for each node
+  std::vector<Eigen::VectorXd> state_ref_;    // Vector containing the state reference for each node
+  std::vector<Eigen::VectorXd> control_ref_;  // Vector containing the control reference for each node
 
   LowLevelControllerParams params_;
 };

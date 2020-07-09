@@ -9,6 +9,9 @@ TrajectoryGenerator::TrajectoryGenerator(const boost::shared_ptr<pinocchio::Mode
   n_knots_ = mission_->getTotalKnots();
 
   initializeDefaultParameters();
+
+  // To be changed!!!!!
+  control_hover_ = Eigen::VectorXd::Ones(mc_params_->n_rotors_) * 3.78;
 }
 
 TrajectoryGenerator::~TrajectoryGenerator() {}
@@ -63,6 +66,8 @@ void TrajectoryGenerator::createProblem(const SolverTypes::Type& solver_type) {
     boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> int_model_terminal =
         boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_model_terminal, dt_);
 
+    int n_run_knots = wp == mission_->waypoints_.cbegin() ? wp->knots - 1 : wp->knots - 2;
+
     if (std::next(wp) != mission_->waypoints_.end()) {
       int_model_running->set_u_lb(tau_lb_);
       int_model_running->set_u_ub(tau_ub_);
@@ -70,11 +75,11 @@ void TrajectoryGenerator::createProblem(const SolverTypes::Type& solver_type) {
       int_model_terminal->set_u_ub(tau_ub_);
 
       std::vector<boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics>> diff_models_running(
-          wp->knots - 1, diff_model_running);
+          n_run_knots, diff_model_running);
       diff_models_running.push_back(diff_model_terminal);
       diff_models_running_.insert(diff_models_running_.end(), diff_models_running.begin(), diff_models_running.end());
 
-      std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> int_models_running(wp->knots - 1,
+      std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> int_models_running(n_run_knots,
                                                                                         int_model_running);
       int_models_running.push_back(int_model_terminal);
       int_models_running_.insert(int_models_running_.end(), int_models_running.begin(), int_models_running.end());
@@ -83,11 +88,12 @@ void TrajectoryGenerator::createProblem(const SolverTypes::Type& solver_type) {
       int_model_running->set_u_ub(tau_ub_);
 
       std::vector<boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics>> diff_models_running(
-          wp->knots, diff_model_running);
+          n_run_knots, diff_model_running);
       diff_models_running_.insert(diff_models_running_.end(), diff_models_running.begin(), diff_models_running.end());
       diff_model_terminal_ = diff_model_terminal;
 
-      std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> int_models_running(wp->knots, int_model_running);
+      std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> int_models_running(n_run_knots,
+                                                                                        int_model_running);
       int_models_running_.insert(int_models_running_.end(), int_models_running.begin(), int_models_running.end());
       int_model_terminal_ = int_model_terminal;
     }
@@ -97,7 +103,7 @@ void TrajectoryGenerator::createProblem(const SolverTypes::Type& solver_type) {
 
   setInitialState(mission_->x0_);
 
-  state_trajectory_ = std::vector<Eigen::VectorXd>(n_knots_ + 1, state_->zero());
+  // state_trajectory_ = std::vector<Eigen::VectorXd>(n_knots_ + 1, state_->zero());
 }
 
 boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics>
@@ -194,28 +200,63 @@ void TrajectoryGenerator::solve() {
   problem_->set_x0(state_initial_);
   solver_->solve();
   // in the unit test check that the solve trajectory and the state_trajectory have the same size
-  std::copy(solver_->get_xs().begin(), solver_->get_xs().end(), state_trajectory_.begin());
+  // std::copy(solver_->get_xs().begin(), solver_->get_xs().end(), state_trajectory_.begin());
   state_hover_ = state_->zero();
   state_hover_.head(3) = solver_->get_xs().back().head(3);
+  Eigen::Quaterniond quat = Eigen::Quaterniond(solver_->get_xs().back()(6), 0.0, 0.0, solver_->get_xs().back()(5));
+  quat.normalize();
+  state_hover_(5) = quat.z();
+  state_hover_(6) = quat.w();
 }
+
+const boost::shared_ptr<const crocoddyl::SolverAbstract> TrajectoryGenerator::getSolver() const { return solver_; }
 
 const boost::shared_ptr<const Mission> TrajectoryGenerator::getMission() const { return mission_; }
 
 const TrajectoryGeneratorParams& TrajectoryGenerator::getParams() const { return params_; };
 
-std::vector<Eigen::VectorXd> TrajectoryGenerator::getTrajectoryPortion(const std::size_t& idx_init,
-                                                                       const std::size_t& idx_end) const {
+std::vector<Eigen::VectorXd> TrajectoryGenerator::getStateTrajectory(const std::size_t& idx_init,
+                                                                     const std::size_t& idx_end) const {
   assert(idx_init < idx_end);
-  std::vector<Eigen::VectorXd>::const_iterator first = state_trajectory_.begin() + idx_init;
-  std::vector<Eigen::VectorXd>::const_iterator last = state_trajectory_.begin() + idx_end + 1;
+  // std::vector<Eigen::VectorXd>::const_iterator first = state_trajectory_.begin() + idx_init;
+  // std::vector<Eigen::VectorXd>::const_iterator last = state_trajectory_.begin() + idx_end + 1;
+  std::vector<Eigen::VectorXd>::const_iterator first = solver_->get_xs().begin() + idx_init;
+  std::vector<Eigen::VectorXd>::const_iterator last = solver_->get_xs().begin() + idx_end + 1;
   return std::vector<Eigen::VectorXd>(first, last);
 }
 
-const Eigen::VectorXd& TrajectoryGenerator::getTrajectoryState(const std::size_t& cursor) const {
-  if (cursor < state_trajectory_.size()) {
-    return state_trajectory_[cursor];
+std::vector<Eigen::VectorXd> TrajectoryGenerator::getControlTrajectory(const std::size_t& idx_init,
+                                                                       const std::size_t& idx_end) const {
+  assert(idx_init < idx_end);
+  std::vector<Eigen::VectorXd>::const_iterator first = solver_->get_us().begin() + idx_init;
+  std::vector<Eigen::VectorXd>::const_iterator last = solver_->get_us().begin() + idx_end + 1;
+  return std::vector<Eigen::VectorXd>(first, last);
+}
+
+const Eigen::VectorXd& TrajectoryGenerator::getState(const std::size_t& cursor) const {
+  // if (cursor < state_trajectory_.size()) {
+  //   return state_trajectory_[cursor];
+  // } else {
+  //   return state_hover_;
+  // }
+  if (cursor < solver_->get_xs().size()) {
+    return solver_->get_xs()[cursor];
   } else {
     return state_hover_;
+  }
+}
+
+const Eigen::VectorXd& TrajectoryGenerator::getControl(const std::size_t& cursor) const {
+  // if (cursor < state_trajectory_.size()) {
+  //   return state_trajectory_[cursor];
+  // } else {
+  //   return state_hover_;
+  // }
+  if (cursor < solver_->get_us().size()) {
+    return solver_->get_us()[cursor];
+  } else {
+    std::cout << "HOVERING! at state: " << state_hover_ << std::endl;
+    return control_hover_;
   }
 }
 

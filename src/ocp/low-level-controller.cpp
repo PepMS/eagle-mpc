@@ -9,6 +9,7 @@ LowLevelController::LowLevelController(const boost::shared_ptr<pinocchio::Model>
   n_knots_ = n_knots;
 
   state_ref_.resize(n_knots_, state_->zero());
+  control_ref_.resize(n_knots_ - 1, Eigen::VectorXd::Zero(4));
 
   initializeDefaultParameters();
 }
@@ -66,18 +67,20 @@ boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> LowLevelCon
       boost::make_shared<crocoddyl::CostModelSum>(state_, actuation_->get_nu());
 
   boost::shared_ptr<crocoddyl::CostModelAbstract> cost_state = createCostState(trajectory_idx);
-  boost::shared_ptr<crocoddyl::CostModelAbstract> cost_reg_control = createCostControlRegularization();
+  if (trajectory_idx < n_knots_ - 1) {
+    boost::shared_ptr<crocoddyl::CostModelAbstract> cost_control = createCostControl(trajectory_idx);
+    cost_model->addCost("control_error", cost_control, params_.w_control);
+  }
 
   // Regularitzations
   cost_model->addCost("state_error", cost_state, params_.w_state);
-  cost_model->addCost("control", cost_reg_control, params_.w_control);
 
   boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model =
       boost::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(state_, actuation_, cost_model);
 
   diff_model->set_u_lb(tau_lb_);
   diff_model->set_u_ub(tau_ub_);
-  
+
   return diff_model;
 }
 
@@ -88,7 +91,7 @@ boost::shared_ptr<crocoddyl::CostModelAbstract> LowLevelController::createCostSt
   state_weights.head(3) = params_.w_state_position;
   state_weights.segment(3, 3) = params_.w_state_orientation;
   state_weights.segment(model_->nv, 3) = params_.w_state_velocity_lin;
-  state_weights.segment(model_->nv + 3, 3) = params_.w_state_velocity_lin;
+  state_weights.segment(model_->nv + 3, 3) = params_.w_state_velocity_ang;
 
   boost::shared_ptr<crocoddyl::ActivationModelWeightedQuad> activation_state =
       boost::make_shared<crocoddyl::ActivationModelWeightedQuad>(state_weights);
@@ -99,14 +102,21 @@ boost::shared_ptr<crocoddyl::CostModelAbstract> LowLevelController::createCostSt
   return cost_reg_state;
 }
 
-boost::shared_ptr<crocoddyl::CostModelAbstract> LowLevelController::createCostControlRegularization() {
-  boost::shared_ptr<crocoddyl::CostModelAbstract> cost_reg_control =
-      boost::make_shared<crocoddyl::CostModelControl>(state_, actuation_->get_nu());
+boost::shared_ptr<crocoddyl::CostModelAbstract> LowLevelController::createCostControl(
+    const unsigned int& trajectory_idx) {
+  boost::shared_ptr<crocoddyl::CostModelAbstract> cost_control =
+      boost::make_shared<crocoddyl::CostModelControl>(state_, control_ref_[trajectory_idx]);
 
-  return cost_reg_control;
+  return cost_control;
 }
 
-void LowLevelController::updateReferenceStateTrajectory(const Eigen::Ref<Eigen::VectorXd>& state_new) {
+void LowLevelController::solve() {
+  problem_->set_x0(state_initial_);
+  solver_->solve(solver_->get_xs(), solver_->get_us(), solver_iters_, false, 1e-9);
+}
+
+void LowLevelController::updateReferences(const Eigen::Ref<Eigen::VectorXd>& state_new,
+                                          const Eigen::Ref<Eigen::VectorXd>& control_new) {
   assert(state_new.size() == state_->get_nx());
 
   for (std::size_t t = 0; t < n_knots_ - 1; ++t) {
@@ -115,31 +125,44 @@ void LowLevelController::updateReferenceStateTrajectory(const Eigen::Ref<Eigen::
     boost::shared_ptr<crocoddyl::CostModelState> cost_state = boost::static_pointer_cast<crocoddyl::CostModelState>(
         diff_models_running_[t]->get_costs()->get_costs().find("state_error")->second->cost);
     cost_state->set_xref(state_ref_[t]);
+
+    boost::shared_ptr<crocoddyl::CostModelControl> cost_control =
+        boost::static_pointer_cast<crocoddyl::CostModelControl>(
+            diff_models_running_[t]->get_costs()->get_costs().find("control_error")->second->cost);
+    if (t < n_knots_ - 2) {
+      control_ref_[t] = control_ref_[t + 1];
+      cost_control->set_uref(control_ref_[t]);
+    } else {
+      control_ref_[t] = control_new;
+      cost_control->set_uref(control_ref_[t]);
+    }
   }
+
   state_ref_[n_knots_ - 1] = state_new;
   boost::shared_ptr<crocoddyl::CostModelState> cost_state = boost::static_pointer_cast<crocoddyl::CostModelState>(
       diff_model_terminal_->get_costs()->get_costs().find("state_error")->second->cost);
   cost_state->set_xref(state_ref_[n_knots_ - 1]);
 }
 
-void LowLevelController::solve() {
-  problem_->set_x0(state_initial_);
-  solver_->solve(solver_->get_xs(), solver_->get_us(), solver_iters_, false, 1e-9);
-}
-
 const Eigen::VectorXd& LowLevelController::getControls(const std::size_t& idx) const { return solver_->get_us()[idx]; }
 const std::vector<Eigen::VectorXd>& LowLevelController::getStateRef() const { return state_ref_; }
 const LowLevelControllerParams& LowLevelController::getParams() const { return params_; }
 
-void LowLevelController::setReferenceStateTrajectory(const std::vector<Eigen::VectorXd>& state_trajectory) {
+void LowLevelController::setReferences(const std::vector<Eigen::VectorXd>& state_trajectory,
+                                       const std::vector<Eigen::VectorXd>& control_trajectory) {
   assert(state_ref_.size() == state_trajectory.size());
   std::copy(state_trajectory.begin(), state_trajectory.end(), state_ref_.begin());
+  std::copy(control_trajectory.begin(), control_trajectory.end(), control_ref_.begin());
 
   if (problem_ != nullptr) {
     for (std::size_t t = 0; t < n_knots_ - 1; ++t) {
       boost::shared_ptr<crocoddyl::CostModelState> cost_state = boost::static_pointer_cast<crocoddyl::CostModelState>(
           diff_models_running_[t]->get_costs()->get_costs().find("state_error")->second->cost);
       cost_state->set_xref(state_ref_[t]);
+      boost::shared_ptr<crocoddyl::CostModelControl> cost_control =
+          boost::static_pointer_cast<crocoddyl::CostModelControl>(
+              diff_models_running_[t]->get_costs()->get_costs().find("control_error")->second->cost);
+      cost_control->set_uref(control_ref_[t]);
     }
     boost::shared_ptr<crocoddyl::CostModelState> cost_state = boost::static_pointer_cast<crocoddyl::CostModelState>(
         diff_model_terminal_->get_costs()->get_costs().find("state_error")->second->cost);
@@ -156,6 +179,5 @@ void LowLevelController::printCosts() {
   boost::shared_ptr<crocoddyl::CostModelState> cost_state = boost::static_pointer_cast<crocoddyl::CostModelState>(
       diff_model_terminal_->get_costs()->get_costs().find("state_error")->second->cost);
   std::cout << "Node number " << n_knots_ - 1 << ": \n" << cost_state->get_xref() << std::endl;
-
 }
 }  // namespace multicopter_mpc

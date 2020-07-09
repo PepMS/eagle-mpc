@@ -6,7 +6,7 @@ MpcMain::MpcMain(MultiCopterTypes::Type mc_type, SolverTypes::Type solver_type, 
   std::string model_description_path;
   std::string model_yaml_path;
   std::string mission_yaml_path = MULTICOPTER_MPC_MISSION_DIR "/" + mission_name;
-  std::string llc_params_yaml_path = MULTICOPTER_MPC_OCP_DIR "/trajectory-generator-controller.yaml";
+  std::string llc_params_yaml_path = MULTICOPTER_MPC_OCP_DIR "/low-level-controller.yaml";
 
   switch (mc_type_) {
     case MultiCopterTypes::Iris:
@@ -39,33 +39,32 @@ MpcMain::MpcMain(MultiCopterTypes::Type mc_type, SolverTypes::Type solver_type, 
   // Multicopter mission and params
   mc_params_ = boost::make_shared<MultiCopterBaseParams>();
   mc_params_->fill(server_params);
-
-  mission_tg_ = boost::make_shared<Mission>(model_->nq + model_->nv);
-  mission_tg_->fillWaypoints(server_mission);
-  mission_tg_->fillInitialState(server_mission);
+  mission_ = boost::make_shared<Mission>(model_->nq + model_->nv);
+  mission_->fillWaypoints(server_mission);
+  mission_->fillInitialState(server_mission);
 
   dt_ = 4e-3;
-
   // TrajectoryGenerator initialization
-  trajectory_generator_ = boost::make_shared<TrajectoryGenerator>(model_, mc_params_, dt_, mission_tg_);
+  trajectory_generator_ = boost::make_shared<TrajectoryGenerator>(model_, mc_params_, dt_, mission_);
   trajectory_generator_->createProblem(solver_type_);
   trajectory_generator_->solve();
   // Safety checks for the solve should be done
 
   // Low Level Controller initialization
   low_level_controller_knots_ = 100;
-  mission_llc_ = boost::make_shared<Mission>(model_->nq + model_->nv);
-  mission_llc_->fillWaypoints(trajectory_generator_->getSolver()->get_xs(), low_level_controller_knots_);
-
-  low_level_controller_ = boost::make_shared<TrajectoryGeneratorController>(model_, mc_params_, dt_, mission_llc_,
-                                                                            low_level_controller_knots_);
-  low_level_controller_->loadParameters(server_llc_params);
+  low_level_controller_ = boost::make_shared<LowLevelController>(model_, mc_params_, dt_, low_level_controller_knots_);
+    low_level_controller_->loadParameters(server_llc_params);
   current_state_ = low_level_controller_->getStateMultibody()->zero();
   low_level_controller_->setInitialState(current_state_);
+  low_level_controller_->setReferences(
+      trajectory_generator_->getStateTrajectory(0, low_level_controller_knots_ - 1),
+      trajectory_generator_->getControlTrajectory(0, low_level_controller_knots_ - 2));
+  
   low_level_controller_->createProblem(solver_type_);
   low_level_controller_->setSolverCallbacks(true);
   low_level_controller_->setSolverIters(100);
   low_level_controller_->solve();
+  // set low level controller for continuous mode
   low_level_controller_->setSolverIters(1);
   low_level_controller_->setSolverCallbacks(false);
 
@@ -73,7 +72,7 @@ MpcMain::MpcMain(MultiCopterTypes::Type mc_type, SolverTypes::Type solver_type, 
   current_motor_speed_ = current_motor_thrust_;
   // Do check to ensure that the guess of the solver is right
 
-  trajectory_cursor_ = low_level_controller_knots_ - 1;
+  trajectory_cursor_ = low_level_controller_knots_;
   std::cout << "MULTICOPTER MPC: MPC Main initialization complete" << std::endl;
 }
 
@@ -81,10 +80,9 @@ MpcMain::MpcMain() {}
 
 MpcMain::~MpcMain() {}
 
-// const boost::shared_ptr<const LowLevelController> MpcMain::getLowLevelController() { return low_level_controller_; }
-const boost::shared_ptr<const TrajectoryGeneratorController> MpcMain::getLowLevelController() {
-  return low_level_controller_;
-}
+const boost::shared_ptr<const LowLevelController> MpcMain::getLowLevelController() { return low_level_controller_; }
+// const boost::shared_ptr<const TrajectoryGeneratorController> MpcMain::getLowLevelController() { return
+// low_level_controller_; }
 
 void MpcMain::setCurrentState(const Eigen::Ref<Eigen::VectorXd>& current_state) { current_state_ = current_state; }
 
@@ -97,16 +95,23 @@ const Eigen::VectorXd& MpcMain::runMpcStep() {
   current_motor_thrust_ = low_level_controller_->getControls();
   computeSpeedControls();
   // 4. update low_level->reference trajecotry with the next state from the mpc_main->reference trajectory
+  next_state_ = trajectory_generator_->getState(trajectory_cursor_);
+  next_control_ = trajectory_generator_->getControl(trajectory_cursor_ - 1);
+  // std::cout << "This is the next position: \n" << next_state_.head(3) << std::endl;
+  low_level_controller_->updateReferences(next_state_, next_control_);
+  // low_level_controller_->updateReferences(next_state_);
   ++trajectory_cursor_;
-  low_level_controller_->updateProblem(trajectory_cursor_);
-  if (trajectory_cursor_ == low_level_controller_knots_ + low_level_controller_->getMission()->getTotalKnots()) {
-    std::cout << "End of trajectory reached. State: \n" << current_state_ << std::endl;
-  }
 
   return current_motor_speed_;
-}
+}  // namespace multicopter_mpc
 
 void MpcMain::computeSpeedControls() {
   current_motor_speed_ = (current_motor_thrust_.array() / mc_params_->cf_).sqrt();
 }
 }  // namespace multicopter_mpc
+
+// void MpcMain::computeNormalizedControls() {
+//   controls_normalized_ = MOTOR_TH_NORM_MIN + (controls_.array() - params_->min_thrust_) /
+//                                                  (params_->max_thrust_ - params_->min_thrust_) *
+//                                                  (MOTOR_TH_NORM_MAX - MOTOR_TH_NORM_MIN);
+// }

@@ -67,7 +67,7 @@ void exposeOcpAbstract() {
       .add_property("mc_params",
                     bp::make_function(&OcpAbstract_wrap::getMcParams, bp::return_value_policy<bp::return_by_value>()))
       .add_property("state",
-                    bp::make_function(&OcpAbstract_wrap::getState, bp::return_value_policy<bp::return_by_value>()))
+                    bp::make_function(&OcpAbstract_wrap::getStateMultibody, bp::return_value_policy<bp::return_by_value>()))
       .add_property("actuation",
                     bp::make_function(&OcpAbstract_wrap::getActuation, bp::return_value_policy<bp::return_by_value>()))
       .add_property("problem",
