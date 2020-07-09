@@ -26,10 +26,9 @@ void exposeMission() {
       .def("fillWaypoints", fillWP_yaml, bp::args("self", "server"))
       .def("fillWaypoints", fillWP_state, bp::args("self", "state_trajectory", "llc_knots"))
       .def("fillInitialState", &Mission::fillInitialState, bp::args("self", "server"))
-      .add_property("x0", bp::make_getter(&Mission::x0_, bp::return_internal_reference<>()),
-                    bp::make_setter(&Mission::x0_), "Initial state")
-      .add_property("waypoints", bp::make_getter(&Mission::waypoints_, bp::return_value_policy<bp::return_by_value>()),
-                    bp::make_setter(&Mission::waypoints_), "List of waypoints")
+      .add_property("x0", bp::make_function(&Mission::getInitialState, bp::return_value_policy<bp::return_by_value>()),
+                    bp::make_function(&Mission::setInitialState), "Initial state")
+      .add_property("waypoints", bp::make_function(&Mission::getWaypoints, bp::return_value_policy<bp::return_by_value>()))
       .add_property("total_knots",
                     bp::make_function(&Mission::getTotalKnots, bp::return_value_policy<bp::return_by_value>()));
 }
