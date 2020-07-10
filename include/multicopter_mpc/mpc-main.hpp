@@ -19,9 +19,9 @@
 #include "yaml_parser/parser_yaml.h"
 #include "yaml_parser/params_server.hpp"
 
-#include "multicopter_mpc/ocp/low-level-controller.hpp"
-#include "multicopter_mpc/ocp/trajectory-generator.hpp"
-#include "multicopter_mpc/ocp/trajectory-generator-controller.hpp"
+#include "multicopter_mpc/ocp/mpc/mpc-base.hpp"
+#include "multicopter_mpc/ocp/mpc/trajectory-generator-controller.hpp"
+#include "multicopter_mpc/ocp/mpc/low-level-controller.hpp"
 #include "multicopter_mpc/path.h"
 
 namespace multicopter_mpc {
@@ -33,10 +33,11 @@ struct MultiCopterTypes {
 class MpcMain {
  public:
   MpcMain();
-  MpcMain(MultiCopterTypes::Type mc_type, SolverTypes::Type solver_type, std::string mission_name);
+  MpcMain(const MultiCopterTypes::Type& mc_type, const SolverTypes::Type& solver_type, const std::string& mission_name,
+          const MpcTypes::Type& mpc_type);
   ~MpcMain();
 
-  const boost::shared_ptr<const TrajectoryGeneratorController> getLowLevelController();
+  const boost::shared_ptr<const MpcAbstract> getMpcController();
   void setCurrentState(const Eigen::Ref<Eigen::VectorXd>& current_state);
   const Eigen::VectorXd& runMpcStep();
 
@@ -45,18 +46,17 @@ class MpcMain {
 
   MultiCopterTypes::Type mc_type_;
   SolverTypes::Type solver_type_;
+  MpcTypes::Type mpc_type_;
 
   boost::shared_ptr<pinocchio::Model> model_;
   boost::shared_ptr<MultiCopterBaseParams> mc_params_;
-  boost::shared_ptr<Mission> mission_tg_;
-  boost::shared_ptr<Mission> mission_llc_;
+  boost::shared_ptr<Mission> mission_;
 
   double dt_;
 
   // boost::shared_ptr<LowLevelController> low_level_controller_;
-  boost::shared_ptr<TrajectoryGeneratorController> low_level_controller_;
-  std::size_t low_level_controller_knots_;
-  boost::shared_ptr<TrajectoryGenerator> trajectory_generator_;
+  boost::shared_ptr<MpcAbstract> mpc_controller_;
+  std::size_t mpc_controller_knots_;
 
   Eigen::VectorXd current_state_;
   Eigen::VectorXd next_state_;

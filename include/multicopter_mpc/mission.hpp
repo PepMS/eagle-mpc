@@ -17,6 +17,8 @@ class Mission {
   void fillWaypointsKnots(const double& dt);
   void fillInitialState(const yaml_parser::ParamsServer& server);
 
+  void addWaypoint(WayPoint waypoint);
+
   void setInitialState(const Eigen::VectorXd& x0);
   const Eigen::VectorXd& getInitialState() const;
   const std::vector<WayPoint>& getWaypoints() const;

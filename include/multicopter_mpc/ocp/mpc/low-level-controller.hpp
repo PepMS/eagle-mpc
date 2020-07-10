@@ -10,7 +10,7 @@
 #include "yaml_parser/parser_yaml.h"
 
 #include "multicopter_mpc/multicopter-base-params.hpp"
-#include "multicopter_mpc/ocp-base.hpp"
+#include "multicopter_mpc/ocp/mpc/mpc-base.hpp"
 
 namespace multicopter_mpc {
 
@@ -24,11 +24,11 @@ struct LowLevelControllerParams {
   double w_control;  // General penalization for the control
 };
 
-class LowLevelController : public OcpAbstract {
+class LowLevelController : public MpcAbstract {
  public:
   LowLevelController(const boost::shared_ptr<pinocchio::Model>& model,
                      const boost::shared_ptr<MultiCopterBaseParams>& mc_params, const double& dt,
-                     std::size_t& n_knots);
+                     const boost::shared_ptr<Mission>& mission, std::size_t& n_knots);
   ~LowLevelController();
 
   void loadParameters(const yaml_parser::ParamsServer& server) override;
@@ -36,6 +36,7 @@ class LowLevelController : public OcpAbstract {
   void createProblem(const SolverTypes::Type& solver_type);
   void solve() override;
 
+  void updateProblem(const std::size_t idx_trajectory);
   void updateReferences(const Eigen::Ref<Eigen::VectorXd>& state_new, const Eigen::Ref<Eigen::VectorXd>& control_new);
 
   const Eigen::VectorXd& getControls(const std::size_t& idx = 0) const;
@@ -47,6 +48,7 @@ class LowLevelController : public OcpAbstract {
   void printCosts();
 
  private:
+  void initializeTrajectoryGenerator(const SolverTypes::Type& solver_type) override;
   void initializeDefaultParameters() override;
 
   boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> createDifferentialModel(

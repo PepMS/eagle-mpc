@@ -121,6 +121,10 @@ void Mission::setInitialState(const Eigen::VectorXd& x0) {
   x0_ = x0;
 }
 
+void Mission::addWaypoint(WayPoint waypoint) {
+  waypoints_.push_back(waypoint);
+}
+
 const Eigen::VectorXd& Mission::getInitialState() const { return x0_; }
 const std::vector<WayPoint>& Mission::getWaypoints() const { return waypoints_; }
 

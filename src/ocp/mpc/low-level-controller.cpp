@@ -1,16 +1,12 @@
-#include "multicopter_mpc/ocp/low-level-controller.hpp"
+#include "multicopter_mpc/ocp/mpc/low-level-controller.hpp"
 
 namespace multicopter_mpc {
 
 LowLevelController::LowLevelController(const boost::shared_ptr<pinocchio::Model>& model,
                                        const boost::shared_ptr<MultiCopterBaseParams>& mc_params, const double& dt,
-                                       std::size_t& n_knots)
-    : OcpAbstract(model, mc_params, dt) {
-  n_knots_ = n_knots;
-
-  state_ref_.resize(n_knots_, state_->zero());
-  control_ref_.resize(n_knots_ - 1, Eigen::VectorXd::Zero(4));
-
+                                       const boost::shared_ptr<Mission>& mission, std::size_t& n_knots)
+    : MpcAbstract(model, mc_params, dt, mission, n_knots) {
+  
   initializeDefaultParameters();
 }
 
@@ -39,7 +35,19 @@ void LowLevelController::loadParameters(const yaml_parser::ParamsServer& server)
   params_.w_control = server.getParam<double>("ocp/cost_control_weight");
 }
 
+void LowLevelController::initializeTrajectoryGenerator(const SolverTypes::Type& solver_type) {
+  state_ref_.resize(n_knots_, state_->zero());
+  control_ref_.resize(n_knots_ - 1, Eigen::VectorXd::Zero(4));
+
+  trajectory_generator_->createProblem(solver_type);
+  trajectory_generator_->solve();
+
+  mission_ = trajectory_generator_->getMission();
+}
+
 void LowLevelController::createProblem(const SolverTypes::Type& solver_type) {
+  initializeTrajectoryGenerator(solver_type);
+  
   for (int i = 0; i < n_knots_ - 1; ++i) {
     boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model = createDifferentialModel(i);
     boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> int_model =
@@ -144,7 +152,8 @@ void LowLevelController::updateReferences(const Eigen::Ref<Eigen::VectorXd>& sta
   cost_state->set_xref(state_ref_[n_knots_ - 1]);
 }
 
-const Eigen::VectorXd& LowLevelController::getControls(const std::size_t& idx) const { return solver_->get_us()[idx]; }
+void LowLevelController::updateProblem(const std::size_t idx_trajectory) {}
+
 const std::vector<Eigen::VectorXd>& LowLevelController::getStateRef() const { return state_ref_; }
 const LowLevelControllerParams& LowLevelController::getParams() const { return params_; }
 

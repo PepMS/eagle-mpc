@@ -11,7 +11,7 @@
 #include "yaml_parser/params_server.hpp"
 
 #include "multicopter_mpc/path.h"
-#include "multicopter_mpc/ocp/low-level-controller.hpp"
+#include "multicopter_mpc/ocp/mpc/low-level-controller.hpp"
 
 BOOST_AUTO_TEST_SUITE(multicopter_mpc_trajectory_generator_test)
 
@@ -19,8 +19,9 @@ class LowLevelControllerDerived : public multicopter_mpc::LowLevelController {
  public:
   LowLevelControllerDerived(const boost::shared_ptr<pinocchio::Model>& model,
                             const boost::shared_ptr<multicopter_mpc::MultiCopterBaseParams>& mc_params,
-                            const double& dt, std::size_t& n_knots)
-      : multicopter_mpc::LowLevelController(model, mc_params, dt, n_knots) {}
+                            const double& dt, const boost::shared_ptr<multicopter_mpc::Mission>& mission,
+                            std::size_t& n_knots)
+      : multicopter_mpc::LowLevelController(model, mc_params, dt, mission, n_knots) {}
 
   ~LowLevelControllerDerived(){};
 
@@ -43,8 +44,9 @@ class LowLevelControllerDerived : public multicopter_mpc::LowLevelController {
 
 class LowLevelControllerTest {
  public:
-  LowLevelControllerTest() {
+  LowLevelControllerTest(const std::string& mission_name) {
     std::string multirotor_yaml_path = MULTICOPTER_MPC_ROOT_DIR "/unittest/config/iris.yaml";
+    std::string mission_yaml_path = MULTICOPTER_MPC_ROOT_DIR "/unittest/config/" + mission_name;
 
     pinocchio::urdf::buildModel(EXAMPLE_ROBOT_DATA_MODEL_DIR "/iris_description/robots/iris_simple.urdf",
                                 pinocchio::JointModelFreeFlyer(), model_);
@@ -52,19 +54,28 @@ class LowLevelControllerTest {
     yaml_parser::ParserYAML yaml_file(multirotor_yaml_path, "", true);
     yaml_parser::ParamsServer server_params(yaml_file.getParams());
 
+
+    yaml_parser::ParserYAML mission_yaml_file(mission_yaml_path, "", true);
+    yaml_parser::ParamsServer mission_server_params(mission_yaml_file.getParams());
+
     mc_params_ = boost::make_shared<multicopter_mpc::MultiCopterBaseParams>();
     mc_params_->fill(server_params);
 
     mc_model_ = boost::make_shared<pinocchio::Model>(model_);
 
+    mc_mission_ = boost::make_shared<multicopter_mpc::Mission>(mc_model_->nq + mc_model_->nv);
+    mc_mission_->fillWaypoints(mission_server_params);
+    mc_mission_->fillInitialState(mission_server_params);
+
     dt_ = 1e-2;
     n_knots_ = 100;
-    low_level_controller_ = boost::make_shared<LowLevelControllerDerived>(mc_model_, mc_params_, dt_, n_knots_);
+    low_level_controller_ = boost::make_shared<LowLevelControllerDerived>(mc_model_, mc_params_, dt_, mc_mission_,n_knots_);
   }
 
   ~LowLevelControllerTest() {}
 
   pinocchio::Model model_;
+  boost::shared_ptr<multicopter_mpc::Mission> mc_mission_;
 
   boost::shared_ptr<multicopter_mpc::MultiCopterBaseParams> mc_params_;
   boost::shared_ptr<pinocchio::Model> mc_model_;
@@ -76,7 +87,7 @@ class LowLevelControllerTest {
 };
 
 BOOST_AUTO_TEST_CASE(constructor_test, *boost::unit_test::tolerance(1e-7)) {
-  LowLevelControllerTest llc_test;
+  LowLevelControllerTest llc_test("mission-test.yaml");
 
   // Ocp_Base constructor
   BOOST_CHECK(llc_test.mc_model_ == llc_test.low_level_controller_->getModel());
@@ -108,7 +119,7 @@ BOOST_AUTO_TEST_CASE(constructor_test, *boost::unit_test::tolerance(1e-7)) {
 }
 
 BOOST_AUTO_TEST_CASE(initialize_default_parameters_test, *boost::unit_test::tolerance(1e-7)) {
-  LowLevelControllerTest llc_test;
+  LowLevelControllerTest llc_test("mission-test.yaml");
 
   Eigen::Vector3d w_position;
   Eigen::Vector3d w_orientation;
@@ -128,7 +139,7 @@ BOOST_AUTO_TEST_CASE(initialize_default_parameters_test, *boost::unit_test::tole
 }
 
 BOOST_AUTO_TEST_CASE(load_parameters_test, *boost::unit_test::tolerance(1e-7)) {
-  LowLevelControllerTest llc_test;
+  LowLevelControllerTest llc_test("mission-test.yaml");
 
   std::string params_yaml_path = MULTICOPTER_MPC_ROOT_DIR "/unittest/config/low-level-controller-test.yaml";
   yaml_parser::ParserYAML yaml_file(params_yaml_path, "", true);
@@ -154,7 +165,7 @@ BOOST_AUTO_TEST_CASE(load_parameters_test, *boost::unit_test::tolerance(1e-7)) {
 }
 
 BOOST_AUTO_TEST_CASE(create_problem_test, *boost::unit_test::tolerance(1e-7)) {
-  LowLevelControllerTest llc_test;
+  LowLevelControllerTest llc_test("mission-test.yaml");
 
   llc_test.low_level_controller_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
 
@@ -187,7 +198,7 @@ BOOST_AUTO_TEST_CASE(create_problem_test, *boost::unit_test::tolerance(1e-7)) {
 }
 
 BOOST_AUTO_TEST_CASE(create_costs_test, *boost::unit_test::tolerance(1e-7)) {
-  LowLevelControllerTest llc_test;
+  LowLevelControllerTest llc_test("mission-test.yaml");
 
   llc_test.low_level_controller_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
 
@@ -211,7 +222,7 @@ BOOST_AUTO_TEST_CASE(create_costs_test, *boost::unit_test::tolerance(1e-7)) {
 }
 
 BOOST_AUTO_TEST_CASE(create_cost_state_test, *boost::unit_test::tolerance(1e-7)) {
-  LowLevelControllerTest llc_test;
+  LowLevelControllerTest llc_test("mission-test.yaml");
 
   llc_test.low_level_controller_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
 
@@ -237,7 +248,7 @@ BOOST_AUTO_TEST_CASE(create_cost_state_test, *boost::unit_test::tolerance(1e-7))
 
 // Set reference before creating the problem
 BOOST_AUTO_TEST_CASE(set_reference_test_1, *boost::unit_test::tolerance(1e-7)) {
-  LowLevelControllerTest llc_test;
+  LowLevelControllerTest llc_test("mission-test.yaml");
 
   std::vector<Eigen::VectorXd> state_reference_trajectory(llc_test.low_level_controller_->getKnots(),
                                                           llc_test.low_level_controller_->getStateMultibody()->zero());
@@ -278,7 +289,7 @@ BOOST_AUTO_TEST_CASE(set_reference_test_1, *boost::unit_test::tolerance(1e-7)) {
 
 // Set reference after creating the problem
 BOOST_AUTO_TEST_CASE(set_reference_test_2, *boost::unit_test::tolerance(1e-7)) {
-  LowLevelControllerTest llc_test;
+  LowLevelControllerTest llc_test("mission-test.yaml");
 
   llc_test.low_level_controller_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
 
@@ -320,7 +331,7 @@ BOOST_AUTO_TEST_CASE(set_reference_test_2, *boost::unit_test::tolerance(1e-7)) {
 
 // Set reference after creating the problem
 BOOST_AUTO_TEST_CASE(update_reference_trajectory_test, *boost::unit_test::tolerance(1e-7)) {
-  LowLevelControllerTest llc_test;
+  LowLevelControllerTest llc_test("mission-test.yaml");
 
   llc_test.low_level_controller_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
 
@@ -355,14 +366,14 @@ BOOST_AUTO_TEST_CASE(update_reference_trajectory_test, *boost::unit_test::tolera
 
 // Set reference after creating the problem
 BOOST_AUTO_TEST_CASE(set_solver_test, *boost::unit_test::tolerance(1e-7)) {
-  LowLevelControllerTest llc_test;
+  LowLevelControllerTest llc_test("mission-test.yaml");
 
   llc_test.low_level_controller_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
   BOOST_CHECK(llc_test.low_level_controller_->getSolver() != nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(solve_test, *boost::unit_test::tolerance(1e-7)) {
-  LowLevelControllerTest llc_test;
+  LowLevelControllerTest llc_test("mission-test.yaml");
 
   llc_test.low_level_controller_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
 

@@ -211,7 +211,7 @@ void TrajectoryGenerator::solve() {
 
 const boost::shared_ptr<const crocoddyl::SolverAbstract> TrajectoryGenerator::getSolver() const { return solver_; }
 
-const boost::shared_ptr<const Mission> TrajectoryGenerator::getMission() const { return mission_; }
+const boost::shared_ptr<Mission> TrajectoryGenerator::getMission() const { return mission_; }
 
 const TrajectoryGeneratorParams& TrajectoryGenerator::getParams() const { return params_; };
 
@@ -234,11 +234,6 @@ std::vector<Eigen::VectorXd> TrajectoryGenerator::getControlTrajectory(const std
 }
 
 const Eigen::VectorXd& TrajectoryGenerator::getState(const std::size_t& cursor) const {
-  // if (cursor < state_trajectory_.size()) {
-  //   return state_trajectory_[cursor];
-  // } else {
-  //   return state_hover_;
-  // }
   if (cursor < solver_->get_xs().size()) {
     return solver_->get_xs()[cursor];
   } else {

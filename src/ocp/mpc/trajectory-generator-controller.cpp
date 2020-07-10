@@ -1,4 +1,4 @@
-#include "multicopter_mpc/ocp/trajectory-generator-controller.hpp"
+#include "multicopter_mpc/ocp/mpc/trajectory-generator-controller.hpp"
 
 namespace multicopter_mpc {
 
@@ -6,17 +6,10 @@ TrajectoryGeneratorController::TrajectoryGeneratorController(const boost::shared
                                                              const boost::shared_ptr<MultiCopterBaseParams>& mc_params,
                                                              const double& dt,
                                                              const boost::shared_ptr<Mission>& mission,
-                                                             const std::size_t& n_knots)
-    : OcpAbstract(model, mc_params, dt), mission_(mission) {
-  assert(mission->waypoints_.size() > 0);
-
-  n_knots_ = n_knots;
-
-  has_motion_ref_ = false;
-  setPoseRef(0);
-  setMotionRef(0);
-
+                                                             std::size_t& n_knots)
+    : MpcAbstract(model, mc_params, dt, mission, n_knots) {
   initializeDefaultParameters();
+  mission_ = boost::make_shared<Mission>(mission->getInitialState().size());
 }
 
 TrajectoryGeneratorController::~TrajectoryGeneratorController() {}
@@ -54,7 +47,51 @@ void TrajectoryGeneratorController::loadParameters(const yaml_parser::ParamsServ
   params_.w_vel_terminal = server.getParam<double>("ocp/cost_terminal_vel_weight");
 }
 
+void TrajectoryGeneratorController::initializeTrajectoryGenerator(const SolverTypes::Type& solver_type) {
+  has_motion_ref_ = false;
+
+  trajectory_generator_->createProblem(solver_type);
+  trajectory_generator_->setSolverCallbacks(true);
+  trajectory_generator_->solve();
+
+  std::size_t wp_idx = 1;
+  std::size_t wp_cursor = 0;
+  for (std::vector<WayPoint>::const_iterator wp = trajectory_generator_->getMission()->getWaypoints().begin();
+       wp != trajectory_generator_->getMission()->getWaypoints().end(); ++wp) {
+    if (wp->knots <= n_knots_) {
+      mission_->addWaypoint((*wp));
+      wp_cursor += wp->knots - 1;
+    } else {
+      std::size_t n_groups = splitWaypoint(wp->knots);
+      std::size_t n_groups_big = wp->knots % n_groups;
+      std::size_t n_groups_small = n_groups - n_groups_big;
+      for (std::size_t i = 0; i < n_groups; ++i) {
+        std::size_t wp_knots = i < n_groups_small ? wp->knots / n_groups : wp->knots / n_groups + 1;
+        wp_cursor += wp_knots - 1;
+        Eigen::VectorXd state_ref = trajectory_generator_->getState(wp_cursor);
+        Eigen::Quaterniond quat(static_cast<Eigen::Vector4d>(state_ref.segment(3, 4)));
+        WayPoint wp_middle(wp_knots, state_ref.head(3), quat, state_ref.segment(7, 3), state_ref.segment(10, 3));
+        mission_->addWaypoint(wp_middle);
+      }
+    }
+    ++wp_idx;
+  }
+
+  setPoseRef(0);
+  setMotionRef(0);
+}
+
+std::size_t TrajectoryGeneratorController::splitWaypoint(const std::size_t& wp_original_knots) {
+  std::size_t divider = 1;
+  while (wp_original_knots / double(divider) > n_knots_) {
+    ++divider;
+  }
+  return divider;
+}
+
 void TrajectoryGeneratorController::createProblem(const SolverTypes::Type& solver_type) {
+  initializeTrajectoryGenerator(solver_type);
+
   for (int i = 0; i < n_knots_ - 1; ++i) {
     boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model = createRunningDifferentialModel();
     boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> int_model =
@@ -262,10 +299,6 @@ void TrajectoryGeneratorController::updateTerminalCost(const std::size_t idx_tra
 const crocoddyl::FramePlacement& TrajectoryGeneratorController::getPoseRef() const { return pose_ref_; }
 const crocoddyl::FrameMotion& TrajectoryGeneratorController::getVelocityRef() const { return motion_ref_; }
 const TrajectoryGeneratorParams& TrajectoryGeneratorController::getParams() const { return params_; };
-const Eigen::VectorXd& TrajectoryGeneratorController::getControls(const std::size_t& idx) const {
-  return solver_->get_us()[idx];
-}
-const boost::shared_ptr<const Mission> TrajectoryGeneratorController::getMission() const { return mission_; }
 
 void TrajectoryGeneratorController::setPoseRef(const std::size_t& idx_trajectory) {
   pose_ref_.frame = frame_base_link_id_;

@@ -1,4 +1,4 @@
-#include "multicopter_mpc/ocp-base.hpp"
+#include "multicopter_mpc/ocp/ocp-base.hpp"
 
 namespace multicopter_mpc {
 
