@@ -18,6 +18,7 @@ class Mission {
   void fillInitialState(const yaml_parser::ParamsServer& server);
 
   void addWaypoint(WayPoint waypoint);
+  void countTotalKnots();
 
   void setInitialState(const Eigen::VectorXd& x0);
   const Eigen::VectorXd& getInitialState() const;
@@ -28,7 +29,6 @@ class Mission {
   std::size_t getWpFromTrajIdx(const std::size_t& traj_idx) const;
 
  private:
-  void countTotalKnots();
   
   std::vector<WayPoint> waypoints_;
   Eigen::VectorXd x0_;

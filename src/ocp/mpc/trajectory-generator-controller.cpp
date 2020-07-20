@@ -51,7 +51,6 @@ void TrajectoryGeneratorController::initializeTrajectoryGenerator(const SolverTy
   has_motion_ref_ = false;
 
   trajectory_generator_->createProblem(solver_type);
-  trajectory_generator_->setSolverCallbacks(true);
   trajectory_generator_->solve();
 
   std::size_t wp_idx = 1;
@@ -67,16 +66,23 @@ void TrajectoryGeneratorController::initializeTrajectoryGenerator(const SolverTy
       std::size_t n_groups_small = n_groups - n_groups_big;
       for (std::size_t i = 0; i < n_groups; ++i) {
         std::size_t wp_knots = i < n_groups_small ? wp->knots / n_groups : wp->knots / n_groups + 1;
-        wp_cursor += wp_knots - 1;
+        wp_cursor = i == 0 ? wp_cursor + wp_knots - 1 : wp_cursor + wp_knots;
         Eigen::VectorXd state_ref = trajectory_generator_->getState(wp_cursor);
         Eigen::Quaterniond quat(static_cast<Eigen::Vector4d>(state_ref.segment(3, 4)));
-        WayPoint wp_middle(wp_knots, state_ref.head(3), quat, state_ref.segment(7, 3), state_ref.segment(10, 3));
-        mission_->addWaypoint(wp_middle);
+        if (i == n_groups - 1) {
+          WayPoint wp_middle(*wp);
+          wp_middle.knots = wp_knots;
+          mission_->addWaypoint(wp_middle);
+        } else {
+          WayPoint wp_middle(wp_knots, state_ref.head(3), quat, state_ref.segment(7, 3), state_ref.segment(10, 3));
+          mission_->addWaypoint(wp_middle);
+        }
       }
     }
     ++wp_idx;
   }
-
+  
+  mission_->countTotalKnots();
   setPoseRef(0);
   setMotionRef(0);
 }
@@ -92,8 +98,9 @@ std::size_t TrajectoryGeneratorController::splitWaypoint(const std::size_t& wp_o
 void TrajectoryGeneratorController::createProblem(const SolverTypes::Type& solver_type) {
   initializeTrajectoryGenerator(solver_type);
 
-  for (int i = 0; i < n_knots_ - 1; ++i) {
-    boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model = createRunningDifferentialModel();
+  for (std::size_t i = 0; i < n_knots_ - 1; ++i) {
+    boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model =
+        createRunningDifferentialModel(i);
     boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> int_model =
         boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_model, dt_);
 
@@ -101,7 +108,8 @@ void TrajectoryGeneratorController::createProblem(const SolverTypes::Type& solve
     int_models_running_.push_back(int_model);
   }
 
-  boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model = createTerminalDifferentialModel();
+  boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model =
+      createTerminalDifferentialModel(n_knots_ - 1);
   boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> int_model =
       boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_model, dt_);
 
@@ -120,7 +128,7 @@ void TrajectoryGeneratorController::createProblem(const SolverTypes::Type& solve
 }
 
 boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics>
-TrajectoryGeneratorController::createRunningDifferentialModel() {
+TrajectoryGeneratorController::createRunningDifferentialModel(const std::size_t& idx_knot) {
   boost::shared_ptr<crocoddyl::CostModelSum> cost_model =
       boost::make_shared<crocoddyl::CostModelSum>(state_, actuation_->get_nu());
 
@@ -132,6 +140,8 @@ TrajectoryGeneratorController::createRunningDifferentialModel() {
   cost_model->addCost("control_reg", cost_reg_control, params_.w_control_running);
 
   // Waypoint cost related
+  setPoseRef(idx_knot);
+  setMotionRef(idx_knot);
   boost::shared_ptr<crocoddyl::CostModelAbstract> cost_pose =
       boost::make_shared<crocoddyl::CostModelFramePlacement>(state_, pose_ref_, actuation_->get_nu());
   cost_model->addCost("pose_desired", cost_pose, params_.w_pos_running);
@@ -152,11 +162,13 @@ TrajectoryGeneratorController::createRunningDifferentialModel() {
 }
 
 boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics>
-TrajectoryGeneratorController::createTerminalDifferentialModel() {
+TrajectoryGeneratorController::createTerminalDifferentialModel(const std::size_t& idx_knot) {
   boost::shared_ptr<crocoddyl::CostModelSum> cost_model =
       boost::make_shared<crocoddyl::CostModelSum>(state_, actuation_->get_nu());
 
   // Waypoint cost related
+  setPoseRef(idx_knot);
+  setMotionRef(idx_knot);
   boost::shared_ptr<crocoddyl::CostModelAbstract> cost_pose =
       boost::make_shared<crocoddyl::CostModelFramePlacement>(state_, pose_ref_, actuation_->get_nu());
   cost_model->addCost("pose_desired", cost_pose, params_.w_pos_terminal);

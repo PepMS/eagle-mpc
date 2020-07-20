@@ -31,8 +31,8 @@ class TrajectoryGeneratorController : public MpcAbstract {
   void initializeTrajectoryGenerator(const SolverTypes::Type& solver_type) override;
 
   std::size_t splitWaypoint(const std::size_t& wp_original_knots);
-  boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> createRunningDifferentialModel();
-  boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> createTerminalDifferentialModel();
+  boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> createRunningDifferentialModel(const std::size_t& idx_knot);
+  boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> createTerminalDifferentialModel(const std::size_t& idx_knot);
   boost::shared_ptr<crocoddyl::CostModelAbstract> createCostStateRegularization();
   boost::shared_ptr<crocoddyl::CostModelAbstract> createCostControlRegularization();
 

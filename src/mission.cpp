@@ -121,9 +121,7 @@ void Mission::setInitialState(const Eigen::VectorXd& x0) {
   x0_ = x0;
 }
 
-void Mission::addWaypoint(WayPoint waypoint) {
-  waypoints_.push_back(waypoint);
-}
+void Mission::addWaypoint(WayPoint waypoint) { waypoints_.push_back(waypoint); }
 
 const Eigen::VectorXd& Mission::getInitialState() const { return x0_; }
 const std::vector<WayPoint>& Mission::getWaypoints() const { return waypoints_; }
@@ -133,6 +131,8 @@ const std::vector<std::size_t>& Mission::getWpTrajIdx() const { return wp_traj_i
 
 std::size_t Mission::getWpFromTrajIdx(const std::size_t& traj_idx) const {
   assert(n_knots_ > 0);
+  assert(wp_traj_idx_.size() > 0);
+
   std::size_t idx = 0;
   while (idx < wp_traj_idx_.size() && traj_idx > wp_traj_idx_[idx]) {
     idx++;
