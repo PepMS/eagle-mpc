@@ -9,7 +9,7 @@
 #include "yaml_parser/params_server.hpp"
 #include "yaml_parser/parser_yaml.h"
 
-#include "multicopter_mpc/ocp-base.hpp"
+#include "multicopter_mpc/ocp/ocp-base.hpp"
 #include "multicopter_mpc/mission.hpp"
 #include "multicopter_mpc/multicopter-base-params.hpp"
 

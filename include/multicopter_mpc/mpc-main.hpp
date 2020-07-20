@@ -20,7 +20,7 @@
 #include "yaml_parser/params_server.hpp"
 
 #include "multicopter_mpc/ocp/mpc/mpc-base.hpp"
-#include "multicopter_mpc/ocp/mpc/trajectory-generator-controller.hpp"
+#include "multicopter_mpc/ocp/mpc/picewise-mpc.hpp"
 #include "multicopter_mpc/ocp/mpc/low-level-controller.hpp"
 #include "multicopter_mpc/path.h"
 

@@ -32,7 +32,6 @@ class LowLevelController : public MpcAbstract {
   ~LowLevelController();
 
   void loadParameters(const yaml_parser::ParamsServer& server) override;
-
   void createProblem(const SolverTypes::Type& solver_type);
   void solve() override;
 

@@ -55,10 +55,10 @@ MpcMain::MpcMain(const MultiCopterTypes::Type& mc_type, const SolverTypes::Type&
       mpc_controller_ =
           boost::make_shared<LowLevelController>(model_, mc_params_, dt_, mission_, mpc_controller_knots_);
       break;
-    case MpcTypes::TgMpc:  
+    case MpcTypes::PiceWiseMpc:  
     default:
       mpc_controller_ =
-          boost::make_shared<TrajectoryGeneratorController>(model_, mc_params_, dt_, mission_, mpc_controller_knots_);
+          boost::make_shared<PiceWiseMpc>(model_, mc_params_, dt_, mission_, mpc_controller_knots_);
       break;
   }
 

@@ -10,7 +10,7 @@
 namespace multicopter_mpc {
 
 struct MpcTypes {
-  enum Type { RailMpc, TgMpc };
+  enum Type { RailMpc, PiceWiseMpc, CarrotMpc };
 };
 
 class MpcAbstract : public OcpAbstract {

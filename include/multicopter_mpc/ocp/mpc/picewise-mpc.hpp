@@ -1,5 +1,5 @@
-#ifndef MULTICOPTER_MPC_OCP_TRAJECTORY_GENERATOR_CONTROLLER_HPP_
-#define MULTICOPTER_MPC_OCP_TRAJECTORY_GENERATOR_CONTROLLER_HPP_
+#ifndef MULTICOPTER_MPC_OCP_PICEWISE_MPC_HPP_
+#define MULTICOPTER_MPC_OCP_PICEWISE_MPC_HPP_
 
 #include "multicopter_mpc/ocp/mpc/mpc-base.hpp"
 #include "multicopter_mpc/ocp/trajectory-generator.hpp"
@@ -8,12 +8,12 @@
 
 namespace multicopter_mpc {
 
-class TrajectoryGeneratorController : public MpcAbstract {
+class PiceWiseMpc : public MpcAbstract {
  public:
-  TrajectoryGeneratorController(const boost::shared_ptr<pinocchio::Model>& model,
+  PiceWiseMpc(const boost::shared_ptr<pinocchio::Model>& model,
                                 const boost::shared_ptr<MultiCopterBaseParams>& mc_params, const double& dt,
                                 const boost::shared_ptr<Mission>& mission, std::size_t& n_knots);
-  ~TrajectoryGeneratorController();
+  ~PiceWiseMpc();
 
   void loadParameters(const yaml_parser::ParamsServer& server) override;
   void createProblem(const SolverTypes::Type& solver_type);
