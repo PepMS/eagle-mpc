@@ -3,7 +3,7 @@
 
 #include <boost/python.hpp>
 
-#include "multicopter_mpc/ocp-base.hpp"
+#include "multicopter_mpc/ocp/ocp-base.hpp"
 
 namespace multicopter_mpc {
 namespace python {
@@ -73,6 +73,8 @@ void exposeOcpAbstract() {
       .add_property("problem",
                     bp::make_function(&OcpAbstract_wrap::getProblem, bp::return_value_policy<bp::return_by_value>()),
                     bp::make_setter(&OcpAbstract_wrap::problem_))
+      .add_property("solver",
+                    bp::make_function(&OcpAbstract_wrap::getSolver, bp::return_value_policy<bp::return_by_value>()))
       .add_property("dt",
                     bp::make_function(&OcpAbstract_wrap::getTimeStep, bp::return_value_policy<bp::return_by_value>()))
       .add_property("u_lb", bp::make_function(&OcpAbstract_wrap::getActuationLowerBounds,
@@ -99,11 +101,7 @@ void exposeOcpAbstract() {
       .add_property(
           "int_model_terminal",
           bp::make_getter(&OcpAbstract_wrap::int_model_terminal_, bp::return_value_policy<bp::return_by_value>()),
-          bp::make_setter(&OcpAbstract_wrap::int_model_terminal_))
-      .add_property(
-          "solver",
-          bp::make_getter(&OcpAbstract_wrap::solver_, bp::return_value_policy<bp::return_by_value>()),
-          bp::make_setter(&OcpAbstract_wrap::solver_));
+          bp::make_setter(&OcpAbstract_wrap::int_model_terminal_));
 }
 
 }  // namespace python

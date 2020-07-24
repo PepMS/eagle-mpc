@@ -24,6 +24,7 @@ void exposeTrajectoryGenerator() {
       .add_property("mission", bp::make_function(&TrajectoryGenerator::getMission,
                                                  bp::return_value_policy<bp::return_by_value>()))
       .def("getStateTrajectory", &TrajectoryGenerator::getStateTrajectory, bp::args("self", "idx_init", "idx_end"))
+      .def("getControlTrajectory", &TrajectoryGenerator::getControlTrajectory, bp::args("self", "idx_init", "idx_end"))
       .def("getState", &TrajectoryGenerator::getState, bp::return_internal_reference<>(),
            bp::args("self", "cursor"));
 }
