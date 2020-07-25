@@ -42,7 +42,6 @@ class RailMpc : public MpcAbstract {
   void solve() override;
 
   void updateProblem(const std::size_t idx_trajectory);
-  void updateReferences(const Eigen::Ref<Eigen::VectorXd>& state_new, const Eigen::Ref<Eigen::VectorXd>& control_new);
 
   const Eigen::VectorXd& getControls(const std::size_t& idx = 0) const;
   const std::vector<Eigen::VectorXd>& getStateRef() const;
