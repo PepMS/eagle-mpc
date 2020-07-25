@@ -2,8 +2,8 @@
 
 namespace multicopter_mpc {
 MpcMain::MpcMain(const MultiCopterTypes::Type& mc_type, const SolverTypes::Type& solver_type,
-                 const std::string& mission_name, const MpcTypes::Type& mpc_type)
-    : mc_type_(mc_type), solver_type_(solver_type), mpc_type_(mpc_type) {
+                 const std::string& mission_name, const std::string& mpc_type)
+    : mc_type_(mc_type), solver_type_(solver_type) {
   std::string model_description_path;
   std::string model_yaml_path;
   std::string mission_yaml_path = MULTICOPTER_MPC_MISSION_DIR "/" + mission_name;
@@ -49,18 +49,7 @@ MpcMain::MpcMain(const MultiCopterTypes::Type& mc_type, const SolverTypes::Type&
 
   // Low Level Controller initialization
   mpc_controller_knots_ = 100;
-
-  switch (mpc_type_) {
-    case MpcTypes::RailMpc:
-      mpc_controller_ =
-          boost::make_shared<LowLevelController>(model_, mc_params_, dt_, mission_, mpc_controller_knots_);
-      break;
-    case MpcTypes::PiceWiseMpc:  
-    default:
-      mpc_controller_ =
-          boost::make_shared<PiceWiseMpc>(model_, mc_params_, dt_, mission_, mpc_controller_knots_);
-      break;
-  }
+  mpc_controller_ = FactoryMpc::createMpcController(mpc_type, model_, mc_params_, dt_, mission_, mpc_controller_knots_);
 
   mpc_controller_->loadParameters(server_llc_params);
   current_state_ = mpc_controller_->getStateMultibody()->zero();
@@ -84,9 +73,7 @@ MpcMain::MpcMain() {}
 
 MpcMain::~MpcMain() {}
 
-const boost::shared_ptr<const MpcAbstract> MpcMain::getMpcController() {
-  return mpc_controller_;
-}
+const boost::shared_ptr<const MpcAbstract> MpcMain::getMpcController() { return mpc_controller_; }
 
 void MpcMain::setCurrentState(const Eigen::Ref<Eigen::VectorXd>& current_state) { current_state_ = current_state; }
 

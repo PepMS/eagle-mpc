@@ -34,7 +34,7 @@ class MpcMain {
  public:
   MpcMain();
   MpcMain(const MultiCopterTypes::Type& mc_type, const SolverTypes::Type& solver_type, const std::string& mission_name,
-          const MpcTypes::Type& mpc_type);
+          const std::string& mpc_type);
   ~MpcMain();
 
   const boost::shared_ptr<const MpcAbstract> getMpcController();
@@ -46,7 +46,6 @@ class MpcMain {
 
   MultiCopterTypes::Type mc_type_;
   SolverTypes::Type solver_type_;
-  MpcTypes::Type mpc_type_;
 
   boost::shared_ptr<pinocchio::Model> model_;
   boost::shared_ptr<MultiCopterBaseParams> mc_params_;

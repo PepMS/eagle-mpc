@@ -4,7 +4,7 @@ namespace multicopter_mpc {
 
 PiceWiseMpc::PiceWiseMpc(const boost::shared_ptr<pinocchio::Model>& model,
                          const boost::shared_ptr<MultiCopterBaseParams>& mc_params, const double& dt,
-                         const boost::shared_ptr<Mission>& mission, std::size_t& n_knots)
+                         const boost::shared_ptr<Mission>& mission, const std::size_t& n_knots)
     : MpcAbstract(model, mc_params, dt, mission, n_knots) {
   initializeDefaultParameters();
   mission_ = boost::make_shared<Mission>(mission->getInitialState().size());
@@ -12,6 +12,17 @@ PiceWiseMpc::PiceWiseMpc(const boost::shared_ptr<pinocchio::Model>& model,
 
 PiceWiseMpc::~PiceWiseMpc() {}
 
+std::string PiceWiseMpc::getFactoryName() { return "PiceWiseMpc"; }
+
+boost::shared_ptr<MpcAbstract> PiceWiseMpc::createMpcController(
+    const boost::shared_ptr<pinocchio::Model>& model, const boost::shared_ptr<MultiCopterBaseParams>& mc_params,
+    const double& dt, const boost::shared_ptr<Mission>& mission, const std::size_t& n_knots) {
+  return boost::make_shared<PiceWiseMpc>(model, mc_params, dt, mission, n_knots);
+}
+
+bool PiceWiseMpc::registered_ =
+    FactoryMpc::registerMpcController(PiceWiseMpc::getFactoryName(), PiceWiseMpc::createMpcController);
+    
 void PiceWiseMpc::initializeDefaultParameters() {
   params_.w_state_position.fill(1.);
   params_.w_state_orientation.fill(1.);

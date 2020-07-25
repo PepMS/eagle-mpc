@@ -1,6 +1,8 @@
 #ifndef MULTICOPTER_MPC_MPC_BASE_HPP_
 #define MULTICOPTER_MPC_MPC_BASE_HPP_
 
+#include <map>
+
 #include <boost/shared_ptr.hpp>
 
 #include "multicopter_mpc/ocp/ocp-base.hpp"
@@ -8,10 +10,6 @@
 #include "multicopter_mpc/mission.hpp"
 
 namespace multicopter_mpc {
-
-struct MpcTypes {
-  enum Type { RailMpc, PiceWiseMpc, CarrotMpc };
-};
 
 class MpcAbstract : public OcpAbstract {
  public:
@@ -32,8 +30,29 @@ class MpcAbstract : public OcpAbstract {
 
   boost::shared_ptr<TrajectoryGenerator> trajectory_generator_;
   boost::shared_ptr<Mission> mission_;
-
 };
+
+class FactoryMpc {
+ public:
+  FactoryMpc();
+  ~FactoryMpc();
+
+  using createMethod = boost::shared_ptr<MpcAbstract> (*)(const boost::shared_ptr<pinocchio::Model>&,
+                                                          const boost::shared_ptr<MultiCopterBaseParams>&,
+                                                          const double&, const boost::shared_ptr<Mission>&,
+                                                          const std::size_t&);
+
+  static bool registerMpcController(const std::string& mpc_name, createMethod create_method);
+  static boost::shared_ptr<MpcAbstract> createMpcController(const std::string& mpc_name,
+                                                            const boost::shared_ptr<pinocchio::Model>& model,
+                                                            const boost::shared_ptr<MultiCopterBaseParams>& mc_params,
+                                                            const double& dt, const boost::shared_ptr<Mission>& mission,
+                                                            const std::size_t& n_knots);
+
+ private:
+  static std::map<std::string, createMethod> s_methods_;
+};
+
 }  // namespace multicopter_mpc
 
 #endif

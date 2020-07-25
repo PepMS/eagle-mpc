@@ -11,9 +11,16 @@ namespace multicopter_mpc {
 class PiceWiseMpc : public MpcAbstract {
  public:
   PiceWiseMpc(const boost::shared_ptr<pinocchio::Model>& model,
-                                const boost::shared_ptr<MultiCopterBaseParams>& mc_params, const double& dt,
-                                const boost::shared_ptr<Mission>& mission, std::size_t& n_knots);
+              const boost::shared_ptr<MultiCopterBaseParams>& mc_params, const double& dt,
+              const boost::shared_ptr<Mission>& mission, const std::size_t& n_knots);
   ~PiceWiseMpc();
+
+  static std::string getFactoryName();
+  static boost::shared_ptr<MpcAbstract> createMpcController(const boost::shared_ptr<pinocchio::Model>& model,
+                                                            const boost::shared_ptr<MultiCopterBaseParams>& mc_params,
+                                                            const double& dt,
+                                                            const boost::shared_ptr<Mission>& mission,
+                                                            const std::size_t& n_knots);
 
   void loadParameters(const yaml_parser::ParamsServer& server) override;
   void createProblem(const SolverTypes::Type& solver_type);
@@ -31,8 +38,10 @@ class PiceWiseMpc : public MpcAbstract {
   void initializeTrajectoryGenerator(const SolverTypes::Type& solver_type) override;
 
   std::size_t splitWaypoint(const std::size_t& wp_original_knots);
-  boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> createRunningDifferentialModel(const std::size_t& idx_knot);
-  boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> createTerminalDifferentialModel(const std::size_t& idx_knot);
+  boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> createRunningDifferentialModel(
+      const std::size_t& idx_knot);
+  boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> createTerminalDifferentialModel(
+      const std::size_t& idx_knot);
   boost::shared_ptr<crocoddyl::CostModelAbstract> createCostStateRegularization();
   boost::shared_ptr<crocoddyl::CostModelAbstract> createCostControlRegularization();
 
@@ -49,6 +58,9 @@ class PiceWiseMpc : public MpcAbstract {
 
   std::vector<std::size_t> terminal_weights_idx_;
   TrajectoryGeneratorParams params_;
+
+ private:
+  static bool registered_;
 };
 }  // namespace multicopter_mpc
 
