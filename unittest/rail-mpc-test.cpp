@@ -139,11 +139,7 @@ BOOST_AUTO_TEST_CASE(initialize_default_parameters_test, *boost::unit_test::tole
 BOOST_AUTO_TEST_CASE(load_parameters_test, *boost::unit_test::tolerance(1e-7)) {
   RailMpcTest llc_test("mission-test.yaml");
 
-  std::string params_yaml_path = MULTICOPTER_MPC_ROOT_DIR "/unittest/config/low-level-controller-test.yaml";
-  yaml_parser::ParserYAML yaml_file(params_yaml_path, "", true);
-  yaml_parser::ParamsServer server_params(yaml_file.getParams());
-
-  llc_test.rail_mpc_->loadParameters(server_params);
+  llc_test.rail_mpc_->loadParameters(MULTICOPTER_MPC_ROOT_DIR "/unittest/config/low-level-controller-test.yaml");
 
   Eigen::Vector3d w_position;
   Eigen::Vector3d w_orientation;

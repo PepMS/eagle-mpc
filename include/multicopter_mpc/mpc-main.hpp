@@ -21,7 +21,7 @@
 
 #include "multicopter_mpc/ocp/mpc/mpc-base.hpp"
 #include "multicopter_mpc/ocp/mpc/picewise-mpc.hpp"
-#include "multicopter_mpc/ocp/mpc/low-level-controller.hpp"
+#include "multicopter_mpc/ocp/mpc/rail-mpc.hpp"
 #include "multicopter_mpc/path.h"
 
 namespace multicopter_mpc {

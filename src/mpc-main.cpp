@@ -6,8 +6,8 @@ MpcMain::MpcMain(const MultiCopterTypes::Type& mc_type, const SolverTypes::Type&
     : mc_type_(mc_type), solver_type_(solver_type) {
   std::string model_description_path;
   std::string model_yaml_path;
-
   std::string mission_yaml_path = MULTICOPTER_MPC_MISSION_DIR "/" + mission_name;
+  
   switch (mc_type_) {
     case MultiCopterTypes::Iris:
       model_description_path = EXAMPLE_ROBOT_DATA_MODEL_DIR "/iris_description/robots/iris_simple.urdf";
