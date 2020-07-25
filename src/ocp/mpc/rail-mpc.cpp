@@ -7,6 +7,8 @@ RailMpc::RailMpc(const boost::shared_ptr<pinocchio::Model>& model,
                  const boost::shared_ptr<Mission>& mission, const std::size_t& n_knots)
     : MpcAbstract(model, mc_params, dt, mission, n_knots) {
   initializeDefaultParameters();
+
+  parameters_yaml_path_ = MULTICOPTER_MPC_OCP_DIR "/rail-mpc.yaml";
 }
 
 RailMpc::~RailMpc() {}
@@ -32,7 +34,10 @@ void RailMpc::initializeDefaultParameters() {
   params_.w_control = 1e-4;
 }
 
-void RailMpc::loadParameters(const yaml_parser::ParamsServer& server) {
+void RailMpc::loadParameters(const std::string& yaml_path) {
+  yaml_parser::ParserYAML yaml_params(yaml_path, "", true);
+  yaml_parser::ParamsServer server(yaml_params.getParams());
+  
   std::vector<std::string> state_weights = server.getParam<std::vector<std::string>>("ocp/state_weights");
   std::map<std::string, std::string> current_state =
       yaml_parser::converter<std::map<std::string, std::string>>::convert(state_weights[0]);
@@ -197,4 +202,5 @@ void RailMpc::printCosts() {
       diff_model_terminal_->get_costs()->get_costs().find("state_error")->second->cost);
   std::cout << "Node number " << n_knots_ - 1 << ": \n" << cost_state->get_xref() << std::endl;
 }
+
 }  // namespace multicopter_mpc

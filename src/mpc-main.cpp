@@ -6,10 +6,8 @@ MpcMain::MpcMain(const MultiCopterTypes::Type& mc_type, const SolverTypes::Type&
     : mc_type_(mc_type), solver_type_(solver_type) {
   std::string model_description_path;
   std::string model_yaml_path;
-  std::string mission_yaml_path = MULTICOPTER_MPC_MISSION_DIR "/" + mission_name;
-  // std::string llc_params_yaml_path = MULTICOPTER_MPC_OCP_DIR "/trajectory-generator-controller.yaml";
-  std::string llc_params_yaml_path = MULTICOPTER_MPC_OCP_DIR "/low-level-controller.yaml";
 
+  std::string mission_yaml_path = MULTICOPTER_MPC_MISSION_DIR "/" + mission_name;
   switch (mc_type_) {
     case MultiCopterTypes::Iris:
       model_description_path = EXAMPLE_ROBOT_DATA_MODEL_DIR "/iris_description/robots/iris_simple.urdf";
@@ -31,9 +29,6 @@ MpcMain::MpcMain(const MultiCopterTypes::Type& mc_type, const SolverTypes::Type&
   yaml_parser::ParserYAML yaml_mission(mission_yaml_path, "", true);
   yaml_parser::ParamsServer server_mission(yaml_mission.getParams());
 
-  yaml_parser::ParserYAML yaml_llc_params(llc_params_yaml_path, "", true);
-  yaml_parser::ParamsServer server_llc_params(yaml_llc_params.getParams());
-
   pinocchio::Model model;
   pinocchio::urdf::buildModel(model_description_path, pinocchio::JointModelFreeFlyer(), model);
   model_ = boost::make_shared<pinocchio::Model>(model);
@@ -51,8 +46,7 @@ MpcMain::MpcMain(const MultiCopterTypes::Type& mc_type, const SolverTypes::Type&
   // Low Level Controller initialization
   mpc_controller_knots_ = 100;
   mpc_controller_ = FactoryMpc::createMpcController(mpc_type, model_, mc_params_, dt_, mission_, mpc_controller_knots_);
-
-  mpc_controller_->loadParameters(server_llc_params);
+  mpc_controller_->loadParameters(mpc_controller_->getParametersPath());
   current_state_ = mpc_controller_->getStateMultibody()->zero();
   mpc_controller_->setInitialState(current_state_);
   mpc_controller_->createProblem(solver_type_);
