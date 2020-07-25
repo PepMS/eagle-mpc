@@ -22,8 +22,8 @@ class PiceWiseMpc : public MpcAbstract {
                                                             const boost::shared_ptr<Mission>& mission,
                                                             const std::size_t& n_knots);
 
-  void loadParameters(const yaml_parser::ParamsServer& server) override;
-  void createProblem(const SolverTypes::Type& solver_type);
+  void loadParameters(const std::string& yaml_path) override;
+  void createProblem(const SolverTypes::Type& solver_type) override;
   void solve() override;
 
   void updateProblem(const std::size_t idx_trajectory);

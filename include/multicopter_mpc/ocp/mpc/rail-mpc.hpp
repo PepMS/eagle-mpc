@@ -37,7 +37,7 @@ class RailMpc : public MpcAbstract {
                                                             const boost::shared_ptr<Mission>& mission,
                                                             const std::size_t& n_knots);
 
-  void loadParameters(const yaml_parser::ParamsServer& server) override;
+  void loadParameters(const std::string& yaml_path) override;
   void createProblem(const SolverTypes::Type& solver_type);
   void solve() override;
 

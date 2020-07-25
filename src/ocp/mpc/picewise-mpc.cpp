@@ -8,6 +8,8 @@ PiceWiseMpc::PiceWiseMpc(const boost::shared_ptr<pinocchio::Model>& model,
     : MpcAbstract(model, mc_params, dt, mission, n_knots) {
   initializeDefaultParameters();
   mission_ = boost::make_shared<Mission>(mission->getInitialState().size());
+
+  parameters_yaml_path_ = MULTICOPTER_MPC_OCP_DIR "/trajectory-generator.yaml";
 }
 
 PiceWiseMpc::~PiceWiseMpc() {}
@@ -22,7 +24,7 @@ boost::shared_ptr<MpcAbstract> PiceWiseMpc::createMpcController(
 
 bool PiceWiseMpc::registered_ =
     FactoryMpc::registerMpcController(PiceWiseMpc::getFactoryName(), PiceWiseMpc::createMpcController);
-    
+
 void PiceWiseMpc::initializeDefaultParameters() {
   params_.w_state_position.fill(1.);
   params_.w_state_orientation.fill(1.);
@@ -38,7 +40,10 @@ void PiceWiseMpc::initializeDefaultParameters() {
   params_.w_vel_terminal = 10;
 }
 
-void PiceWiseMpc::loadParameters(const yaml_parser::ParamsServer& server) {
+void PiceWiseMpc::loadParameters(const std::string& yaml_path) {
+  yaml_parser::ParserYAML yaml_params(yaml_path, "", true);
+  yaml_parser::ParamsServer server(yaml_params.getParams());
+
   std::vector<std::string> state_weights = server.getParam<std::vector<std::string>>("ocp/state_weights");
   std::map<std::string, std::string> current_state =
       yaml_parser::converter<std::map<std::string, std::string>>::convert(state_weights[0]);

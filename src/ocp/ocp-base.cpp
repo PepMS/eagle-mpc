@@ -22,8 +22,6 @@ OcpAbstract::~OcpAbstract() {}
 
 void OcpAbstract::initializeDefaultParameters(){};
 
-void OcpAbstract::loadParameters(const yaml_parser::ParamsServer& server){};
-
 void OcpAbstract::setSolver(const SolverTypes::Type& solver_type) {
   assert(problem_ != nullptr);
 
@@ -75,6 +73,7 @@ const std::size_t& OcpAbstract::getKnots() const {
   }
   return n_knots_;
 }
+const std::string& OcpAbstract::getParametersPath() const { return parameters_yaml_path_; }
 
 void OcpAbstract::setInitialState(const Eigen::VectorXd& initial_state) {
   assert(initial_state.size() == state_->get_nx());  // Might not be efficient to do this here

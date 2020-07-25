@@ -6,7 +6,6 @@ TrajectoryGenerator::TrajectoryGenerator(const boost::shared_ptr<pinocchio::Mode
                                          const boost::shared_ptr<MultiCopterBaseParams>& mc_params, const double& dt,
                                          const boost::shared_ptr<Mission>& mission)
     : OcpAbstract(model, mc_params, dt), mission_(mission) {
-
   mission_->fillWaypointsKnots(dt_);
   n_knots_ = mission_->getTotalKnots();
 
@@ -14,6 +13,8 @@ TrajectoryGenerator::TrajectoryGenerator(const boost::shared_ptr<pinocchio::Mode
 
   // To be changed!!!!!
   control_hover_ = Eigen::VectorXd::Ones(mc_params_->n_rotors_) * 3.78;
+
+  parameters_yaml_path_ = MULTICOPTER_MPC_OCP_DIR "/trajectory-generator.yaml";
 }
 
 TrajectoryGenerator::~TrajectoryGenerator() {}
@@ -33,7 +34,10 @@ void TrajectoryGenerator::initializeDefaultParameters() {
   params_.w_vel_terminal = 10;
 }
 
-void TrajectoryGenerator::loadParameters(const yaml_parser::ParamsServer& server) {
+void TrajectoryGenerator::loadParameters(const std::string& yaml_path) {
+  yaml_parser::ParserYAML yaml_params(yaml_path, "", true);
+  yaml_parser::ParamsServer server(yaml_params.getParams());
+
   std::vector<std::string> state_weights = server.getParam<std::vector<std::string>>("ocp/state_weights");
   std::map<std::string, std::string> current_state =
       yaml_parser::converter<std::map<std::string, std::string>>::convert(state_weights[0]);
@@ -100,7 +104,8 @@ void TrajectoryGenerator::createProblem(const SolverTypes::Type& solver_type) {
       int_model_terminal_ = int_model_terminal;
     }
   }
-  problem_ = boost::make_shared<crocoddyl::ShootingProblem>(mission_->getInitialState(), int_models_running_, int_model_terminal_);
+  problem_ = boost::make_shared<crocoddyl::ShootingProblem>(mission_->getInitialState(), int_models_running_,
+                                                            int_model_terminal_);
   setSolver(solver_type);
 
   setInitialState(mission_->getInitialState());

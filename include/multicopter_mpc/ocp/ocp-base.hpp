@@ -43,7 +43,7 @@ class OcpAbstract {
   // Other methods
   virtual void createProblem(const SolverTypes::Type& solver_type) = 0;
 
-  virtual void loadParameters(const yaml_parser::ParamsServer& server);
+  virtual void loadParameters(const std::string& yaml_path) = 0;
 
   virtual void setSolverCallbacks(const bool& activated);
   virtual void solve();
@@ -63,6 +63,8 @@ class OcpAbstract {
   const Eigen::VectorXd& getInitialState() const;
   const int& getBaseLinkId() const;
   const std::size_t& getKnots() const;
+  const std::string& getParametersPath() const;
+
   // Setters
   virtual void setInitialState(const Eigen::VectorXd& initial_state);
 
@@ -95,6 +97,8 @@ class OcpAbstract {
   Eigen::VectorXd tau_lb_;
 
   Eigen::VectorXd state_initial_;
+
+  std::string parameters_yaml_path_;
 };
 
 }  // namespace multicopter_mpc

@@ -9,6 +9,7 @@
 #include "yaml_parser/params_server.hpp"
 #include "yaml_parser/parser_yaml.h"
 
+#include "multicopter_mpc/path.h"
 #include "multicopter_mpc/ocp/ocp-base.hpp"
 #include "multicopter_mpc/mission.hpp"
 #include "multicopter_mpc/multicopter-base-params.hpp"
@@ -37,9 +38,9 @@ class TrajectoryGenerator : public OcpAbstract {
                       const boost::shared_ptr<Mission>& mission);
   ~TrajectoryGenerator();
 
-  void loadParameters(const yaml_parser::ParamsServer& server) override;
+  void loadParameters(const std::string& yaml_path) override;
 
-  void createProblem(const SolverTypes::Type& solver_type);
+  void createProblem(const SolverTypes::Type& solver_type) override;
 
   boost::shared_ptr<crocoddyl::CostModelAbstract> createCostStateRegularization();
   boost::shared_ptr<crocoddyl::CostModelAbstract> createCostControlRegularization();
@@ -52,13 +53,14 @@ class TrajectoryGenerator : public OcpAbstract {
   const Eigen::VectorXd& getState(const std::size_t& cursor) const;
   const Eigen::VectorXd& getControl(const std::size_t& cursor) const;
   const boost::shared_ptr<const crocoddyl::SolverAbstract> getSolver() const;
-
   const TrajectoryGeneratorParams& getParams() const;
 
  private:
   void initializeDefaultParameters() override;
-  boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> createRunningDifferentialModel(const WayPoint& waypoint);
-  boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> createTerminalDifferentialModel(const WayPoint& waypoint, const bool& is_last_wp);
+  boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> createRunningDifferentialModel(
+      const WayPoint& waypoint);
+  boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> createTerminalDifferentialModel(
+      const WayPoint& waypoint, const bool& is_last_wp);
 
   boost::shared_ptr<Mission> mission_;
   // std::vector<Eigen::VectorXd> state_trajectory_;
