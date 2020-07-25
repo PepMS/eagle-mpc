@@ -1,27 +1,29 @@
-#include "multicopter_mpc/ocp/trajectory-generator-controller.hpp"
+#include "multicopter_mpc/ocp/mpc/picewise-mpc.hpp"
 
 namespace multicopter_mpc {
 
-TrajectoryGeneratorController::TrajectoryGeneratorController(const boost::shared_ptr<pinocchio::Model>& model,
-                                                             const boost::shared_ptr<MultiCopterBaseParams>& mc_params,
-                                                             const double& dt,
-                                                             const boost::shared_ptr<Mission>& mission,
-                                                             const std::size_t& n_knots)
-    : OcpAbstract(model, mc_params, dt), mission_(mission) {
-  assert(mission->waypoints_.size() > 0);
-
-  n_knots_ = n_knots;
-
-  has_motion_ref_ = false;
-  setPoseRef(0);
-  setMotionRef(0);
-
+PiceWiseMpc::PiceWiseMpc(const boost::shared_ptr<pinocchio::Model>& model,
+                         const boost::shared_ptr<MultiCopterBaseParams>& mc_params, const double& dt,
+                         const boost::shared_ptr<Mission>& mission, const std::size_t& n_knots)
+    : MpcAbstract(model, mc_params, dt, mission, n_knots) {
   initializeDefaultParameters();
+  mission_ = boost::make_shared<Mission>(mission->getInitialState().size());
 }
 
-TrajectoryGeneratorController::~TrajectoryGeneratorController() {}
+PiceWiseMpc::~PiceWiseMpc() {}
 
-void TrajectoryGeneratorController::initializeDefaultParameters() {
+std::string PiceWiseMpc::getFactoryName() { return "PiceWiseMpc"; }
+
+boost::shared_ptr<MpcAbstract> PiceWiseMpc::createMpcController(
+    const boost::shared_ptr<pinocchio::Model>& model, const boost::shared_ptr<MultiCopterBaseParams>& mc_params,
+    const double& dt, const boost::shared_ptr<Mission>& mission, const std::size_t& n_knots) {
+  return boost::make_shared<PiceWiseMpc>(model, mc_params, dt, mission, n_knots);
+}
+
+bool PiceWiseMpc::registered_ =
+    FactoryMpc::registerMpcController(PiceWiseMpc::getFactoryName(), PiceWiseMpc::createMpcController);
+    
+void PiceWiseMpc::initializeDefaultParameters() {
   params_.w_state_position.fill(1.);
   params_.w_state_orientation.fill(1.);
   params_.w_state_velocity_lin.fill(1.);
@@ -36,7 +38,7 @@ void TrajectoryGeneratorController::initializeDefaultParameters() {
   params_.w_vel_terminal = 10;
 }
 
-void TrajectoryGeneratorController::loadParameters(const yaml_parser::ParamsServer& server) {
+void PiceWiseMpc::loadParameters(const yaml_parser::ParamsServer& server) {
   std::vector<std::string> state_weights = server.getParam<std::vector<std::string>>("ocp/state_weights");
   std::map<std::string, std::string> current_state =
       yaml_parser::converter<std::map<std::string, std::string>>::convert(state_weights[0]);
@@ -54,9 +56,60 @@ void TrajectoryGeneratorController::loadParameters(const yaml_parser::ParamsServ
   params_.w_vel_terminal = server.getParam<double>("ocp/cost_terminal_vel_weight");
 }
 
-void TrajectoryGeneratorController::createProblem(const SolverTypes::Type& solver_type) {
-  for (int i = 0; i < n_knots_ - 1; ++i) {
-    boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model = createRunningDifferentialModel();
+void PiceWiseMpc::initializeTrajectoryGenerator(const SolverTypes::Type& solver_type) {
+  has_motion_ref_ = false;
+
+  trajectory_generator_->createProblem(solver_type);
+  trajectory_generator_->solve();
+
+  std::size_t wp_idx = 1;
+  std::size_t wp_cursor = 0;
+  for (std::vector<WayPoint>::const_iterator wp = trajectory_generator_->getMission()->getWaypoints().begin();
+       wp != trajectory_generator_->getMission()->getWaypoints().end(); ++wp) {
+    if (wp->knots <= n_knots_) {
+      mission_->addWaypoint((*wp));
+      wp_cursor += wp->knots - 1;
+    } else {
+      std::size_t n_groups = splitWaypoint(wp->knots);
+      std::size_t n_groups_big = wp->knots % n_groups;
+      std::size_t n_groups_small = n_groups - n_groups_big;
+      for (std::size_t i = 0; i < n_groups; ++i) {
+        std::size_t wp_knots = i < n_groups_small ? wp->knots / n_groups : wp->knots / n_groups + 1;
+        wp_cursor = i == 0 ? wp_cursor + wp_knots - 1 : wp_cursor + wp_knots;
+        Eigen::VectorXd state_ref = trajectory_generator_->getState(wp_cursor);
+        Eigen::Quaterniond quat(static_cast<Eigen::Vector4d>(state_ref.segment(3, 4)));
+        if (i == n_groups - 1) {
+          WayPoint wp_middle(*wp);
+          wp_middle.knots = wp_knots;
+          mission_->addWaypoint(wp_middle);
+        } else {
+          WayPoint wp_middle(wp_knots, state_ref.head(3), quat, state_ref.segment(7, 3), state_ref.segment(10, 3));
+          mission_->addWaypoint(wp_middle);
+        }
+      }
+    }
+    ++wp_idx;
+  }
+
+  mission_->countTotalKnots();
+  setPoseRef(0);
+  setMotionRef(0);
+}
+
+std::size_t PiceWiseMpc::splitWaypoint(const std::size_t& wp_original_knots) {
+  std::size_t divider = 1;
+  while (wp_original_knots / double(divider) > n_knots_) {
+    ++divider;
+  }
+  return divider;
+}
+
+void PiceWiseMpc::createProblem(const SolverTypes::Type& solver_type) {
+  initializeTrajectoryGenerator(solver_type);
+
+  for (std::size_t i = 0; i < n_knots_ - 1; ++i) {
+    boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model =
+        createRunningDifferentialModel(i);
     boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> int_model =
         boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_model, dt_);
 
@@ -64,7 +117,8 @@ void TrajectoryGeneratorController::createProblem(const SolverTypes::Type& solve
     int_models_running_.push_back(int_model);
   }
 
-  boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model = createTerminalDifferentialModel();
+  boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model =
+      createTerminalDifferentialModel(n_knots_ - 1);
   boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> int_model =
       boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_model, dt_);
 
@@ -82,8 +136,8 @@ void TrajectoryGeneratorController::createProblem(const SolverTypes::Type& solve
   diff_model_iter_ = diff_models_running_.end() - 1;
 }
 
-boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics>
-TrajectoryGeneratorController::createRunningDifferentialModel() {
+boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> PiceWiseMpc::createRunningDifferentialModel(
+    const std::size_t& idx_knot) {
   boost::shared_ptr<crocoddyl::CostModelSum> cost_model =
       boost::make_shared<crocoddyl::CostModelSum>(state_, actuation_->get_nu());
 
@@ -95,6 +149,8 @@ TrajectoryGeneratorController::createRunningDifferentialModel() {
   cost_model->addCost("control_reg", cost_reg_control, params_.w_control_running);
 
   // Waypoint cost related
+  setPoseRef(idx_knot);
+  setMotionRef(idx_knot);
   boost::shared_ptr<crocoddyl::CostModelAbstract> cost_pose =
       boost::make_shared<crocoddyl::CostModelFramePlacement>(state_, pose_ref_, actuation_->get_nu());
   cost_model->addCost("pose_desired", cost_pose, params_.w_pos_running);
@@ -114,12 +170,14 @@ TrajectoryGeneratorController::createRunningDifferentialModel() {
   return diff_model;
 }
 
-boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics>
-TrajectoryGeneratorController::createTerminalDifferentialModel() {
+boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> PiceWiseMpc::createTerminalDifferentialModel(
+    const std::size_t& idx_knot) {
   boost::shared_ptr<crocoddyl::CostModelSum> cost_model =
       boost::make_shared<crocoddyl::CostModelSum>(state_, actuation_->get_nu());
 
   // Waypoint cost related
+  setPoseRef(idx_knot);
+  setMotionRef(idx_knot);
   boost::shared_ptr<crocoddyl::CostModelAbstract> cost_pose =
       boost::make_shared<crocoddyl::CostModelFramePlacement>(state_, pose_ref_, actuation_->get_nu());
   cost_model->addCost("pose_desired", cost_pose, params_.w_pos_terminal);
@@ -139,7 +197,7 @@ TrajectoryGeneratorController::createTerminalDifferentialModel() {
   return diff_model;
 }
 
-boost::shared_ptr<crocoddyl::CostModelAbstract> TrajectoryGeneratorController::createCostStateRegularization() {
+boost::shared_ptr<crocoddyl::CostModelAbstract> PiceWiseMpc::createCostStateRegularization() {
   Eigen::VectorXd state_weights(state_->get_ndx());
 
   state_weights.head(3) = params_.w_state_position;
@@ -156,19 +214,19 @@ boost::shared_ptr<crocoddyl::CostModelAbstract> TrajectoryGeneratorController::c
   return cost_reg_state;
 }
 
-boost::shared_ptr<crocoddyl::CostModelAbstract> TrajectoryGeneratorController::createCostControlRegularization() {
+boost::shared_ptr<crocoddyl::CostModelAbstract> PiceWiseMpc::createCostControlRegularization() {
   boost::shared_ptr<crocoddyl::CostModelAbstract> cost_reg_control =
       boost::make_shared<crocoddyl::CostModelControl>(state_, actuation_->get_nu());
 
   return cost_reg_control;
 }
 
-void TrajectoryGeneratorController::solve() {
+void PiceWiseMpc::solve() {
   problem_->set_x0(state_initial_);
   solver_->solve(solver_->get_xs(), solver_->get_us(), solver_iters_, false, 1e-9);
 }
 
-void TrajectoryGeneratorController::updateProblem(const std::size_t idx_trajectory) {
+void PiceWiseMpc::updateProblem(const std::size_t idx_trajectory) {
   (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->weight = params_.w_pos_running;
   if (has_motion_ref_) {
     (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->weight = params_.w_vel_running;
@@ -203,7 +261,7 @@ void TrajectoryGeneratorController::updateProblem(const std::size_t idx_trajecto
   // updateTerminalCost(idx_trajectory);
 }
 
-void TrajectoryGeneratorController::updateWeights(const std::size_t& idx_trajectory) {
+void PiceWiseMpc::updateWeights(const std::size_t& idx_trajectory) {
   // Update weights
   // Decrease the current weight value of the cost (if the trajectory is not at its end)
   // if (idx_trajectory < mission_->getTotalKnots()) {
@@ -242,7 +300,7 @@ void TrajectoryGeneratorController::updateWeights(const std::size_t& idx_traject
   }
 }
 
-void TrajectoryGeneratorController::updateTerminalCost(const std::size_t idx_trajectory) {
+void PiceWiseMpc::updateTerminalCost(const std::size_t idx_trajectory) {
   // update Cost Reference
   setPoseRef(idx_trajectory);
   setMotionRef(idx_trajectory);
@@ -259,20 +317,16 @@ void TrajectoryGeneratorController::updateTerminalCost(const std::size_t idx_tra
   }
 }
 
-const crocoddyl::FramePlacement& TrajectoryGeneratorController::getPoseRef() const { return pose_ref_; }
-const crocoddyl::FrameMotion& TrajectoryGeneratorController::getVelocityRef() const { return motion_ref_; }
-const TrajectoryGeneratorParams& TrajectoryGeneratorController::getParams() const { return params_; };
-const Eigen::VectorXd& TrajectoryGeneratorController::getControls(const std::size_t& idx) const {
-  return solver_->get_us()[idx];
-}
-const boost::shared_ptr<const Mission> TrajectoryGeneratorController::getMission() const { return mission_; }
+const crocoddyl::FramePlacement& PiceWiseMpc::getPoseRef() const { return pose_ref_; }
+const crocoddyl::FrameMotion& PiceWiseMpc::getVelocityRef() const { return motion_ref_; }
+const TrajectoryGeneratorParams& PiceWiseMpc::getParams() const { return params_; };
 
-void TrajectoryGeneratorController::setPoseRef(const std::size_t& idx_trajectory) {
+void PiceWiseMpc::setPoseRef(const std::size_t& idx_trajectory) {
   pose_ref_.frame = frame_base_link_id_;
   pose_ref_.oMf = mission_->getWaypoints()[mission_->getWpFromTrajIdx(idx_trajectory)].pose;
 }
 
-void TrajectoryGeneratorController::setMotionRef(const std::size_t& idx_trajectory) {
+void PiceWiseMpc::setMotionRef(const std::size_t& idx_trajectory) {
   has_motion_ref_ = mission_->getWaypoints()[mission_->getWpFromTrajIdx(idx_trajectory)].vel != boost::none;
   if (has_motion_ref_) {
     motion_ref_.frame = frame_base_link_id_;

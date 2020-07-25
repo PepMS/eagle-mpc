@@ -1,4 +1,4 @@
-#include "multicopter_mpc/ocp-base.hpp"
+#include "multicopter_mpc/ocp/ocp-base.hpp"
 
 namespace multicopter_mpc {
 
@@ -56,13 +56,14 @@ void OcpAbstract::setSolverIters(const std::size_t& n_iters) { solver_iters_ = n
 
 void OcpAbstract::solve() { solver_->solve(); }
 
-const boost::shared_ptr<const pinocchio::Model> OcpAbstract::getModel() const { return model_; }
-const boost::shared_ptr<const MultiCopterBaseParams> OcpAbstract::getMcParams() const { return mc_params_; }
-const boost::shared_ptr<const crocoddyl::StateMultibody> OcpAbstract::getStateMultibody() const { return state_; }
-const boost::shared_ptr<const crocoddyl::ActuationModelMultiCopterBase> OcpAbstract::getActuation() const {
+const boost::shared_ptr<pinocchio::Model> OcpAbstract::getModel() const { return model_; }
+const boost::shared_ptr<MultiCopterBaseParams> OcpAbstract::getMcParams() const { return mc_params_; }
+const boost::shared_ptr<crocoddyl::StateMultibody> OcpAbstract::getStateMultibody() const { return state_; }
+const boost::shared_ptr<crocoddyl::ActuationModelMultiCopterBase> OcpAbstract::getActuation() const {
   return actuation_;
 }
-const boost::shared_ptr<const crocoddyl::ShootingProblem> OcpAbstract::getProblem() const { return problem_; }
+const boost::shared_ptr<crocoddyl::ShootingProblem> OcpAbstract::getProblem() const { return problem_; }
+const boost::shared_ptr<crocoddyl::SolverAbstract> OcpAbstract::getSolver() const { return solver_; }
 const double& OcpAbstract::getTimeStep() const { return dt_; }
 const Eigen::VectorXd& OcpAbstract::getActuationLowerBounds() const { return tau_lb_; }
 const Eigen::VectorXd& OcpAbstract::getActuationUpperBounds() const { return tau_ub_; }

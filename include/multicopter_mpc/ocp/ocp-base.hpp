@@ -51,11 +51,12 @@ class OcpAbstract {
   void setSolverIters(const std::size_t& n_iters);
 
   // Getters
-  const boost::shared_ptr<const pinocchio::Model> getModel() const;
-  const boost::shared_ptr<const MultiCopterBaseParams> getMcParams() const;
-  const boost::shared_ptr<const crocoddyl::StateMultibody> getStateMultibody() const;
-  const boost::shared_ptr<const crocoddyl::ActuationModelMultiCopterBase> getActuation() const;
-  const boost::shared_ptr<const crocoddyl::ShootingProblem> getProblem() const;
+  const boost::shared_ptr<pinocchio::Model> getModel() const;
+  const boost::shared_ptr<MultiCopterBaseParams> getMcParams() const;
+  const boost::shared_ptr<crocoddyl::StateMultibody> getStateMultibody() const;
+  const boost::shared_ptr<crocoddyl::ActuationModelMultiCopterBase> getActuation() const;
+  const boost::shared_ptr<crocoddyl::ShootingProblem> getProblem() const;
+  const boost::shared_ptr<crocoddyl::SolverAbstract> getSolver() const;
   const double& getTimeStep() const;
   const Eigen::VectorXd& getActuationLowerBounds() const;
   const Eigen::VectorXd& getActuationUpperBounds() const;
