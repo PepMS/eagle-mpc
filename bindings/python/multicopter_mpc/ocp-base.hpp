@@ -26,14 +26,8 @@ class OcpAbstract_wrap : public OcpAbstract, public bp::wrapper<OcpAbstract> {
     return bp::call<void>(this->get_override("createProblem").ptr(), solver_type);
   }
 
-  void loadParameters(const yaml_parser::ParamsServer& server) {
-    if (bp::override loadParameters = this->get_override("loadParameters")) {
-      return bp::call<void>(loadParameters.ptr(), server);
-    }
-    return OcpAbstract::loadParameters(server);
-  }
-  void default_loadParameters(const yaml_parser::ParamsServer& server) {
-    return this->OcpAbstract::loadParameters(server);
+  void loadParameters(const std::string& yaml_path) {
+    return bp::call<void>(this->get_override("loadParameters").ptr(), yaml_path);
   }
 
   void solve() {
@@ -57,8 +51,7 @@ void exposeOcpAbstract() {
                const double&>(bp::args("self", "model", "mc_params", "dt"),
                               "Initialize the Optimal Control problem abstract class"))
       .def("createProblem", pure_virtual(&OcpAbstract_wrap::createProblem), bp::args("self", "solver_type"))
-      .def("loadParameters", &OcpAbstract::loadParameters, &OcpAbstract_wrap::default_loadParameters,
-           bp::args("self", "server"))
+      .def("loadParameters", pure_virtual(&OcpAbstract_wrap::loadParameters), bp::args("self", "yaml_path"))
       .def("setSolverCallbacks", &OcpAbstract_wrap::setSolverCallbacks, bp::args("self", "activated"))
       .def("solve", &OcpAbstract::solve, &OcpAbstract_wrap::default_solve, bp::args("self"))
       .def("setSolverIters", &OcpAbstract_wrap::setSolverIters, bp::args("self", "num_iters"))

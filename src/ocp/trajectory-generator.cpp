@@ -255,7 +255,7 @@ const Eigen::VectorXd& TrajectoryGenerator::getControl(const std::size_t& cursor
   if (cursor < solver_->get_us().size()) {
     return solver_->get_us()[cursor];
   } else {
-    std::cout << "HOVERING! at state: " << state_hover_ << std::endl;
+    // std::cout << "HOVERING! at state: " << state_hover_ << std::endl;
     return control_hover_;
   }
 }
