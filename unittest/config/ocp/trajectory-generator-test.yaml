@@ -1,0 +1,12 @@
+ocp:
+  cost_running_state_weight: 1.234
+  cost_running_control_weight: 2.345
+  cost_running_pos_weight: 3.456
+  cost_running_vel_weight: 4.567
+  cost_terminal_pos_weight: 5.678
+  cost_terminal_vel_weight: 6.789
+  $state_weights:
+    - position: [2.0, 4.0, 1.5]
+      orientation: [2.0, 2.0, 1.0]
+      velocity_lin: [1.0, 4.0, 1.0]
+      velocity_ang: [1.0, 2.0, 1.0]

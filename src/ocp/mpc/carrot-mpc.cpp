@@ -10,7 +10,7 @@ CarrotMpc::CarrotMpc(const boost::shared_ptr<pinocchio::Model>& model,
   mission_ = boost::make_shared<Mission>(mission->getInitialState().size());
 
   parameters_yaml_path_ = MULTICOPTER_MPC_OCP_DIR "/carrot-mpc.yaml";
-  terminal_weights_idx_ = std::vector<bool>(n_knots_, false);
+  // terminal_weights_idx_ = std::vector<bool>(n_knots_, false);
 }
 
 CarrotMpc::~CarrotMpc() {}
@@ -24,7 +24,7 @@ boost::shared_ptr<MpcAbstract> CarrotMpc::createMpcController(
 }
 
 bool CarrotMpc::registered_ =
-    FactoryMpc::registerMpcController(CarrotMpc::getFactoryName(), CarrotMpc::createMpcController);
+    FactoryMpc::get().registerMpcController(CarrotMpc::getFactoryName(), CarrotMpc::createMpcController);
 
 void CarrotMpc::initializeDefaultParameters() {
   params_.w_state_position.fill(1.);
@@ -90,7 +90,7 @@ void CarrotMpc::initializeTerminalWeights() {
 void CarrotMpc::createProblem(const SolverTypes::Type& solver_type) {
   initializeTrajectoryGenerator(solver_type);
   initializeTerminalWeights();
-  
+
   boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model =
       createDifferentialModel(n_knots_ - 1);
   boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> int_model =
@@ -98,11 +98,6 @@ void CarrotMpc::createProblem(const SolverTypes::Type& solver_type) {
 
   diff_model_terminal_ = diff_model;
   int_model_terminal_ = int_model;
-
-  // Here check in unittest that terminal and last item in vector are pointing at the same place
-  // check also that the size of the vectors are equal to n_knots_
-  diff_models_running_.insert(diff_models_running_.begin(), diff_model);
-  int_models_running_.insert(int_models_running_.begin(), int_model);
 
   for (std::size_t i = n_knots_ - 2; i >= 0; --i) {
     boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model = createDifferentialModel(i);
@@ -113,11 +108,14 @@ void CarrotMpc::createProblem(const SolverTypes::Type& solver_type) {
     int_models_running_.insert(int_models_running_.begin(), int_model);
   }
 
-  problem_ = boost::make_shared<crocoddyl::ShootingProblem>(
-      state_initial_,
-      std::vector<boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics>>(int_models_running_.begin(),
-                                                                                        int_models_running_.end() - 1),
-      int_model_terminal_);
+  // Check that the running differential model from the problem DOES NOT contain the terminal model
+  problem_ = boost::make_shared<crocoddyl::ShootingProblem>(state_initial_, int_models_running_, int_model_terminal_);
+
+  // Here check in unittest that terminal and last item in vector are pointing at the same place
+  // check also that the size of the vectors are equal to n_knots_
+  diff_models_running_.push_back(diff_model_terminal_);
+  int_models_running_.push_back(int_model_terminal_);
+
   setSolver(solver_type);
 
   diff_model_iter_ = diff_models_running_.end() - 1;

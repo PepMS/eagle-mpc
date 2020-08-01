@@ -54,8 +54,8 @@ class PiceWiseMpcDerived : public multicopter_mpc::PiceWiseMpc {
 class PiceWiseMpcTest {
  public:
   PiceWiseMpcTest(const std::string& mission_name) {
-    std::string multirotor_yaml_path = MULTICOPTER_MPC_ROOT_DIR "/unittest/config/iris.yaml";
-    std::string mission_yaml_path = MULTICOPTER_MPC_ROOT_DIR "/unittest/config/" + mission_name;
+    std::string multirotor_yaml_path = MULTICOPTER_MPC_ROOT_DIR "/unittest/config/multirotor/iris.yaml";
+    std::string mission_yaml_path = MULTICOPTER_MPC_ROOT_DIR "/unittest/config/mission/" + mission_name;
 
     pinocchio::urdf::buildModel(EXAMPLE_ROBOT_DATA_MODEL_DIR "/iris_description/robots/iris_simple.urdf",
                                 pinocchio::JointModelFreeFlyer(), model_);
@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(initialize_default_parameters_test, *boost::unit_test::tole
 BOOST_AUTO_TEST_CASE(load_parameters_test, *boost::unit_test::tolerance(1e-7)) {
   PiceWiseMpcTest pw_mpc_test("mission-test.yaml");
 
-  pw_mpc_test.pw_mpc_->loadParameters(MULTICOPTER_MPC_ROOT_DIR "/unittest/config/trajectory-generator-test.yaml");
+  pw_mpc_test.pw_mpc_->loadParameters(MULTICOPTER_MPC_ROOT_DIR "/unittest/config/ocp/picewise-mpc-test.yaml");
 
   Eigen::Vector3d w_position;
   Eigen::Vector3d w_orientation;

@@ -7,7 +7,8 @@ RailMpc::RailMpc(const boost::shared_ptr<pinocchio::Model>& model,
                  const boost::shared_ptr<Mission>& mission, const std::size_t& n_knots)
     : MpcAbstract(model, mc_params, dt, mission, n_knots) {
   initializeDefaultParameters();
-
+  state_ref_.resize(n_knots_, state_->zero());
+  control_ref_.resize(n_knots_ - 1, Eigen::VectorXd::Zero(4));
   parameters_yaml_path_ = MULTICOPTER_MPC_OCP_DIR "/rail-mpc.yaml";
 }
 
@@ -23,7 +24,7 @@ boost::shared_ptr<MpcAbstract> RailMpc::createMpcController(const boost::shared_
   return boost::make_shared<RailMpc>(model, mc_params, dt, mission, n_knots);
 }
 
-bool RailMpc::registered_ = FactoryMpc::registerMpcController(RailMpc::getFactoryName(), RailMpc::createMpcController);
+bool RailMpc::registered_ = FactoryMpc::get().registerMpcController(RailMpc::getFactoryName(), RailMpc::createMpcController);
 
 void RailMpc::initializeDefaultParameters() {
   params_.w_state = 1e-2;
@@ -52,9 +53,6 @@ void RailMpc::loadParameters(const std::string& yaml_path) {
 }
 
 void RailMpc::initializeTrajectoryGenerator(const SolverTypes::Type& solver_type) {
-  state_ref_.resize(n_knots_, state_->zero());
-  control_ref_.resize(n_knots_ - 1, Eigen::VectorXd::Zero(4));
-
   trajectory_generator_->createProblem(solver_type);
   trajectory_generator_->setSolverIters(300);
   trajectory_generator_->solve();

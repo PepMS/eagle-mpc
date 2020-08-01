@@ -19,10 +19,17 @@ const boost::shared_ptr<TrajectoryGenerator> MpcAbstract::getTrajectoryGenerator
 }
 const boost::shared_ptr<Mission> MpcAbstract::getMission() const { return mission_; }
 
+FactoryMpc::FactoryMpc() {}
+FactoryMpc::~FactoryMpc() {}
+
 using createMethod = boost::shared_ptr<MpcAbstract> (*)(const boost::shared_ptr<pinocchio::Model>&,
                                                         const boost::shared_ptr<MultiCopterBaseParams>&, const double&,
                                                         const boost::shared_ptr<Mission>&, const std::size_t&);
-std::map<std::string, createMethod> FactoryMpc::s_methods_;
+
+FactoryMpc& FactoryMpc::get() {
+  static FactoryMpc instance;
+  return instance;
+}
 
 bool FactoryMpc::registerMpcController(const std::string& mpc_name, createMethod create_method) {
   auto it = s_methods_.find(mpc_name);
