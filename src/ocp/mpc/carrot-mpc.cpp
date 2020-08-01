@@ -7,10 +7,8 @@ CarrotMpc::CarrotMpc(const boost::shared_ptr<pinocchio::Model>& model,
                      const boost::shared_ptr<Mission>& mission, const std::size_t& n_knots)
     : MpcAbstract(model, mc_params, dt, mission, n_knots) {
   initializeDefaultParameters();
-  mission_ = boost::make_shared<Mission>(mission->getInitialState().size());
-
   parameters_yaml_path_ = MULTICOPTER_MPC_OCP_DIR "/carrot-mpc.yaml";
-  // terminal_weights_idx_ = std::vector<bool>(n_knots_, false);
+  terminal_weights_idx_ = std::vector<bool>(n_knots_, false);
 }
 
 CarrotMpc::~CarrotMpc() {}
