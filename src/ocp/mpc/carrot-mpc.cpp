@@ -85,6 +85,10 @@ void CarrotMpc::initializeTerminalWeights() {
   }
 }
 
+const bool CarrotMpc::existsTerminalWeight() {
+  return std::find(terminal_weights_idx_.begin(), terminal_weights_idx_.end(), 1) != terminal_weights_idx_.end();
+}
+
 void CarrotMpc::createProblem(const SolverTypes::Type& solver_type) {
   initializeTrajectoryGenerator(solver_type);
   initializeTerminalWeights();
@@ -97,17 +101,17 @@ void CarrotMpc::createProblem(const SolverTypes::Type& solver_type) {
   diff_model_terminal_ = diff_model;
   int_model_terminal_ = int_model;
 
-  for (std::size_t i = n_knots_ - 2; i >= 0; --i) {
+  for (int i = n_knots_ - 2; i >= 0; --i) {
     boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model = createDifferentialModel(i);
     boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> int_model =
         boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_model, dt_);
-
     diff_models_running_.insert(diff_models_running_.begin(), diff_model);
     int_models_running_.insert(int_models_running_.begin(), int_model);
   }
 
   // Check that the running differential model from the problem DOES NOT contain the terminal model
-  problem_ = boost::make_shared<crocoddyl::ShootingProblem>(state_initial_, int_models_running_, int_model_terminal_);
+  problem_ = boost::make_shared<crocoddyl::ShootingProblem>(state_initial_, int_models_running_,
+  int_model_terminal_);
 
   // Here check in unittest that terminal and last item in vector are pointing at the same place
   // check also that the size of the vectors are equal to n_knots_
@@ -133,16 +137,13 @@ boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> CarrotMpc::
 
   // Set reference if it is the last node or a WayPoint node
   if (idx_knot == n_knots_ - 1 || terminal_weights_idx_[idx_knot]) {
-    setPoseRef(idx_knot);
-    setMotionRef(idx_knot);
+    setReference(idx_knot);
   }
 
   double weight_pos = 0.0;
   double weight_vel = 0.0;
 
-  if (terminal_weights_idx_[idx_knot] ||
-      (idx_knot == n_knots_ - 1 &&
-       std::find(terminal_weights_idx_.begin(), terminal_weights_idx_.end(), 1) == terminal_weights_idx_.end())) {
+  if (terminal_weights_idx_[idx_knot] || (idx_knot == n_knots_ - 1 && !existsTerminalWeight())) {
     weight_pos = params_.w_pos_terminal;
     weight_vel = params_.w_vel_terminal;
   } else {
@@ -154,11 +155,9 @@ boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> CarrotMpc::
       boost::make_shared<crocoddyl::CostModelFramePlacement>(state_, pose_ref_, actuation_->get_nu());
   cost_model->addCost("pose_desired", cost_pose, weight_pos);
 
-  if (has_motion_ref_) {
-    boost::shared_ptr<crocoddyl::CostModelAbstract> cost_vel =
-        boost::make_shared<crocoddyl::CostModelFrameVelocity>(state_, motion_ref_, actuation_->get_nu());
-    cost_model->addCost("vel_desired", cost_vel, weight_vel);
-  }
+  boost::shared_ptr<crocoddyl::CostModelAbstract> cost_vel =
+      boost::make_shared<crocoddyl::CostModelFrameVelocity>(state_, motion_ref_, actuation_->get_nu());
+  cost_model->addCost("vel_desired", cost_vel, weight_vel);
 
   boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model =
       boost::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(state_, actuation_, cost_model);
@@ -209,8 +208,7 @@ void CarrotMpc::updateProblem(const std::size_t idx_trajectory) {
     (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->weight = params_.w_vel_running;
   }
 
-  setPoseRef(idx_trajectory);
-  setMotionRef(idx_trajectory);
+  setReference(idx_trajectory);
 
   boost::shared_ptr<crocoddyl::CostModelFramePlacement> cost_pose =
       boost::static_pointer_cast<crocoddyl::CostModelFramePlacement>(
@@ -240,17 +238,15 @@ const crocoddyl::FramePlacement& CarrotMpc::getPoseRef() const { return pose_ref
 const crocoddyl::FrameMotion& CarrotMpc::getVelocityRef() const { return motion_ref_; }
 const TrajectoryGeneratorParams& CarrotMpc::getParams() const { return params_; };
 
-void CarrotMpc::setPoseRef(const std::size_t& idx_trajectory) {
+void CarrotMpc::setReference(const std::size_t& idx_trajectory) {
   pose_ref_.frame = frame_base_link_id_;
-  pose_ref_.oMf = mission_->getWaypoints()[mission_->getWpFromTrajIdx(idx_trajectory)].pose;
-}
+  state_ref_ = trajectory_generator_->getState(idx_trajectory);
+  quat_ref_ = Eigen::Quaterniond(static_cast<Eigen::Vector4d>(state_ref_.segment(3, 4)));
+  pose_ref_.oMf = pinocchio::SE3(quat_ref_.matrix(), static_cast<Eigen::Vector3d>(state_ref_.head(3)));
 
-void CarrotMpc::setMotionRef(const std::size_t& idx_trajectory) {
-  has_motion_ref_ = mission_->getWaypoints()[mission_->getWpFromTrajIdx(idx_trajectory)].vel != boost::none;
-  if (has_motion_ref_) {
-    motion_ref_.frame = frame_base_link_id_;
-    motion_ref_.oMf = mission_->getWaypoints()[mission_->getWpFromTrajIdx(idx_trajectory)].vel.get();
-  }
+  motion_ref_.frame = frame_base_link_id_;
+  motion_ref_.oMf = pinocchio::Motion(static_cast<Eigen::Vector3d>(state_ref_.segment(7, 3)),
+                                      static_cast<Eigen::Vector3d>(state_ref_.segment(10, 3)));
 }
 
 }  // namespace multicopter_mpc

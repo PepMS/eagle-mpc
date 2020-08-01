@@ -235,46 +235,54 @@ BOOST_AUTO_TEST_CASE(initialize_weights_test, *boost::unit_test::tolerance(1e-7)
   }
 }
 
-// BOOST_AUTO_TEST_CASE(create_problem_test, *boost::unit_test::tolerance(1e-7)) {
-//   CarrotMpcTest carrot_mpc_test("takeoff.yaml");
+BOOST_AUTO_TEST_CASE(exists_terminal_weight_test, *boost::unit_test::tolerance(1e-7)) {
+  CarrotMpcTest carrot_mpc_test("carrot-mpc-test-2.yaml");
 
-//   carrot_mpc_test.carrot_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
+  carrot_mpc_test.carrot_mpc_->initializeTrajectoryGen(multicopter_mpc::SolverTypes::BoxFDDP);
+  carrot_mpc_test.carrot_mpc_->initializeTerminalW();
 
-//   BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels().size() ==
-//   carrot_mpc_test.carrot_mpc_->getKnots());
-//   BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getIntegratedRunningModels().size() ==
-//   carrot_mpc_test.carrot_mpc_->getKnots());
+  BOOST_CHECK(carrot_mpc_test.carrot_mpc_->existsTerminalWeight() == true);
+}
 
-//   // Differential and Integrated->Differential are pointing at the same place
-//   for (std::size_t i = 0; i < carrot_mpc_test.carrot_mpc_->getKnots() - 1; ++i) {
-//     // Check that the data differential model that std_vector<integrated> is pointing to is the same that the data
-//     // member differential is pointing to
-//     boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> int_model =
-//         boost::static_pointer_cast<crocoddyl::IntegratedActionModelEuler>(
-//             carrot_mpc_test.carrot_mpc_->getIntegratedRunningModels()[i]);
-//     BOOST_CHECK(int_model->get_differential() == carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()[i]);
-//     // Check the action model ptr of every node are pointing to different action model
-//     if (i < carrot_mpc_test.carrot_mpc_->getKnots() - 2) {
-//       BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()[i] !=
-//                   carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()[i + 1]);
-//       BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getIntegratedRunningModels()[i] !=
-//                   carrot_mpc_test.carrot_mpc_->getIntegratedRunningModels()[i + 1]);
-//     } else {
-//       BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()[i] !=
-//                   carrot_mpc_test.carrot_mpc_->getDifferentialTerminalModel());
-//       BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getIntegratedRunningModels()[i] !=
-//                   carrot_mpc_test.carrot_mpc_->getIntegratedTerminalModel());
-//     }
-//   }
-//   BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getIntegratedTerminalModel()->get_differential() ==
-//               carrot_mpc_test.carrot_mpc_->getDifferentialTerminalModel());
+BOOST_AUTO_TEST_CASE(create_problem_test, *boost::unit_test::tolerance(1e-7)) {
+  // First waypoint after MPC Horizon: all false
+  {
+    CarrotMpcTest carrot_mpc_test("carrot-mpc-test-1.yaml");
 
-//   // Last of running and terminal are pointing at the same place
-//   BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getIntegratedTerminalModel() ==
-//               carrot_mpc_test.carrot_mpc_->getIntegratedRunningModels().back());
-//   BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getDifferentialTerminalModel() ==
-//               carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels().back());
-// }
+    carrot_mpc_test.carrot_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
+
+    // Check that the differentialrunning vector has ALL nodes (terminal node included)
+    BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels().size() ==
+                carrot_mpc_test.carrot_mpc_->getKnots());
+    BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getIntegratedRunningModels().size() ==
+                carrot_mpc_test.carrot_mpc_->getKnots());
+
+    // Check that the differentialrunning vector has only running nodes (terminal node included)
+    BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getProblem()->get_runningModels().size() ==
+                carrot_mpc_test.carrot_mpc_->getKnots() - 1);
+
+    // Check that the last of the running models and the terminal model are pointing at the same object
+    BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels().back() ==
+                carrot_mpc_test.carrot_mpc_->getDifferentialTerminalModel());
+
+    for (std::size_t i = 0; i < carrot_mpc_test.carrot_mpc_->getTerminalWeights().size(); ++i) {
+      boost::shared_ptr<crocoddyl::CostModelFramePlacement> cost_pose =
+          boost::static_pointer_cast<crocoddyl::CostModelFramePlacement>(
+              carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()[i]
+                  ->get_costs()
+                  ->get_costs()
+                  .find("pose_desired")
+                  ->second->cost);
+      BOOST_CHECK(cost_pose->get_Mref().oMf.translation() ==
+                  static_cast<Eigen::Vector3d>(carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()->getState(
+                      carrot_mpc_test.carrot_mpc_->getKnots() - 1).head(3)));
+      // TODO: Check the rest of the state
+    }
+    {
+      // As done with the terminal weight vector, check the other mission test
+    }
+  }
+}
 
 // BOOST_AUTO_TEST_CASE(create_costs_weights_test, *boost::unit_test::tolerance(1e-7)) {
 //   CarrotMpcTest carrot_mpc_test("takeoff.yaml");

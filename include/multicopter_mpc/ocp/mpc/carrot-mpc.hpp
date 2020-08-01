@@ -3,6 +3,8 @@
 
 #include <algorithm>
 
+#include <pinocchio/spatial/se3.hpp>
+
 #include "multicopter_mpc/ocp/mpc/mpc-base.hpp"
 #include "multicopter_mpc/ocp/trajectory-generator.hpp"
 #include "multicopter_mpc/multicopter-base-params.hpp"
@@ -30,6 +32,8 @@ class CarrotMpc : public MpcAbstract {
 
   void updateProblem(const std::size_t idx_trajectory);
 
+  const bool existsTerminalWeight(); 
+
   const crocoddyl::FramePlacement& getPoseRef() const;
   const crocoddyl::FrameMotion& getVelocityRef() const;
   const TrajectoryGeneratorParams& getParams() const;
@@ -45,10 +49,11 @@ class CarrotMpc : public MpcAbstract {
   boost::shared_ptr<crocoddyl::CostModelAbstract> createCostStateRegularization();
   boost::shared_ptr<crocoddyl::CostModelAbstract> createCostControlRegularization();
 
-  void setPoseRef(const std::size_t& idx_trajectory);
-  void setMotionRef(const std::size_t& idx_trajectory);
+  void setReference(const std::size_t& idx_trajectory);
 
   bool has_motion_ref_;
+  Eigen::VectorXd state_ref_;
+  Eigen::Quaterniond quat_ref_;
   crocoddyl::FramePlacement pose_ref_;
   crocoddyl::FrameMotion motion_ref_;
   std::vector<boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics>>::iterator diff_model_iter_;
