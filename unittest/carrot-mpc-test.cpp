@@ -216,6 +216,23 @@ BOOST_AUTO_TEST_CASE(initialize_weights_test, *boost::unit_test::tolerance(1e-7)
     }
   }
 
+  // MPC Horizon after middle waypoint: Wp true
+  {
+    CarrotMpcTest carrot_mpc_test("carrot-mpc-test-3.yaml");
+
+    carrot_mpc_test.carrot_mpc_->initializeTrajectoryGen(multicopter_mpc::SolverTypes::BoxFDDP);
+    carrot_mpc_test.carrot_mpc_->initializeTerminalW();
+
+    for (std::size_t i = 0; i < carrot_mpc_test.carrot_mpc_->getTerminalWeights().size(); ++i) {
+      if (i == carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()->getMission()->getWpTrajIdx()[0] or
+          i == carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()->getMission()->getWpTrajIdx()[1]) {
+        BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getTerminalWeights()[i] == true);
+      } else {
+        BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getTerminalWeights()[i] == false);
+      }
+    }
+  }
+
   // Last Waypoint before the MPC Horizon: Wp true and tail true
   {
     CarrotMpcTest carrot_mpc_test("carrot-mpc-test-4.yaml");
@@ -245,7 +262,7 @@ BOOST_AUTO_TEST_CASE(exists_terminal_weight_test, *boost::unit_test::tolerance(1
 }
 
 BOOST_AUTO_TEST_CASE(create_problem_test, *boost::unit_test::tolerance(1e-7)) {
-  // First waypoint after MPC Horizon: all false
+  // First waypoint after MPC Horizon
   {
     CarrotMpcTest carrot_mpc_test("carrot-mpc-test-1.yaml");
 
@@ -273,223 +290,260 @@ BOOST_AUTO_TEST_CASE(create_problem_test, *boost::unit_test::tolerance(1e-7)) {
                   ->get_costs()
                   .find("pose_desired")
                   ->second->cost);
+      boost::shared_ptr<crocoddyl::CostModelFrameVelocity> cost_vel =
+          boost::static_pointer_cast<crocoddyl::CostModelFrameVelocity>(
+              carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()[i]
+                  ->get_costs()
+                  ->get_costs()
+                  .find("vel_desired")
+                  ->second->cost);
+      // Reference
       BOOST_CHECK(cost_pose->get_Mref().oMf.translation() ==
-                  static_cast<Eigen::Vector3d>(carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()->getState(
-                      carrot_mpc_test.carrot_mpc_->getKnots() - 1).head(3)));
-      // TODO: Check the rest of the state
-    }
-    {
-      // As done with the terminal weight vector, check the other mission test
+                  static_cast<Eigen::Vector3d>(carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()
+                                                   ->getState(carrot_mpc_test.carrot_mpc_->getKnots() - 1)
+                                                   .head(3)));
+      BOOST_CHECK(
+          cost_pose->get_Mref().oMf.rotation() ==
+          Eigen::Quaterniond(static_cast<Eigen::Vector4d>(carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()
+                                                              ->getState(carrot_mpc_test.carrot_mpc_->getKnots() - 1)
+                                                              .segment(3, 7)))
+              .toRotationMatrix());
+      BOOST_CHECK(cost_vel->get_vref().oMf.linear() ==
+                  static_cast<Eigen::Vector3d>(carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()
+                                                   ->getState(carrot_mpc_test.carrot_mpc_->getKnots() - 1)
+                                                   .segment(7, 10)));
+      BOOST_CHECK(cost_vel->get_vref().oMf.angular() ==
+                  static_cast<Eigen::Vector3d>(carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()
+                                                   ->getState(carrot_mpc_test.carrot_mpc_->getKnots() - 1)
+                                                   .segment(10, 13)));
+      // Weights
+      double weight_pos;
+      double weight_vel;
+      if (i == carrot_mpc_test.carrot_mpc_->getKnots() - 1) {
+        weight_pos = carrot_mpc_test.carrot_mpc_->getParams().w_pos_terminal;
+        weight_vel = carrot_mpc_test.carrot_mpc_->getParams().w_vel_terminal;
+      } else {
+        weight_pos = carrot_mpc_test.carrot_mpc_->getParams().w_pos_running;
+        weight_vel = carrot_mpc_test.carrot_mpc_->getParams().w_vel_running;
+      }
+
+      BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()[i]
+                      ->get_costs()
+                      ->get_costs()
+                      .find("pose_desired")
+                      ->second->weight == weight_pos);
+      BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()[i]
+                      ->get_costs()
+                      ->get_costs()
+                      .find("vel_desired")
+                      ->second->weight == weight_vel);
     }
   }
-}
+  // First waypoint coinciding with the MPC Horizon: last true
+  {
+    CarrotMpcTest carrot_mpc_test("carrot-mpc-test-2.yaml");
 
-// BOOST_AUTO_TEST_CASE(create_costs_weights_test, *boost::unit_test::tolerance(1e-7)) {
-//   CarrotMpcTest carrot_mpc_test("takeoff.yaml");
+    carrot_mpc_test.carrot_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
 
-//   carrot_mpc_test.carrot_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
+    for (std::size_t i = 0; i < carrot_mpc_test.carrot_mpc_->getTerminalWeights().size(); ++i) {
+      boost::shared_ptr<crocoddyl::CostModelFramePlacement> cost_pose =
+          boost::static_pointer_cast<crocoddyl::CostModelFramePlacement>(
+              carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()[i]
+                  ->get_costs()
+                  ->get_costs()
+                  .find("pose_desired")
+                  ->second->cost);
+      boost::shared_ptr<crocoddyl::CostModelFrameVelocity> cost_vel =
+          boost::static_pointer_cast<crocoddyl::CostModelFrameVelocity>(
+              carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()[i]
+                  ->get_costs()
+                  ->get_costs()
+                  .find("vel_desired")
+                  ->second->cost);
+      // Reference
+      BOOST_CHECK(cost_pose->get_Mref().oMf.translation() ==
+                  static_cast<Eigen::Vector3d>(carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()
+                                                   ->getState(carrot_mpc_test.carrot_mpc_->getKnots() - 1)
+                                                   .head(3)));
+      BOOST_CHECK(
+          cost_pose->get_Mref().oMf.rotation() ==
+          Eigen::Quaterniond(static_cast<Eigen::Vector4d>(carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()
+                                                              ->getState(carrot_mpc_test.carrot_mpc_->getKnots() - 1)
+                                                              .segment(3, 7)))
+              .toRotationMatrix());
+      BOOST_CHECK(cost_vel->get_vref().oMf.linear() ==
+                  static_cast<Eigen::Vector3d>(carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()
+                                                   ->getState(carrot_mpc_test.carrot_mpc_->getKnots() - 1)
+                                                   .segment(7, 10)));
+      BOOST_CHECK(cost_vel->get_vref().oMf.angular() ==
+                  static_cast<Eigen::Vector3d>(carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()
+                                                   ->getState(carrot_mpc_test.carrot_mpc_->getKnots() - 1)
+                                                   .segment(10, 13)));
+      // Weights
+      double weight_pos;
+      double weight_vel;
+      if (i == carrot_mpc_test.carrot_mpc_->getKnots() - 1) {
+        weight_pos = carrot_mpc_test.carrot_mpc_->getParams().w_pos_terminal;
+        weight_vel = carrot_mpc_test.carrot_mpc_->getParams().w_vel_terminal;
+      } else {
+        weight_pos = carrot_mpc_test.carrot_mpc_->getParams().w_pos_running;
+        weight_vel = carrot_mpc_test.carrot_mpc_->getParams().w_vel_running;
+      }
 
-//   for (std::size_t i = 0; i < carrot_mpc_test.carrot_mpc_->getKnots() - 1; ++i) {
-//     BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()[i]
-//                     ->get_costs()
-//                     ->get_costs()
-//                     .find("state_reg")
-//                     ->second->weight == carrot_mpc_test.carrot_mpc_->getParams().w_state_running);
-//     BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()[i]
-//                     ->get_costs()
-//                     ->get_costs()
-//                     .find("control_reg")
-//                     ->second->weight == carrot_mpc_test.carrot_mpc_->getParams().w_control_running);
-//     BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()[i]
-//                     ->get_costs()
-//                     ->get_costs()
-//                     .find("pose_desired")
-//                     ->second->weight == carrot_mpc_test.carrot_mpc_->getParams().w_pos_running);
-//     BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()[i]
-//                     ->get_costs()
-//                     ->get_costs()
-//                     .find("vel_desired")
-//                     ->second->weight == carrot_mpc_test.carrot_mpc_->getParams().w_vel_running);
-//   }
-//   BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getDifferentialTerminalModel()
-//                   ->get_costs()
-//                   ->get_costs()
-//                   .find("pose_desired")
-//                   ->second->weight == carrot_mpc_test.carrot_mpc_->getParams().w_pos_terminal);
-//   BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getDifferentialTerminalModel()
-//                   ->get_costs()
-//                   ->get_costs()
-//                   .find("vel_desired")
-//                   ->second->weight == carrot_mpc_test.carrot_mpc_->getParams().w_vel_terminal);
-// }
+      BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()[i]
+                      ->get_costs()
+                      ->get_costs()
+                      .find("pose_desired")
+                      ->second->weight == weight_pos);
+      BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()[i]
+                      ->get_costs()
+                      ->get_costs()
+                      .find("vel_desired")
+                      ->second->weight == weight_vel);
+    }
+  }
 
-// This checks that the weights for the weighted quadratic barrier in the state costs are properly set
-// BOOST_AUTO_TEST_CASE(create_cost_state_test, *boost::unit_test::tolerance(1e-7)) {
-//   CarrotMpcTest carrot_mpc_test("takeoff.yaml");
+  // MPC Horizon after middle waypoint: Wp true
+  {
+    CarrotMpcTest carrot_mpc_test("carrot-mpc-test-3.yaml");
 
-//   carrot_mpc_test.carrot_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
+    carrot_mpc_test.carrot_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
 
-//   for (std::size_t i = 0; i < carrot_mpc_test.carrot_mpc_->getKnots() - 1; ++i) {
-//     boost::shared_ptr<crocoddyl::ActivationModelWeightedQuad> activation =
-//         boost::static_pointer_cast<crocoddyl::ActivationModelWeightedQuad>(
-//             carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()[i]
-//                 ->get_costs()
-//                 ->get_costs()
-//                 .find("state_reg")
-//                 ->second->cost->get_activation());
-//     Eigen::VectorXd weights(carrot_mpc_test.carrot_mpc_->getParams().w_state_position.size() +
-//                             carrot_mpc_test.carrot_mpc_->getParams().w_state_orientation.size() +
-//                             carrot_mpc_test.carrot_mpc_->getParams().w_state_velocity_lin.size() +
-//                             carrot_mpc_test.carrot_mpc_->getParams().w_state_velocity_ang.size());
-//     weights << carrot_mpc_test.carrot_mpc_->getParams().w_state_position,
-//     carrot_mpc_test.carrot_mpc_->getParams().w_state_orientation,
-//         carrot_mpc_test.carrot_mpc_->getParams().w_state_velocity_lin,
-//         carrot_mpc_test.carrot_mpc_->getParams().w_state_velocity_ang;
-//     BOOST_CHECK(activation->get_weights() == weights);
-//   }
-// }
+    for (std::size_t i = 0; i < carrot_mpc_test.carrot_mpc_->getTerminalWeights().size(); ++i) {
+      boost::shared_ptr<crocoddyl::CostModelFramePlacement> cost_pose =
+          boost::static_pointer_cast<crocoddyl::CostModelFramePlacement>(
+              carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()[i]
+                  ->get_costs()
+                  ->get_costs()
+                  .find("pose_desired")
+                  ->second->cost);
+      boost::shared_ptr<crocoddyl::CostModelFrameVelocity> cost_vel =
+          boost::static_pointer_cast<crocoddyl::CostModelFrameVelocity>(
+              carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()[i]
+                  ->get_costs()
+                  ->get_costs()
+                  .find("vel_desired")
+                  ->second->cost);
+      // Reference
+      Eigen::Vector3d pos_ref;
+      Eigen::Quaterniond quat_ref;
+      Eigen::Vector3d vel_lin_ref;
+      Eigen::Vector3d vel_ang_ref;
+      int knot_idx;
+      if (i <= carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()->getMission()->getWpTrajIdx()[0]) {
+        knot_idx = carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()->getMission()->getWpTrajIdx()[0];
+      } else if (i <= carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()->getMission()->getWpTrajIdx()[1]) {
+        knot_idx = carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()->getMission()->getWpTrajIdx()[1];
+      } else {
+        knot_idx = carrot_mpc_test.carrot_mpc_->getKnots() - 1;
+      }
+      pos_ref = static_cast<Eigen::Vector3d>(
+          carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()->getState(knot_idx).head(3));
+      quat_ref = Eigen::Quaterniond(static_cast<Eigen::Vector4d>(
+          carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()->getState(knot_idx).segment(3, 7)));
+      vel_lin_ref = static_cast<Eigen::Vector3d>(
+          carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()->getState(knot_idx).segment(7, 10));
+      vel_ang_ref = static_cast<Eigen::Vector3d>(
+          carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()->getState(knot_idx).segment(10, 13));
+      BOOST_CHECK(cost_pose->get_Mref().oMf.translation() == pos_ref);
+      BOOST_CHECK(cost_pose->get_Mref().oMf.rotation() == quat_ref.toRotationMatrix());
+      BOOST_CHECK(cost_vel->get_vref().oMf.linear() == vel_lin_ref);
+      BOOST_CHECK(cost_vel->get_vref().oMf.angular() == vel_ang_ref);
+      // Weights
+      double weight_pos;
+      double weight_vel;
+      if (i == knot_idx && i != carrot_mpc_test.carrot_mpc_->getKnots() - 1) {
+        weight_pos = carrot_mpc_test.carrot_mpc_->getParams().w_pos_terminal;
+        weight_vel = carrot_mpc_test.carrot_mpc_->getParams().w_vel_terminal;
+      } else {
+        weight_pos = carrot_mpc_test.carrot_mpc_->getParams().w_pos_running;
+        weight_vel = carrot_mpc_test.carrot_mpc_->getParams().w_vel_running;
+      }
 
-// // This test is to check that the weights are properly updated when the method updateWeights() is called
-// BOOST_AUTO_TEST_CASE(update_weights_test, *boost::unit_test::tolerance(1e-7)) {
-//   CarrotMpcTest carrot_mpc_test("takeoff.yaml");
+      BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()[i]
+                      ->get_costs()
+                      ->get_costs()
+                      .find("pose_desired")
+                      ->second->weight == weight_pos);
+      BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()[i]
+                      ->get_costs()
+                      ->get_costs()
+                      .find("vel_desired")
+                      ->second->weight == weight_vel);
+    }
+  }
 
-//   carrot_mpc_test.carrot_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
+  // Last Waypoint before the MPC Horizon: Wp true and tail true
+  {
+    CarrotMpcTest carrot_mpc_test("carrot-mpc-test-4.yaml");
 
-//   // Before calling the updateProblem() last node should have the terminal weight
-//   BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()
-//                   .back()
-//                   ->get_costs()
-//                   ->get_costs()
-//                   .find("pose_desired")
-//                   ->second->weight == carrot_mpc_test.carrot_mpc_->getParams().w_pos_terminal);
-//   BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()
-//                   .back()
-//                   ->get_costs()
-//                   ->get_costs()
-//                   .find("vel_desired")
-//                   ->second->weight == carrot_mpc_test.carrot_mpc_->getParams().w_vel_terminal);
-//   BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()[carrot_mpc_test.carrot_mpc_->getKnots() -
-//   2]
-//                   ->get_costs()
-//                   ->get_costs()
-//                   .find("pose_desired")
-//                   ->second->weight == carrot_mpc_test.carrot_mpc_->getParams().w_pos_running);
-//   BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()[carrot_mpc_test.carrot_mpc_->getKnots() -
-//   2]
-//                   ->get_costs()
-//                   ->get_costs()
-//                   .find("vel_desired")
-//                   ->second->weight == carrot_mpc_test.carrot_mpc_->getParams().w_vel_running);
+    carrot_mpc_test.carrot_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
 
-//   carrot_mpc_test.carrot_mpc_->updateProblem(carrot_mpc_test.carrot_mpc_->getKnots());
+    for (std::size_t i = 0; i < carrot_mpc_test.carrot_mpc_->getTerminalWeights().size(); ++i) {
+      boost::shared_ptr<crocoddyl::CostModelFramePlacement> cost_pose =
+          boost::static_pointer_cast<crocoddyl::CostModelFramePlacement>(
+              carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()[i]
+                  ->get_costs()
+                  ->get_costs()
+                  .find("pose_desired")
+                  ->second->cost);
+      boost::shared_ptr<crocoddyl::CostModelFrameVelocity> cost_vel =
+          boost::static_pointer_cast<crocoddyl::CostModelFrameVelocity>(
+              carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()[i]
+                  ->get_costs()
+                  ->get_costs()
+                  .find("vel_desired")
+                  ->second->cost);
+      // Reference
+      Eigen::Vector3d pos_ref;
+      Eigen::Quaterniond quat_ref;
+      Eigen::Vector3d vel_lin_ref;
+      Eigen::Vector3d vel_ang_ref;
+      int knot_idx;
+      if (i <= carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()->getMission()->getWpTrajIdx()[0]) {
+        knot_idx = carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()->getMission()->getWpTrajIdx()[0];
+      } else if (i <= carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()->getMission()->getWpTrajIdx()[1]) {
+        knot_idx = carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()->getMission()->getWpTrajIdx()[1];
+      } else if (i <= carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()->getMission()->getWpTrajIdx()[2]){
+        knot_idx = carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()->getMission()->getWpTrajIdx()[2];
+      } else {
+        knot_idx = i;
+      }
+      pos_ref = static_cast<Eigen::Vector3d>(
+          carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()->getState(knot_idx).head(3));
+      quat_ref = Eigen::Quaterniond(static_cast<Eigen::Vector4d>(
+          carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()->getState(knot_idx).segment(3, 7)));
+      vel_lin_ref = static_cast<Eigen::Vector3d>(
+          carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()->getState(knot_idx).segment(7, 10));
+      vel_ang_ref = static_cast<Eigen::Vector3d>(
+          carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()->getState(knot_idx).segment(10, 13));
+      BOOST_CHECK(cost_pose->get_Mref().oMf.translation() == pos_ref);
+      BOOST_CHECK(cost_pose->get_Mref().oMf.rotation() == quat_ref.toRotationMatrix());
+      BOOST_CHECK(cost_vel->get_vref().oMf.linear() == vel_lin_ref);
+      BOOST_CHECK(cost_vel->get_vref().oMf.angular() == vel_ang_ref);
+      // Weights
+      double weight_pos;
+      double weight_vel;
+      if (i == knot_idx) {
+        weight_pos = carrot_mpc_test.carrot_mpc_->getParams().w_pos_terminal;
+        weight_vel = carrot_mpc_test.carrot_mpc_->getParams().w_vel_terminal;
+      } else {
+        weight_pos = carrot_mpc_test.carrot_mpc_->getParams().w_pos_running;
+        weight_vel = carrot_mpc_test.carrot_mpc_->getParams().w_vel_running;
+      }
 
-//   // After calling, last node running weights and the penultimate terminal weights
-//   BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()
-//                   .back()
-//                   ->get_costs()
-//                   ->get_costs()
-//                   .find("pose_desired")
-//                   ->second->weight == carrot_mpc_test.carrot_mpc_->getParams().w_pos_running);
-//   BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()
-//                   .back()
-//                   ->get_costs()
-//                   ->get_costs()
-//                   .find("vel_desired")
-//                   ->second->weight == carrot_mpc_test.carrot_mpc_->getParams().w_vel_running);
-//   BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()[carrot_mpc_test.carrot_mpc_->getKnots() -
-//   2]
-//                   ->get_costs()
-//                   ->get_costs()
-//                   .find("pose_desired")
-//                   ->second->weight == carrot_mpc_test.carrot_mpc_->getParams().w_pos_terminal);
-//   BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()[carrot_mpc_test.carrot_mpc_->getKnots() -
-//   2]
-//                   ->get_costs()
-//                   ->get_costs()
-//                   .find("vel_desired")
-//                   ->second->weight == carrot_mpc_test.carrot_mpc_->getParams().w_vel_terminal);
-// }
-
-// // This test is to check that the iterator indicating the terminal weight is the last node after calling
-// // updateProblem() n_knots - 1 times
-// BOOST_AUTO_TEST_CASE(update_iterator_cyclic_test, *boost::unit_test::tolerance(1e-7)) {
-//   CarrotMpcTest carrot_mpc_test("takeoff.yaml");
-
-//   carrot_mpc_test.carrot_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
-
-//   for (int i = 0; i < carrot_mpc_test.carrot_mpc_->getKnots() - 1; ++i) {
-//     carrot_mpc_test.carrot_mpc_->updateProblem(carrot_mpc_test.carrot_mpc_->getKnots());
-//   }
-
-//   BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getIterator() ==
-//   carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels().end() - 1);
-// }
-
-// BOOST_AUTO_TEST_CASE(update_terminal_cost_test, *boost::unit_test::tolerance(1e-7)) {
-//   CarrotMpcTest carrot_mpc_test("takeoff.yaml");
-
-//   carrot_mpc_test.carrot_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
-
-//   std::size_t trajectory_cursor = carrot_mpc_test.carrot_mpc_->getKnots();
-
-//   carrot_mpc_test.carrot_mpc_->updateProblem(trajectory_cursor);
-
-//   boost::shared_ptr<crocoddyl::CostModelFramePlacement> cost_pose =
-//       boost::static_pointer_cast<crocoddyl::CostModelFramePlacement>(
-//           carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()
-//               .back()
-//               ->get_costs()
-//               ->get_costs()
-//               .find("pose_desired")
-//               ->second->cost);
-//   BOOST_CHECK(cost_pose->get_Mref().oMf == carrot_mpc_test.carrot_mpc_->getMission()->getWaypoints()[1].pose);
-//   BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getHasMotionRef() == true);
-// }
-
-// The hovering case should be implemented in the updateProblem case
-BOOST_AUTO_TEST_CASE(hovering_state_test, *boost::unit_test::tolerance(1e-7)) {
-  // CarrotMpcTest carrot_mpc_test("takeoff.yaml");
-
-  // carrot_mpc_test.carrot_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
-
-  // std::size_t trajectory_cursor = carrot_mpc_test.carrot_mpc_->getKnots() - 1;
-
-  // for (std::size_t i = 0; i < carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()->getMission()->getTotalKnots() -
-  //                                 carrot_mpc_test.carrot_mpc_->getKnots() + 1;
-  //      ++i) {
-  //   ++trajectory_cursor;
-  //   carrot_mpc_test.carrot_mpc_->updateProblem(trajectory_cursor);
-  // }
-
-  // for (std::size_t i = 0; i < carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels().size(); ++i) {
-  //   boost::shared_ptr<crocoddyl::CostModelFramePlacement> cost_pose =
-  //       boost::static_pointer_cast<crocoddyl::CostModelFramePlacement>(
-  //           carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()[i]
-  //               ->get_costs()
-  //               ->get_costs()
-  //               .find("pose_desired")
-  //               ->second->cost);
-  //   boost::shared_ptr<crocoddyl::CostModelFrameVelocity> cost_vel =
-  //       boost::static_pointer_cast<crocoddyl::CostModelFrameVelocity>(
-  //           carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()[i]
-  //               ->get_costs()
-  //               ->get_costs()
-  //               .find("vel_desired")
-  //               ->second->cost);
-
-  //   BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()[i]
-  //                   ->get_costs()
-  //                   ->get_costs()
-  //                   .find("pose_desired")
-  //                   ->second->weight == carrot_mpc_test.carrot_mpc_->getParams().w_pos_terminal);
-  //   BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()[i]
-  //                   ->get_costs()
-  //                   ->get_costs()
-  //                   .find("vel_desired")
-  //                   ->second->weight == carrot_mpc_test.carrot_mpc_->getParams().w_vel_terminal);
-  //   BOOST_CHECK(cost_pose->get_Mref().oMf == carrot_mpc_test.carrot_mpc_->getMission()->getWaypoints().back().pose);
-  //   BOOST_CHECK(cost_vel->get_vref().oMf == carrot_mpc_test.carrot_mpc_->getMission()->getWaypoints().back().vel);
-  // }
+      BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()[i]
+                      ->get_costs()
+                      ->get_costs()
+                      .find("pose_desired")
+                      ->second->weight == weight_pos);
+      BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()[i]
+                      ->get_costs()
+                      ->get_costs()
+                      .find("vel_desired")
+                      ->second->weight == weight_vel);
+    }
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

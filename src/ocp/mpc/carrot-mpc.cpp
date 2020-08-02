@@ -110,8 +110,7 @@ void CarrotMpc::createProblem(const SolverTypes::Type& solver_type) {
   }
 
   // Check that the running differential model from the problem DOES NOT contain the terminal model
-  problem_ = boost::make_shared<crocoddyl::ShootingProblem>(state_initial_, int_models_running_,
-  int_model_terminal_);
+  problem_ = boost::make_shared<crocoddyl::ShootingProblem>(state_initial_, int_models_running_, int_model_terminal_);
 
   // Here check in unittest that terminal and last item in vector are pointing at the same place
   // check also that the size of the vectors are equal to n_knots_
@@ -239,11 +238,11 @@ const crocoddyl::FrameMotion& CarrotMpc::getVelocityRef() const { return motion_
 const TrajectoryGeneratorParams& CarrotMpc::getParams() const { return params_; };
 
 void CarrotMpc::setReference(const std::size_t& idx_trajectory) {
-  pose_ref_.frame = frame_base_link_id_;
   state_ref_ = trajectory_generator_->getState(idx_trajectory);
   quat_ref_ = Eigen::Quaterniond(static_cast<Eigen::Vector4d>(state_ref_.segment(3, 4)));
-  pose_ref_.oMf = pinocchio::SE3(quat_ref_.matrix(), static_cast<Eigen::Vector3d>(state_ref_.head(3)));
 
+  pose_ref_.frame = frame_base_link_id_;
+  pose_ref_.oMf = pinocchio::SE3(quat_ref_.matrix(), static_cast<Eigen::Vector3d>(state_ref_.head(3)));
   motion_ref_.frame = frame_base_link_id_;
   motion_ref_.oMf = pinocchio::Motion(static_cast<Eigen::Vector3d>(state_ref_.segment(7, 3)),
                                       static_cast<Eigen::Vector3d>(state_ref_.segment(10, 3)));
