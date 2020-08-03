@@ -202,35 +202,50 @@ void CarrotMpc::updateProblem(const std::size_t idx_trajectory) {
   terminal_weights_idx_.back() = std::find(mission_->getWpTrajIdx().begin(), mission_->getWpTrajIdx().end(),
                                            idx_trajectory) != mission_->getWpTrajIdx().end();
 
-  (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->weight = params_.w_pos_running;
-  if (has_motion_ref_) {
-    (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->weight = params_.w_vel_running;
-  }
-
+  // Treat the incoming knot
   setReference(idx_trajectory);
-
+  diff_model_iter_ = diff_models_running_.end() - 1;
+  // -- References
   boost::shared_ptr<crocoddyl::CostModelFramePlacement> cost_pose =
       boost::static_pointer_cast<crocoddyl::CostModelFramePlacement>(
           (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->cost);
+  boost::shared_ptr<crocoddyl::CostModelFrameVelocity> cost_vel =
+      boost::static_pointer_cast<crocoddyl::CostModelFrameVelocity>(
+          (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->cost);
   cost_pose->set_Mref(pose_ref_);
-  if (has_motion_ref_) {
-    boost::shared_ptr<crocoddyl::CostModelFrameVelocity> cost_vel =
-        boost::static_pointer_cast<crocoddyl::CostModelFrameVelocity>(
-            (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->cost);
-    cost_vel->set_vref(motion_ref_);
-  }
-
-  if (diff_model_iter_ - 1 == diff_models_running_.begin()) {
-    diff_model_iter_ = diff_models_running_.end() - 1;
+  cost_vel->set_vref(motion_ref_);
+  // -- Weights
+  if (existsTerminalWeight()) {
+    (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->weight = params_.w_pos_running;
+    (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->weight = params_.w_vel_running;
   } else {
-    diff_model_iter_ -= 1;
-  }
-
-  // Increase the weight for the next node
-  (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->weight = params_.w_pos_terminal;
-  if (has_motion_ref_) {
+    (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->weight = params_.w_pos_terminal;
     (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->weight = params_.w_vel_terminal;
   }
+  --diff_model_iter_;
+
+  // Treat the subsequent knots
+  bool first_terminal_found = false;
+  for (std::size_t i = 0; i < n_knots_ - 1; ++i) {
+    if (terminal_weights_idx_[n_knots_ - 2 - i]) {
+      setReference(idx_trajectory - i - 1);
+      (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->weight = params_.w_pos_terminal;
+      (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->weight = params_.w_vel_terminal;
+    } else {
+      (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->weight = params_.w_pos_running;
+      (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->weight = params_.w_vel_running;
+    }
+
+    cost_pose = boost::static_pointer_cast<crocoddyl::CostModelFramePlacement>(
+        (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->cost);
+    cost_vel = boost::static_pointer_cast<crocoddyl::CostModelFrameVelocity>(
+        (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->cost);
+    cost_pose->set_Mref(pose_ref_);
+    cost_vel->set_vref(motion_ref_);
+
+    --diff_model_iter_;
+  }
+  // Increase the weight for the next node
 }
 
 const crocoddyl::FramePlacement& CarrotMpc::getPoseRef() const { return pose_ref_; }
