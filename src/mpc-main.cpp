@@ -45,7 +45,7 @@ MpcMain::MpcMain(const MultiCopterTypes::Type& mc_type, const SolverTypes::Type&
 
   // Low Level Controller initialization
   mpc_controller_knots_ = 100;
-  mpc_controller_ = FactoryMpc::createMpcController(mpc_type, model_, mc_params_, dt_, mission_, mpc_controller_knots_);
+  mpc_controller_ = FactoryMpc::get().createMpcController(mpc_type, model_, mc_params_, dt_, mission_, mpc_controller_knots_);
   mpc_controller_->loadParameters(mpc_controller_->getParametersPath());
   current_state_ = mpc_controller_->getStateMultibody()->zero();
   mpc_controller_->setInitialState(current_state_);

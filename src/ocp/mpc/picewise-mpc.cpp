@@ -9,7 +9,7 @@ PiceWiseMpc::PiceWiseMpc(const boost::shared_ptr<pinocchio::Model>& model,
   initializeDefaultParameters();
   mission_ = boost::make_shared<Mission>(mission->getInitialState().size());
 
-  parameters_yaml_path_ = MULTICOPTER_MPC_OCP_DIR "/trajectory-generator.yaml";
+  parameters_yaml_path_ = MULTICOPTER_MPC_OCP_DIR "/picewise-mpc.yaml";
 }
 
 PiceWiseMpc::~PiceWiseMpc() {}
@@ -23,7 +23,7 @@ boost::shared_ptr<MpcAbstract> PiceWiseMpc::createMpcController(
 }
 
 bool PiceWiseMpc::registered_ =
-    FactoryMpc::registerMpcController(PiceWiseMpc::getFactoryName(), PiceWiseMpc::createMpcController);
+    FactoryMpc::get().registerMpcController(PiceWiseMpc::getFactoryName(), PiceWiseMpc::createMpcController);
 
 void PiceWiseMpc::initializeDefaultParameters() {
   params_.w_state_position.fill(1.);

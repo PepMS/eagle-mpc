@@ -44,8 +44,8 @@ class RailMpcDerived : public multicopter_mpc::RailMpc {
 class RailMpcTest {
  public:
   RailMpcTest(const std::string& mission_name) {
-    std::string multirotor_yaml_path = MULTICOPTER_MPC_ROOT_DIR "/unittest/config/iris.yaml";
-    std::string mission_yaml_path = MULTICOPTER_MPC_ROOT_DIR "/unittest/config/" + mission_name;
+    std::string multirotor_yaml_path = MULTICOPTER_MPC_ROOT_DIR "/unittest/config/multirotor/iris.yaml";
+    std::string mission_yaml_path = MULTICOPTER_MPC_ROOT_DIR "/unittest/config/mission/" + mission_name;
 
     pinocchio::urdf::buildModel(EXAMPLE_ROBOT_DATA_MODEL_DIR "/iris_description/robots/iris_simple.urdf",
                                 pinocchio::JointModelFreeFlyer(), model_);
@@ -103,16 +103,14 @@ BOOST_AUTO_TEST_CASE(constructor_test, *boost::unit_test::tolerance(1e-7)) {
   BOOST_CHECK(tau_lb == llc_test.rail_mpc_->getActuationLowerBounds());
   BOOST_CHECK(tau_ub == llc_test.rail_mpc_->getActuationUpperBounds());
 
-  BOOST_CHECK(llc_test.rail_mpc_->getStateMultibody()->zero() ==
-              llc_test.rail_mpc_->getInitialState());
+  BOOST_CHECK(llc_test.rail_mpc_->getStateMultibody()->zero() == llc_test.rail_mpc_->getInitialState());
   BOOST_CHECK(llc_test.mc_model_->getFrameId(llc_test.mc_params_->base_link_name_) ==
               llc_test.rail_mpc_->getBaseLinkId());
 
   // Low Level constructor
   BOOST_CHECK(llc_test.n_knots_ == llc_test.rail_mpc_->getKnots());
   for (std::size_t i = 0; i < llc_test.rail_mpc_->getKnots(); ++i) {
-    BOOST_CHECK(llc_test.rail_mpc_->getStateMultibody()->zero() ==
-                llc_test.rail_mpc_->getStateRef()[i]);
+    BOOST_CHECK(llc_test.rail_mpc_->getStateMultibody()->zero() == llc_test.rail_mpc_->getStateRef()[i]);
   }
 }
 
@@ -139,7 +137,7 @@ BOOST_AUTO_TEST_CASE(initialize_default_parameters_test, *boost::unit_test::tole
 BOOST_AUTO_TEST_CASE(load_parameters_test, *boost::unit_test::tolerance(1e-7)) {
   RailMpcTest llc_test("mission-test.yaml");
 
-  llc_test.rail_mpc_->loadParameters(MULTICOPTER_MPC_ROOT_DIR "/unittest/config/low-level-controller-test.yaml");
+  llc_test.rail_mpc_->loadParameters(MULTICOPTER_MPC_ROOT_DIR "/unittest/config/ocp/rail-mpc-test.yaml");
 
   Eigen::Vector3d w_position;
   Eigen::Vector3d w_orientation;
@@ -163,10 +161,8 @@ BOOST_AUTO_TEST_CASE(create_problem_test, *boost::unit_test::tolerance(1e-7)) {
 
   llc_test.rail_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
 
-  BOOST_CHECK(llc_test.rail_mpc_->getDifferentialRunningModels().size() ==
-              llc_test.rail_mpc_->getKnots() - 1);
-  BOOST_CHECK(llc_test.rail_mpc_->getIntegratedRunningModels().size() ==
-              llc_test.rail_mpc_->getKnots() - 1);
+  BOOST_CHECK(llc_test.rail_mpc_->getDifferentialRunningModels().size() == llc_test.rail_mpc_->getKnots() - 1);
+  BOOST_CHECK(llc_test.rail_mpc_->getIntegratedRunningModels().size() == llc_test.rail_mpc_->getKnots() - 1);
   for (std::size_t i = 0; i < llc_test.rail_mpc_->getKnots() - 1; ++i) {
     // Check that the data differential model that std_vecto<integrated> is pointing to is the same that the data
     // member differential is pointing to
@@ -232,54 +228,56 @@ BOOST_AUTO_TEST_CASE(create_cost_state_test, *boost::unit_test::tolerance(1e-7))
                             llc_test.rail_mpc_->getParams().w_state_orientation.size() +
                             llc_test.rail_mpc_->getParams().w_state_velocity_lin.size() +
                             llc_test.rail_mpc_->getParams().w_state_velocity_ang.size());
-    weights << llc_test.rail_mpc_->getParams().w_state_position,
-        llc_test.rail_mpc_->getParams().w_state_orientation,
-        llc_test.rail_mpc_->getParams().w_state_velocity_lin,
-        llc_test.rail_mpc_->getParams().w_state_velocity_ang;
+    weights << llc_test.rail_mpc_->getParams().w_state_position, llc_test.rail_mpc_->getParams().w_state_orientation,
+        llc_test.rail_mpc_->getParams().w_state_velocity_lin, llc_test.rail_mpc_->getParams().w_state_velocity_ang;
     BOOST_CHECK(activation->get_weights() == weights);
   }
 }
 
 // Set reference before creating the problem
-BOOST_AUTO_TEST_CASE(set_reference_test_1, *boost::unit_test::tolerance(1e-7)) {
-  RailMpcTest llc_test("mission-test.yaml");
 
-  std::vector<Eigen::VectorXd> state_reference_trajectory(llc_test.rail_mpc_->getKnots(),
-                                                          llc_test.rail_mpc_->getStateMultibody()->zero());
-  std::vector<Eigen::VectorXd> control_reference_trajectory(
-      llc_test.rail_mpc_->getKnots() - 1,
-      Eigen::VectorXd::Zero(llc_test.rail_mpc_->getActuation()->get_nu()));
-  for (std::size_t i = 0; i < llc_test.rail_mpc_->getKnots() - 1; ++i) {
-    state_reference_trajectory[i](0) = i;
-    if (i < llc_test.rail_mpc_->getKnots() - 2) {
-      control_reference_trajectory[i](0) = i;
-    }
-  }
+// XXX: As when creating the problem the reference trajecotry gets updated automatically from the trajectory generator
+// the following test has no sense anymore. Leaved here in case we want to remove this automatic set in the future
 
-  llc_test.rail_mpc_->setReferences(state_reference_trajectory, control_reference_trajectory);
-  llc_test.rail_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
+// BOOST_AUTO_TEST_CASE(set_reference_test_1, *boost::unit_test::tolerance(1e-7)) {
+//   RailMpcTest llc_test("mission-test.yaml");
 
-  for (std::size_t i = 0; i < llc_test.rail_mpc_->getKnots() - 1; ++i) {
-    boost::shared_ptr<crocoddyl::CostModelState> cost_state = boost::static_pointer_cast<crocoddyl::CostModelState>(
-        llc_test.rail_mpc_->getDifferentialRunningModels()[i]
-            ->get_costs()
-            ->get_costs()
-            .find("state_error")
-            ->second->cost);
-    BOOST_CHECK(state_reference_trajectory[i] == llc_test.rail_mpc_->getStateRef()[i]);
-    BOOST_CHECK(cost_state->get_xref() == llc_test.rail_mpc_->getStateRef()[i]);
-  }
-  boost::shared_ptr<crocoddyl::CostModelState> cost_state = boost::static_pointer_cast<crocoddyl::CostModelState>(
-      llc_test.rail_mpc_->getDifferentialTerminalModel()
-          ->get_costs()
-          ->get_costs()
-          .find("state_error")
-          ->second->cost);
-  BOOST_CHECK(state_reference_trajectory[llc_test.rail_mpc_->getKnots() - 1] ==
-              llc_test.rail_mpc_->getStateRef()[llc_test.rail_mpc_->getKnots() - 1]);
-  BOOST_CHECK(cost_state->get_xref() ==
-              llc_test.rail_mpc_->getStateRef()[llc_test.rail_mpc_->getKnots() - 1]);
-}
+//   std::vector<Eigen::VectorXd> state_reference_trajectory(llc_test.rail_mpc_->getKnots(),
+//                                                           llc_test.rail_mpc_->getStateMultibody()->zero());
+//   std::vector<Eigen::VectorXd> control_reference_trajectory(
+//       llc_test.rail_mpc_->getKnots() - 1,
+//       Eigen::VectorXd::Zero(llc_test.rail_mpc_->getActuation()->get_nu()));
+//   for (std::size_t i = 0; i < llc_test.rail_mpc_->getKnots() - 1; ++i) {
+//     state_reference_trajectory[i](0) = i;
+//     if (i < llc_test.rail_mpc_->getKnots() - 2) {
+//       control_reference_trajectory[i](0) = i;
+//     }
+//   }
+
+//   llc_test.rail_mpc_->setReferences(state_reference_trajectory, control_reference_trajectory);
+//   llc_test.rail_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
+
+//   for (std::size_t i = 0; i < llc_test.rail_mpc_->getKnots() - 1; ++i) {
+//     boost::shared_ptr<crocoddyl::CostModelState> cost_state = boost::static_pointer_cast<crocoddyl::CostModelState>(
+//         llc_test.rail_mpc_->getDifferentialRunningModels()[i]
+//             ->get_costs()
+//             ->get_costs()
+//             .find("state_error")
+//             ->second->cost);
+//     BOOST_CHECK(state_reference_trajectory[i] == llc_test.rail_mpc_->getStateRef()[i]);
+//     BOOST_CHECK(cost_state->get_xref() == llc_test.rail_mpc_->getStateRef()[i]);
+//   }
+//   boost::shared_ptr<crocoddyl::CostModelState> cost_state = boost::static_pointer_cast<crocoddyl::CostModelState>(
+//       llc_test.rail_mpc_->getDifferentialTerminalModel()
+//           ->get_costs()
+//           ->get_costs()
+//           .find("state_error")
+//           ->second->cost);
+//   BOOST_CHECK(state_reference_trajectory[llc_test.rail_mpc_->getKnots() - 1] ==
+//               llc_test.rail_mpc_->getStateRef()[llc_test.rail_mpc_->getKnots() - 1]);
+//   BOOST_CHECK(cost_state->get_xref() ==
+//               llc_test.rail_mpc_->getStateRef()[llc_test.rail_mpc_->getKnots() - 1]);
+// }
 
 // Set reference after creating the problem
 BOOST_AUTO_TEST_CASE(set_reference_test_2, *boost::unit_test::tolerance(1e-7)) {
@@ -290,8 +288,7 @@ BOOST_AUTO_TEST_CASE(set_reference_test_2, *boost::unit_test::tolerance(1e-7)) {
   std::vector<Eigen::VectorXd> state_reference_trajectory(llc_test.rail_mpc_->getKnots(),
                                                           llc_test.rail_mpc_->getStateMultibody()->zero());
   std::vector<Eigen::VectorXd> control_reference_trajectory(
-      llc_test.rail_mpc_->getKnots() - 1,
-      Eigen::VectorXd::Zero(llc_test.rail_mpc_->getActuation()->get_nu()));
+      llc_test.rail_mpc_->getKnots() - 1, Eigen::VectorXd::Zero(llc_test.rail_mpc_->getActuation()->get_nu()));
   for (std::size_t i = 0; i < llc_test.rail_mpc_->getKnots() - 1; ++i) {
     state_reference_trajectory[i](0) = i;
     if (i < llc_test.rail_mpc_->getKnots() - 2) {
@@ -302,25 +299,20 @@ BOOST_AUTO_TEST_CASE(set_reference_test_2, *boost::unit_test::tolerance(1e-7)) {
   llc_test.rail_mpc_->setReferences(state_reference_trajectory, control_reference_trajectory);
 
   for (std::size_t i = 0; i < llc_test.rail_mpc_->getKnots() - 1; ++i) {
-    boost::shared_ptr<crocoddyl::CostModelState> cost_state = boost::static_pointer_cast<crocoddyl::CostModelState>(
-        llc_test.rail_mpc_->getDifferentialRunningModels()[i]
-            ->get_costs()
-            ->get_costs()
-            .find("state_error")
-            ->second->cost);
+    boost::shared_ptr<crocoddyl::CostModelState> cost_state =
+        boost::static_pointer_cast<crocoddyl::CostModelState>(llc_test.rail_mpc_->getDifferentialRunningModels()[i]
+                                                                  ->get_costs()
+                                                                  ->get_costs()
+                                                                  .find("state_error")
+                                                                  ->second->cost);
     BOOST_CHECK(state_reference_trajectory[i] == llc_test.rail_mpc_->getStateRef()[i]);
     BOOST_CHECK(cost_state->get_xref() == llc_test.rail_mpc_->getStateRef()[i]);
   }
   boost::shared_ptr<crocoddyl::CostModelState> cost_state = boost::static_pointer_cast<crocoddyl::CostModelState>(
-      llc_test.rail_mpc_->getDifferentialTerminalModel()
-          ->get_costs()
-          ->get_costs()
-          .find("state_error")
-          ->second->cost);
+      llc_test.rail_mpc_->getDifferentialTerminalModel()->get_costs()->get_costs().find("state_error")->second->cost);
   BOOST_CHECK(state_reference_trajectory[llc_test.rail_mpc_->getKnots() - 1] ==
               llc_test.rail_mpc_->getStateRef()[llc_test.rail_mpc_->getKnots() - 1]);
-  BOOST_CHECK(cost_state->get_xref() ==
-              llc_test.rail_mpc_->getStateRef()[llc_test.rail_mpc_->getKnots() - 1]);
+  BOOST_CHECK(cost_state->get_xref() == llc_test.rail_mpc_->getStateRef()[llc_test.rail_mpc_->getKnots() - 1]);
 }
 
 // Set reference after creating the problem

@@ -44,8 +44,8 @@ class TrajectoryGeneratorDerived : public multicopter_mpc::TrajectoryGenerator {
 class TrajectoryGeneratorTest {
  public:
   TrajectoryGeneratorTest() {
-    std::string mission_yaml_path = MULTICOPTER_MPC_ROOT_DIR "/unittest/config/takeoff.yaml";
-    std::string multirotor_yaml_path = MULTICOPTER_MPC_ROOT_DIR "/unittest/config/iris.yaml";
+    std::string mission_yaml_path = MULTICOPTER_MPC_ROOT_DIR "/unittest/config/mission/takeoff.yaml";
+    std::string multirotor_yaml_path = MULTICOPTER_MPC_ROOT_DIR "/unittest/config/multirotor/iris.yaml";
 
     pinocchio::urdf::buildModel(EXAMPLE_ROBOT_DATA_MODEL_DIR "/iris_description/robots/iris_simple.urdf",
                                 pinocchio::JointModelFreeFlyer(), model_);
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(initialize_default_parameters_test, *boost::unit_test::tole
 BOOST_AUTO_TEST_CASE(load_parameters_test, *boost::unit_test::tolerance(1e-7)) {
   TrajectoryGeneratorTest tg_test;
   
-  tg_test.trajectory_generator_->loadParameters( MULTICOPTER_MPC_ROOT_DIR "/unittest/config/trajectory-generator-test.yaml");
+  tg_test.trajectory_generator_->loadParameters( MULTICOPTER_MPC_ROOT_DIR "/unittest/config/ocp/trajectory-generator-test.yaml");
 
   Eigen::Vector3d w_position;
   Eigen::Vector3d w_orientation;

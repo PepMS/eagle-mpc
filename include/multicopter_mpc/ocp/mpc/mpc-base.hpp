@@ -37,20 +37,22 @@ class FactoryMpc {
   FactoryMpc();
   ~FactoryMpc();
 
+  static FactoryMpc& get();
+
   using createMethod = boost::shared_ptr<MpcAbstract> (*)(const boost::shared_ptr<pinocchio::Model>&,
                                                           const boost::shared_ptr<MultiCopterBaseParams>&,
                                                           const double&, const boost::shared_ptr<Mission>&,
                                                           const std::size_t&);
 
-  static bool registerMpcController(const std::string& mpc_name, createMethod create_method);
-  static boost::shared_ptr<MpcAbstract> createMpcController(const std::string& mpc_name,
+  bool registerMpcController(const std::string& mpc_name, createMethod create_method);
+  boost::shared_ptr<MpcAbstract> createMpcController(const std::string& mpc_name,
                                                             const boost::shared_ptr<pinocchio::Model>& model,
                                                             const boost::shared_ptr<MultiCopterBaseParams>& mc_params,
                                                             const double& dt, const boost::shared_ptr<Mission>& mission,
                                                             const std::size_t& n_knots);
 
  private:
-  static std::map<std::string, createMethod> s_methods_;
+  std::map<std::string, createMethod> s_methods_;
 };
 
 }  // namespace multicopter_mpc
