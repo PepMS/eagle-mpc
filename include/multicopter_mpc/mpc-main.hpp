@@ -9,8 +9,6 @@
 
 #include <string>
 
-// #include <Eigen/Core>
-
 #include "pinocchio/parsers/urdf.hpp"
 #include "pinocchio/multibody/model.hpp"
 

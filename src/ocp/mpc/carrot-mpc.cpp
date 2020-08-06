@@ -65,7 +65,10 @@ void CarrotMpc::initializeTrajectoryGenerator(const SolverTypes::Type& solver_ty
 
   trajectory_generator_->createProblem(solver_type);
   trajectory_generator_->setSolverIters(300);
-  trajectory_generator_->solve();
+  std::vector<Eigen::VectorXd> state_trajectory = trajectory_generator_->getMission()->interpolateTrajectory();
+  std::vector<Eigen::VectorXd> control_trajectory(trajectory_generator_->getKnots() - 1,
+                                                  Eigen::VectorXd::Zero(actuation_->get_nu()));
+  trajectory_generator_->solve(state_trajectory, control_trajectory);
 
   mission_ = trajectory_generator_->getMission();
 }

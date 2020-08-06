@@ -20,16 +20,17 @@ class Mission {
   void addWaypoint(WayPoint waypoint);
   void countTotalKnots();
 
+  std::vector<Eigen::VectorXd> interpolateTrajectory();
+
   void setInitialState(const Eigen::VectorXd& x0);
   const Eigen::VectorXd& getInitialState() const;
   const std::vector<WayPoint>& getWaypoints() const;
   const std::size_t& getTotalKnots() const;
   const std::vector<std::size_t>& getWpTrajIdx() const;
-  
+
   std::size_t getWpFromTrajIdx(const std::size_t& traj_idx) const;
 
  private:
-  
   std::vector<WayPoint> waypoints_;
   Eigen::VectorXd x0_;
 

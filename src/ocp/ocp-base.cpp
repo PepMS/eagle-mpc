@@ -53,6 +53,11 @@ void OcpAbstract::setSolverCallbacks(const bool& activated) {
 void OcpAbstract::setSolverIters(const std::size_t& n_iters) { solver_iters_ = n_iters; }
 
 void OcpAbstract::solve() { solver_->solve(); }
+void OcpAbstract::solve(const std::vector<Eigen::VectorXd>& state_trajectory,
+                        const std::vector<Eigen::VectorXd>& control_trajectory) {
+  std::cout << "State Trajectory: " << state_trajectory[10] << std::endl;
+  solver_->solve(state_trajectory, control_trajectory, solver_iters_, false);
+}
 
 const boost::shared_ptr<pinocchio::Model> OcpAbstract::getModel() const { return model_; }
 const boost::shared_ptr<MultiCopterBaseParams> OcpAbstract::getMcParams() const { return mc_params_; }

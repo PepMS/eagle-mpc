@@ -31,18 +31,40 @@ class OcpAbstract_wrap : public OcpAbstract, public bp::wrapper<OcpAbstract> {
   }
 
   void solve() {
-    if (bp::override solve = this->get_override("solver")) {
+    if (bp::override solve = this->get_override("solve")) {
       return bp::call<void>(solve.ptr());
     }
+    std::cout << "Called solve void!" << std::endl;
     return OcpAbstract::solve();
   }
-  void default_solve() { return this->OcpAbstract::solve(); }
+  void default_solve() {
+    std::cout << "Called default solve void!" << std::endl;
+    return this->OcpAbstract::solve();
+  }
+
+  void solve(const std::vector<Eigen::VectorXd>& state_trajectory,
+             const std::vector<Eigen::VectorXd>& control_trajectory) {
+    if (bp::override solve = this->get_override("solve")) {
+      return bp::call<void>(solve.ptr(), state_trajectory, control_trajectory);
+    }
+    std::cout << "Called solve init!" << std::endl;
+    return OcpAbstract::solve(state_trajectory, control_trajectory);
+  }
+  void default_solve_2(const std::vector<Eigen::VectorXd>& state_trajectory,
+                       const std::vector<Eigen::VectorXd>& control_trajectory) {
+    std::cout << "Called solve init default!" << std::endl;
+    return this->OcpAbstract::solve(state_trajectory, control_trajectory);
+  }
 };
 
 void exposeOcpAbstract() {
   bp::enum_<SolverTypes::Type>("SolverType")
       .value("SolverTypeBoxFDDP", SolverTypes::BoxFDDP)
       .value("SolverTypeSquashBoxFDDP", SolverTypes::SquashBoxFDDP);
+
+  void (OcpAbstract::*solve_void)(void) = &OcpAbstract::solve;
+  void (OcpAbstract::*solve_init)(const std::vector<Eigen::VectorXd>& state_trajectory,
+                                  const std::vector<Eigen::VectorXd>& control_trajectory) = &OcpAbstract::solve;
 
   bp::class_<OcpAbstract_wrap, boost::noncopyable>(
       "OcpAbstract",
@@ -53,14 +75,16 @@ void exposeOcpAbstract() {
       .def("createProblem", pure_virtual(&OcpAbstract_wrap::createProblem), bp::args("self", "solver_type"))
       .def("loadParameters", pure_virtual(&OcpAbstract_wrap::loadParameters), bp::args("self", "yaml_path"))
       .def("setSolverCallbacks", &OcpAbstract_wrap::setSolverCallbacks, bp::args("self", "activated"))
-      .def("solve", &OcpAbstract::solve, &OcpAbstract_wrap::default_solve, bp::args("self"))
+      .def("solve", solve_void, &OcpAbstract_wrap::default_solve, bp::args("self"))
+      .def("solve", solve_init, &OcpAbstract_wrap::default_solve_2,
+           bp::args("self", "state_trajectory", "control_trajectory"))
       .def("setSolverIters", &OcpAbstract_wrap::setSolverIters, bp::args("self", "num_iters"))
       .add_property("model",
                     bp::make_function(&OcpAbstract_wrap::getModel, bp::return_value_policy<bp::return_by_value>()))
       .add_property("mc_params",
                     bp::make_function(&OcpAbstract_wrap::getMcParams, bp::return_value_policy<bp::return_by_value>()))
-      .add_property("state",
-                    bp::make_function(&OcpAbstract_wrap::getStateMultibody, bp::return_value_policy<bp::return_by_value>()))
+      .add_property("state", bp::make_function(&OcpAbstract_wrap::getStateMultibody,
+                                               bp::return_value_policy<bp::return_by_value>()))
       .add_property("actuation",
                     bp::make_function(&OcpAbstract_wrap::getActuation, bp::return_value_policy<bp::return_by_value>()))
       .add_property("problem",

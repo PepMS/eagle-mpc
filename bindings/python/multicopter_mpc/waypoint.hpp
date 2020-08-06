@@ -27,7 +27,8 @@ void exposeWayPoint() {
           bp::args("self", "knots", "position", "orientation", "velocity", "rates")))
       .add_property("knots", bp::make_getter(&WayPoint::knots, bp::return_value_policy<bp::return_by_value>()))
       .add_property("pose", bp::make_getter(&WayPoint::pose, bp::return_internal_reference<>()))
-      .add_property("velocity", bp::make_getter(&WayPoint::vel, bp::return_value_policy<bp::return_by_value>()));
+      .add_property("velocity", bp::make_getter(&WayPoint::vel, bp::return_value_policy<bp::return_by_value>()))
+      .add_property("time", bp::make_getter(&WayPoint::time, bp::return_value_policy<bp::return_by_value>()));
 }
 
 }  // namespace python

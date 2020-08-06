@@ -46,6 +46,8 @@ class TrajectoryGenerator : public OcpAbstract {
   boost::shared_ptr<crocoddyl::CostModelAbstract> createCostControlRegularization();
 
   void solve() override;
+  void solve(const std::vector<Eigen::VectorXd>& state_trajectory,
+             const std::vector<Eigen::VectorXd>& control_trajectory) override;
 
   const boost::shared_ptr<Mission> getMission() const;
   std::vector<Eigen::VectorXd> getStateTrajectory(const std::size_t& idx_init, const std::size_t& idx_end) const;

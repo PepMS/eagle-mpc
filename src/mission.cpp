@@ -116,6 +116,38 @@ void Mission::countTotalKnots() {
   n_knots_ = knots;
 }
 
+std::vector<Eigen::VectorXd> Mission::interpolateTrajectory() {
+  std::vector<Eigen::VectorXd> state_trajectory;
+  Eigen::Quaterniond quat(static_cast<Eigen::Vector4d>(x0_.segment(3,7)));
+  Eigen::Vector3d pos(static_cast<Eigen::Vector3d>(x0_.head(3)));
+  pinocchio::SE3 pose_initial(quat, pos);
+  for (std::vector<WayPoint>::iterator wp = waypoints_.begin(); wp != waypoints_.end(); ++wp) {
+    std::size_t knots;
+    if (wp == waypoints_.begin()) {
+      knots = wp->knots;
+    } else {
+      knots = wp->knots - 1;
+    }
+    double alpha = 0;
+    double step = 1.0 / double(knots - 1);
+    for (std::size_t i = 0; i < knots; ++i) {
+      pinocchio::SE3 M = pinocchio::SE3::Interpolate(pose_initial, wp->pose, alpha);
+      Eigen::VectorXd state = Eigen::VectorXd::Zero(x0_.size());
+      state.head(3) = M.translation();
+      quat = Eigen::Quaterniond(M.rotation());
+      state(3) = quat.x();
+      state(4) = quat.y();
+      state(5) = quat.z();
+      state(6) = quat.w();
+      state_trajectory.push_back(state);
+      alpha += step;
+    }
+    pose_initial = wp->pose;
+  }
+
+  return state_trajectory;
+}
+
 void Mission::setInitialState(const Eigen::VectorXd& x0) {
   assert(x0_.size() == x0.size());
   x0_ = x0;

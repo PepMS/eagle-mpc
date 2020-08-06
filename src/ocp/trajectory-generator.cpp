@@ -214,6 +214,21 @@ void TrajectoryGenerator::solve() {
   state_hover_(6) = quat.w();
 }
 
+void TrajectoryGenerator::solve(const std::vector<Eigen::VectorXd>& state_trajectory,
+                                const std::vector<Eigen::VectorXd>& control_trajectory) {
+  std::cout << "inside of solver guess! \n";
+  problem_->set_x0(state_initial_);
+  solver_->solve(state_trajectory, control_trajectory, solver_iters_, false);
+  // in the unit test check that the solve trajectory and the state_trajectory have the same size
+  // std::copy(solver_->get_xs().begin(), solver_->get_xs().end(), state_trajectory_.begin());
+  state_hover_ = state_->zero();
+  state_hover_.head(3) = solver_->get_xs().back().head(3);
+  Eigen::Quaterniond quat = Eigen::Quaterniond(solver_->get_xs().back()(6), 0.0, 0.0, solver_->get_xs().back()(5));
+  quat.normalize();
+  state_hover_(5) = quat.z();
+  state_hover_(6) = quat.w();
+}
+
 const boost::shared_ptr<const crocoddyl::SolverAbstract> TrajectoryGenerator::getSolver() const { return solver_; }
 
 const boost::shared_ptr<Mission> TrajectoryGenerator::getMission() const { return mission_; }

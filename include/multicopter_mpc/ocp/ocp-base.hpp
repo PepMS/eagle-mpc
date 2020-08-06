@@ -47,7 +47,9 @@ class OcpAbstract {
 
   virtual void setSolverCallbacks(const bool& activated);
   virtual void solve();
-  
+  virtual void solve(const std::vector<Eigen::VectorXd>& state_trajectory,
+             const std::vector<Eigen::VectorXd>& control_trajectory);
+
   void setSolverIters(const std::size_t& n_iters);
 
   // Getters
@@ -73,7 +75,7 @@ class OcpAbstract {
   virtual void initializeDefaultParameters();
 
   virtual void setSolver(const SolverTypes::Type& solver_type);
-  
+
   // Class members
   boost::shared_ptr<MultiCopterBaseParams> mc_params_;
 
