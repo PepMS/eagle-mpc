@@ -1,7 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+from mpl_toolkits.mplot3d import Axes3D
+
 from multicopter_mpc.utils.tools import wayPointLitToStateArray
+
+colors = ['tab:blue', 'tab:orange', 'tab:red', 'tab:green']
 
 
 def PlotStates(xs, dt, wp_list=None):
@@ -11,64 +15,106 @@ def PlotStates(xs, dt, wp_list=None):
     PlotVelocityAng(xs, dt, wp_list)
 
 
+def Plot3DTrajectory(xs, wp_list=None, subplot_axis=0, elev=None, azim=None):
+    if isinstance(xs, list):
+        n_plots = len(xs)
+        fig = plt.figure(figsize=(5*n_plots, 5))
+        xlim_min = min([np.amin(arr[0, :]) for arr in xs])
+        xlim_max = max([np.amax(arr[0, :]) for arr in xs])
+        ylim_min = min([np.amin(arr[1, :]) for arr in xs])
+        ylim_max = max([np.amax(arr[1, :]) for arr in xs])
+        zlim_min = min([np.amin(arr[2, :]) for arr in xs])
+        zlim_max = max([np.amax(arr[2, :]) for arr in xs])
+        axs = []
+        for idx, d in enumerate(xs):
+            if subplot_axis == 0:
+                axs.append(fig.add_subplot(1, n_plots, idx+1, projection='3d'))
+            else:
+                axs.append(fig.add_subplot(n_plots, 1, idx+1, projection='3d'))
+            axs[-1].plot(xs=d[0, :], ys=d[1, :], zs=d[2, :], color=colors[idx])
+            axs[-1].set_xlim(xlim_min, xlim_max)
+            axs[-1].set_ylim(ylim_min, ylim_max)
+            axs[-1].set_zlim(xlim_min, zlim_max)
+            if elev is not None and azim is not None:
+                axs[-1].view_init(elev=elev, azim=azim)
+            if wp_list is not None:
+                for idx, wp in enumerate(wp_list):
+                    plotWpReferenceFrame(axs[-1], wp, idx)
+            plt.gca().set_aspect('equal', adjustable='datalim')
+    else:
+        fig = plt.figure(figsize=(5, 5))
+        ax = fig.add_subplot(1, 1, 1, projection='3d')
+        ax.plot(xs=xs[0, :], ys=xs[1, :], zs=xs[2, :])
+
+
+def PlotControls(us, dt, wp_list=None):
+    if isinstance(us, list):
+        n_subplots = us[0].shape[0]
+    else:
+        n_subplots = us.shape[0]
+
+    fig, axs = plt.subplots(n_subplots, 1, figsize=(15, 10), sharex=True)
+    plotTrajectory(us, 4e-3, axs, 0, 4, names=['Rotor 1', 'Rotor 2', 'Rotor3', 'Rotor4'], wp_list=wp_list)
+
+
 def PlotPosition(xs, dt, wp_list=None):
-    fig, axs = plt.subplots(3, 1, figsize=(15, 10))
+    fig, axs = plt.subplots(3, 1, figsize=(15, 10), sharex=True)
     plotTrajectory(xs, 4e-3, axs, 0, 3, names=['X pos', 'Y pos', 'Z pos'], wp_list=wp_list)
-    # plt.vlines(wp_list[0].knots*dt)
-    # plt.show()
 
 
 def PlotAttitude(xs, dt, wp_list=None):
-    fig, axs = plt.subplots(4, 1, figsize=(15, 10))
+    fig, axs = plt.subplots(4, 1, figsize=(15, 10), sharex=True)
     plotTrajectory(xs,
                    4e-3,
                    axs,
                    3,
                    7,
                    names=['X quat', 'Y quat', 'Z quat', 'W quat'], wp_list=wp_list)
-    # plt.show()
 
 
 def PlotVelocityLin(xs, dt, wp_list=None):
-    fig, axs = plt.subplots(3, 1, figsize=(15, 10))
+    fig, axs = plt.subplots(3, 1, figsize=(15, 10), sharex=True)
     plotTrajectory(xs,
                    4e-3,
                    axs,
                    7,
                    10,
                    names=['X vel. lin.', 'Y vel. lin.', 'Z vel. lin.'], wp_list=wp_list)
-    # plt.show()
 
 
 def PlotVelocityAng(xs, dt, wp_list=None):
-    fig, axs = plt.subplots(3, 1, figsize=(15, 10))
+    fig, axs = plt.subplots(3, 1, figsize=(15, 10), sharex=True)
     plotTrajectory(xs,
                    4e-3,
                    axs,
                    10,
                    13,
                    names=['X vel. ang.', 'Y vel. ang.', 'Z vel. ang.'], wp_list=wp_list)
-    # plt.show()
 
 
 def PlotMotorSpeed(us, dt, wp_list=None):
-    fig, axs = plt.subplots(4, 1, figsize=(15, 10))
+    fig, axs = plt.subplots(4, 1, figsize=(15, 10), sharex=True)
     plotTrajectory(us, 4e-3, axs, 0, 4)
 
 
 def plotTrajectory(data, dt, axs, row_init, row_end, names=None, wp_list=None):
     if isinstance(data, list):
-        for d in data:
+        for idx, d in enumerate(data):
             knots = np.size(d, 1)
             t = np.arange(0, round(knots * dt, 4), dt)
             for i in range(row_end - row_init):
-                axs[i].plot(t, d[row_init + i, :])
+                # Inneficient search for min
+                y_min = min([np.amin(arr[row_init + i, :]) for arr in data])
+                y_max = max([np.amax(arr[row_init + i, :]) for arr in data])
+                axs[i].plot(t, d[row_init + i, :], color=colors[idx])
                 if names is not None:
                     axs[i].set_title(names[i])
                 if wp_list is not None:
                     wp_array, time_array = wayPointLitToStateArray(wp_list)
                     axs[i].plot(time_array, wp_array[row_init + i, :], 'r+')
-
+                axs[i].grid(linestyle='--', linewidth=0.5)
+                axs[i].margins(x=0, y=0, z=0)
+                axs[i].set_ylim(y_min - 0.1, y_max + 0.1)
     else:
         knots = np.size(data, 1)
         t = np.arange(0, round(knots * dt, 4), dt)
@@ -76,6 +122,19 @@ def plotTrajectory(data, dt, axs, row_init, row_end, names=None, wp_list=None):
             axs[i].plot(t, data[row_init + i, :])
             if names is not None:
                 axs[i].set_title(names[i])
+        plt.grid()
+
+
+def plotWpReferenceFrame(ax, wp, wp_number=None):
+    origin = wp.pose.translation
+    x_vec = wp.pose.rotation[:, 0] / 3
+    y_vec = wp.pose.rotation[:, 1] / 3
+    z_vec = wp.pose.rotation[:, 2] / 3
+    ax.quiver(origin[0], origin[1], origin[2], x_vec[0], x_vec[1], x_vec[2], color='r')
+    ax.quiver(origin[0], origin[1], origin[2], y_vec[0], y_vec[1], y_vec[2], color='g')
+    ax.quiver(origin[0], origin[1], origin[2], z_vec[0], z_vec[1], z_vec[2], color='b')
+    if wp_number is not None:
+        ax.text(origin[0], origin[1], origin[2], "WP" + str(wp_number))
 
 
 def plotRPY(xs, dt, axs, wp_list=None):
@@ -154,4 +213,9 @@ def q2e(q, deg=False):
 
 
 def showPlots():
+    plt.tight_layout()
     plt.show()
+
+
+def saveFig(name):
+    plt.savefig(name, bbox_inches='tight')
