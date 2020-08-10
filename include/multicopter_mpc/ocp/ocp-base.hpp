@@ -42,8 +42,8 @@ class OcpAbstract {
 
   // Other methods
   virtual void createProblem(const SolverTypes::Type& solver_type) = 0;
-
   virtual void loadParameters(const std::string& yaml_path) = 0;
+  virtual void setTimeStep(const double& dt) = 0;
 
   virtual void setSolverCallbacks(const bool& activated);
   virtual void solve();
@@ -91,6 +91,7 @@ class OcpAbstract {
   boost::shared_ptr<crocoddyl::SolverAbstract> solver_;
   std::vector<boost::shared_ptr<crocoddyl::CallbackAbstract>> solver_callbacks_;
   std::size_t solver_iters_;
+  SolverTypes::Type solver_type_;
 
   int frame_base_link_id_;
   std::size_t n_knots_;

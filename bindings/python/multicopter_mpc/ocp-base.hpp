@@ -30,6 +30,10 @@ class OcpAbstract_wrap : public OcpAbstract, public bp::wrapper<OcpAbstract> {
     return bp::call<void>(this->get_override("loadParameters").ptr(), yaml_path);
   }
 
+  void setTimeStep(const double& dt) {
+    return bp::call<void>(this->get_override("setTimeStep").ptr(), dt);
+  }
+
   void solve() {
     if (bp::override solve = this->get_override("solve")) {
       return bp::call<void>(solve.ptr());

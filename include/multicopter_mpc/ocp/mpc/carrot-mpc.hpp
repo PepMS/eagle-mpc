@@ -15,8 +15,8 @@ namespace multicopter_mpc {
 class CarrotMpc : public MpcAbstract {
  public:
   CarrotMpc(const boost::shared_ptr<pinocchio::Model>& model,
-              const boost::shared_ptr<MultiCopterBaseParams>& mc_params, const double& dt,
-              const boost::shared_ptr<Mission>& mission, const std::size_t& n_knots);
+            const boost::shared_ptr<MultiCopterBaseParams>& mc_params, const double& dt,
+            const boost::shared_ptr<Mission>& mission, const std::size_t& n_knots);
   ~CarrotMpc();
 
   static std::string getFactoryName();
@@ -28,11 +28,13 @@ class CarrotMpc : public MpcAbstract {
 
   void loadParameters(const std::string& yaml_path) override;
   void createProblem(const SolverTypes::Type& solver_type) override;
+  void setTimeStep(const double& dt) override;
+
   void solve() override;
 
   void updateProblem(const std::size_t idx_trajectory);
 
-  const bool existsTerminalWeight(); 
+  const bool existsTerminalWeight();
 
   const crocoddyl::FramePlacement& getPoseRef() const;
   const crocoddyl::FrameMotion& getVelocityRef() const;
@@ -43,7 +45,7 @@ class CarrotMpc : public MpcAbstract {
   void initializeDefaultParameters() override;
   void initializeTrajectoryGenerator(const SolverTypes::Type& solver_type) override;
   void initializeTerminalWeights();
-  
+
   boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> createDifferentialModel(
       const std::size_t& idx_knot);
   boost::shared_ptr<crocoddyl::CostModelAbstract> createCostStateRegularization();

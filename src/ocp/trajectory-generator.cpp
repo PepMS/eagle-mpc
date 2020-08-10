@@ -6,7 +6,7 @@ TrajectoryGenerator::TrajectoryGenerator(const boost::shared_ptr<pinocchio::Mode
                                          const boost::shared_ptr<MultiCopterBaseParams>& mc_params, const double& dt,
                                          const boost::shared_ptr<Mission>& mission)
     : OcpAbstract(model, mc_params, dt), mission_(mission) {
-  mission_->fillWaypointsKnots(dt_);
+  mission_->setTimeStep(dt_);
   n_knots_ = mission_->getTotalKnots();
 
   initializeDefaultParameters();
@@ -229,6 +229,24 @@ void TrajectoryGenerator::solve(const std::vector<Eigen::VectorXd>& state_trajec
   state_hover_(6) = quat.w();
 }
 
+void TrajectoryGenerator::setTimeStep(const double& dt) {
+  dt_ = dt;
+  mission_->setTimeStep(dt_);
+  n_knots_ = mission_->getTotalKnots();
+
+  if (problem_ != nullptr) {
+    diff_models_running_.clear();
+    diff_model_terminal_ = nullptr;
+
+    int_models_running_.clear();
+    int_model_terminal_ = nullptr;
+    
+    problem_ = nullptr;
+    solver_ = nullptr;
+    // Notice that when changind the dt, create problem should be called again!
+  }
+}
+
 const boost::shared_ptr<const crocoddyl::SolverAbstract> TrajectoryGenerator::getSolver() const { return solver_; }
 
 const boost::shared_ptr<Mission> TrajectoryGenerator::getMission() const { return mission_; }
@@ -262,15 +280,9 @@ const Eigen::VectorXd& TrajectoryGenerator::getState(const std::size_t& cursor) 
 }
 
 const Eigen::VectorXd& TrajectoryGenerator::getControl(const std::size_t& cursor) const {
-  // if (cursor < state_trajectory_.size()) {
-  //   return state_trajectory_[cursor];
-  // } else {
-  //   return state_hover_;
-  // }
-  if (cursor < solver_->get_us().size()) {
+    if (cursor < solver_->get_us().size()) {
     return solver_->get_us()[cursor];
   } else {
-    // std::cout << "HOVERING! at state: " << state_hover_ << std::endl;
     return control_hover_;
   }
 }

@@ -165,6 +165,22 @@ void RailMpc::updateProblem(const std::size_t idx_trajectory) {
   cost_state->set_xref(state_ref_[n_knots_ - 1]);
 }
 
+void RailMpc::setTimeStep(const double& dt) {
+  dt_ = dt;
+  trajectory_generator_->setTimeStep(dt_);
+
+  if (problem_ != nullptr) {
+    diff_models_running_.clear();
+    diff_model_terminal_ = nullptr;
+
+    int_models_running_.clear();
+    int_model_terminal_ = nullptr;
+
+    problem_ = nullptr;
+    solver_ = nullptr;
+  }
+}
+
 const std::vector<Eigen::VectorXd>& RailMpc::getStateRef() const { return state_ref_; }
 const RailMpcParams& RailMpc::getParams() const { return params_; }
 

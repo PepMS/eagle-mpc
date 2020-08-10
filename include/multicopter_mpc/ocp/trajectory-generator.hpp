@@ -39,8 +39,8 @@ class TrajectoryGenerator : public OcpAbstract {
   ~TrajectoryGenerator();
 
   void loadParameters(const std::string& yaml_path) override;
-
   void createProblem(const SolverTypes::Type& solver_type) override;
+  void setTimeStep(const double& dt) override;
 
   boost::shared_ptr<crocoddyl::CostModelAbstract> createCostStateRegularization();
   boost::shared_ptr<crocoddyl::CostModelAbstract> createCostControlRegularization();
@@ -65,8 +65,6 @@ class TrajectoryGenerator : public OcpAbstract {
       const WayPoint& waypoint, const bool& is_last_wp);
 
   boost::shared_ptr<Mission> mission_;
-  // std::vector<Eigen::VectorXd> state_trajectory_;
-  // std::vector<Eigen::VectorXd> control_trajectory_;
   Eigen::VectorXd state_hover_;
   Eigen::VectorXd control_hover_;
   TrajectoryGeneratorParams params_;

@@ -39,11 +39,11 @@ void Mission::fillWaypoints(const yaml_parser::ParamsServer& server) {
   }
 }
 
-void Mission::fillWaypointsKnots(const double& dt) {
+void Mission::fillKnots() {
   assert(waypoints_.size() > 0);
 
   for (std::vector<WayPoint>::iterator wp = waypoints_.begin(); wp != waypoints_.end(); ++wp) {
-    wp->knots = std::size_t(wp->time / dt) + 1;
+    wp->knots = std::size_t(wp->time / dt_) + 1;
   }
 
   countTotalKnots();
@@ -51,29 +51,7 @@ void Mission::fillWaypointsKnots(const double& dt) {
 
 void Mission::fillWaypoints(const yaml_parser::ParamsServer& server, const double& dt) {
   fillWaypoints(server);
-  fillWaypointsKnots(dt);
-}
-
-// This way of adding waypoints will probably be done in the controller side
-void Mission::fillWaypoints(const std::vector<Eigen::VectorXd>& state_trajectory, const std::size_t& llc_knots) {
-  std::size_t cursor = 0;
-  std::size_t num_wp = state_trajectory.size() / (llc_knots - 1);
-
-  for (std::size_t i = 0; i < num_wp; ++i) {
-    cursor += llc_knots - 1;
-
-    // To be removed: hardcoded indicies
-    Eigen::Vector3d pos = state_trajectory[cursor].head(3);
-    Eigen::Quaterniond quat(static_cast<Eigen::Vector4d>(state_trajectory[cursor].segment(3, 4)));
-    Eigen::Vector3d vel_lin = state_trajectory[cursor].segment(7, 3);
-    Eigen::Vector3d vel_rot = state_trajectory[cursor].segment(10, 3);
-
-    WayPoint wp(llc_knots, pos, quat, vel_lin, vel_rot);
-    waypoints_.push_back(wp);
-  }
-
-  countTotalKnots();
-  x0_ = state_trajectory[0];
+  setTimeStep(dt);
 }
 
 void Mission::fillInitialState(const yaml_parser::ParamsServer& server) {
@@ -118,7 +96,7 @@ void Mission::countTotalKnots() {
 
 std::vector<Eigen::VectorXd> Mission::interpolateTrajectory() {
   std::vector<Eigen::VectorXd> state_trajectory;
-  Eigen::Quaterniond quat(static_cast<Eigen::Vector4d>(x0_.segment(3,7)));
+  Eigen::Quaterniond quat(static_cast<Eigen::Vector4d>(x0_.segment(3, 7)));
   Eigen::Vector3d pos(static_cast<Eigen::Vector3d>(x0_.head(3)));
   pinocchio::SE3 pose_initial(quat, pos);
   for (std::vector<WayPoint>::iterator wp = waypoints_.begin(); wp != waypoints_.end(); ++wp) {
@@ -146,6 +124,14 @@ std::vector<Eigen::VectorXd> Mission::interpolateTrajectory() {
   }
 
   return state_trajectory;
+}
+
+void Mission::setTimeStep(const double& dt) {
+  dt_ = dt;
+
+  if (waypoints_.size() > 0) {
+    fillKnots();
+  }
 }
 
 void Mission::setInitialState(const Eigen::VectorXd& x0) {

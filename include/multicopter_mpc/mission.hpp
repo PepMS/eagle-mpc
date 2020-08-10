@@ -13,8 +13,6 @@ class Mission {
 
   void fillWaypoints(const yaml_parser::ParamsServer& server);
   void fillWaypoints(const yaml_parser::ParamsServer& server, const double& dt);
-  void fillWaypoints(const std::vector<Eigen::VectorXd>& state_trajectory, const std::size_t& llc_knots);
-  void fillWaypointsKnots(const double& dt);
   void fillInitialState(const yaml_parser::ParamsServer& server);
 
   void addWaypoint(WayPoint waypoint);
@@ -22,6 +20,7 @@ class Mission {
 
   std::vector<Eigen::VectorXd> interpolateTrajectory();
 
+  void setTimeStep(const double& dt);
   void setInitialState(const Eigen::VectorXd& x0);
   const Eigen::VectorXd& getInitialState() const;
   const std::vector<WayPoint>& getWaypoints() const;
@@ -31,11 +30,15 @@ class Mission {
   std::size_t getWpFromTrajIdx(const std::size_t& traj_idx) const;
 
  private:
+
+  void fillKnots();
+
   std::vector<WayPoint> waypoints_;
   Eigen::VectorXd x0_;
 
   std::size_t n_knots_;
   std::vector<std::size_t> wp_traj_idx_;
+  double dt_;
 };
 }  // namespace multicopter_mpc
 

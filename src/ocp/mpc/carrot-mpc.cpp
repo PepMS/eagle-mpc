@@ -251,6 +251,23 @@ void CarrotMpc::updateProblem(const std::size_t idx_trajectory) {
   // Increase the weight for the next node
 }
 
+void CarrotMpc::setTimeStep(const double& dt) {
+  dt_ = dt;
+  mission_->setTimeStep(dt_);
+  trajectory_generator_->setTimeStep(dt_);
+
+  if (problem_ != nullptr) {
+    diff_models_running_.clear();
+    diff_model_terminal_ = nullptr;
+
+    int_models_running_.clear();
+    int_model_terminal_ = nullptr;
+
+    problem_ = nullptr;
+    solver_ = nullptr;
+  }
+}
+
 const crocoddyl::FramePlacement& CarrotMpc::getPoseRef() const { return pose_ref_; }
 const crocoddyl::FrameMotion& CarrotMpc::getVelocityRef() const { return motion_ref_; }
 const TrajectoryGeneratorParams& CarrotMpc::getParams() const { return params_; };

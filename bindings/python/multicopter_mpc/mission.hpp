@@ -20,11 +20,9 @@ void exposeMission() {
   bp::register_ptr_to_python<boost::shared_ptr<Mission>>();
 
   void (Mission::*fillWP_yaml)(const yaml_parser::ParamsServer&) = &Mission::fillWaypoints;
-  void (Mission::*fillWP_state)(const std::vector<Eigen::VectorXd>&, const std::size_t&) = &Mission::fillWaypoints;
 
   bp::class_<Mission>("Mission", bp::init<int>(bp::args("self", "nx"), "Initialize mission params"))
       .def("fillWaypoints", fillWP_yaml, bp::args("self", "server"))
-      .def("fillWaypoints", fillWP_state, bp::args("self", "state_trajectory", "llc_knots"))
       .def("fillInitialState", &Mission::fillInitialState, bp::args("self", "server"))
       .def("interpolateTrajectory", &Mission::interpolateTrajectory, bp::args("self"))
       .add_property("x0", bp::make_function(&Mission::getInitialState, bp::return_value_policy<bp::return_by_value>()),

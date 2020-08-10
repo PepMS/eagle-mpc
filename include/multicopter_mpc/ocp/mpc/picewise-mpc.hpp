@@ -24,6 +24,8 @@ class PiceWiseMpc : public MpcAbstract {
 
   void loadParameters(const std::string& yaml_path) override;
   void createProblem(const SolverTypes::Type& solver_type) override;
+  void setTimeStep(const double& dt) override;
+
   void solve() override;
 
   void updateProblem(const std::size_t idx_trajectory);

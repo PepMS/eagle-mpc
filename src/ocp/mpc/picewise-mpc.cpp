@@ -322,6 +322,26 @@ void PiceWiseMpc::updateTerminalCost(const std::size_t idx_trajectory) {
   }
 }
 
+void PiceWiseMpc::setTimeStep(const double& dt) {
+  dt_ = dt;
+  
+  std::size_t nx = mission_->getInitialState().size();
+  mission_ = boost::make_shared<Mission>(nx);
+  
+  trajectory_generator_->setTimeStep(dt_);
+
+  if (problem_ != nullptr) {
+    diff_models_running_.clear();
+    diff_model_terminal_ = nullptr;
+
+    int_models_running_.clear();
+    int_model_terminal_ = nullptr;
+
+    problem_ = nullptr;
+    solver_ = nullptr;
+  }
+}
+
 const crocoddyl::FramePlacement& PiceWiseMpc::getPoseRef() const { return pose_ref_; }
 const crocoddyl::FrameMotion& PiceWiseMpc::getVelocityRef() const { return motion_ref_; }
 const TrajectoryGeneratorParams& PiceWiseMpc::getParams() const { return params_; };

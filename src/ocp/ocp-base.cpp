@@ -37,6 +37,8 @@ void OcpAbstract::setSolver(const SolverTypes::Type& solver_type) {
     default:
       break;
   }
+
+  solver_type_ = solver_type;
 }
 
 void OcpAbstract::setSolverCallbacks(const bool& activated) {
