@@ -42,7 +42,7 @@ class CarrotMpcDerived : public multicopter_mpc::CarrotMpc {
     return diff_model_iter_;
   }
 
-  const boost::shared_ptr<crocoddyl::SolverAbstract>& getSolver() { return solver_; }
+  const boost::shared_ptr<crocoddyl::SolverDDP>& getSolver() { return solver_; }
 
   const bool& getHasMotionRef() { return has_motion_ref_; }
 

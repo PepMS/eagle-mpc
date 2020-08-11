@@ -2,12 +2,12 @@
 
 namespace multicopter_mpc {
 MpcMain::MpcMain(const MultiCopterTypes::Type& mc_type, const SolverTypes::Type& solver_type,
-                 const std::string& mission_name, const std::string& mpc_type)
+                 const std::string& mission_name, const std::string& mpc_type, const double& dt)
     : mc_type_(mc_type), solver_type_(solver_type) {
   std::string model_description_path;
   std::string model_yaml_path;
   std::string mission_yaml_path = MULTICOPTER_MPC_MISSION_DIR "/" + mission_name;
-  
+
   switch (mc_type_) {
     case MultiCopterTypes::Iris:
       model_description_path = EXAMPLE_ROBOT_DATA_MODEL_DIR "/iris_description/robots/iris_simple.urdf";
@@ -41,14 +41,15 @@ MpcMain::MpcMain(const MultiCopterTypes::Type& mc_type, const SolverTypes::Type&
   mission_->fillWaypoints(server_mission);
   mission_->fillInitialState(server_mission);
 
-  dt_ = 4e-3;
+  dt_ = dt;
 
   // Low Level Controller initialization
   mpc_controller_knots_ = 100;
-  mpc_controller_ = FactoryMpc::get().createMpcController(mpc_type, model_, mc_params_, dt_, mission_, mpc_controller_knots_);
+  mpc_controller_ =
+      FactoryMpc::get().createMpcController(mpc_type, model_, mc_params_, dt_, mission_, mpc_controller_knots_);
   mpc_controller_->loadParameters(mpc_controller_->getParametersPath());
-  current_state_ = mpc_controller_->getStateMultibody()->zero();
-  mpc_controller_->setInitialState(current_state_);
+  state_ = mpc_controller_->getStateMultibody()->zero();
+  mpc_controller_->setInitialState(state_);
   mpc_controller_->createProblem(solver_type_);
   mpc_controller_->setSolverCallbacks(true);
   mpc_controller_->setSolverIters(100);
@@ -56,10 +57,14 @@ MpcMain::MpcMain(const MultiCopterTypes::Type& mc_type, const SolverTypes::Type&
   mpc_controller_->setSolverIters(1);
   mpc_controller_->setSolverCallbacks(false);
 
-  current_motor_thrust_ = Eigen::VectorXd::Zero(mpc_controller_->getActuation()->get_nu());
-  current_motor_speed_ = current_motor_thrust_;
-  // Do check to ensure that the guess of the solver is right
+  motor_thrust_ = Eigen::VectorXd::Zero(mpc_controller_->getActuation()->get_nu());
+  motor_speed_ = motor_thrust_;
 
+  ff_gains_ = Eigen::VectorXd::Zero(mpc_controller_->getStateMultibody()->get_ndx());
+  fb_gains_ = Eigen::MatrixXd::Zero(mpc_controller_->getActuation()->get_nu(),
+                                            mpc_controller_->getStateMultibody()->get_ndx());
+
+  // Do check to ensure that the guess of the solver is right
   trajectory_cursor_ = mpc_controller_knots_ - 1;
   std::cout << "MULTICOPTER MPC: MPC Main initialization complete" << std::endl;
 }
@@ -68,29 +73,46 @@ MpcMain::MpcMain() {}
 
 MpcMain::~MpcMain() {}
 
-const boost::shared_ptr<const MpcAbstract> MpcMain::getMpcController() { return mpc_controller_; }
-
-void MpcMain::setCurrentState(const Eigen::Ref<Eigen::VectorXd>& current_state) { current_state_ = current_state; }
-
-const Eigen::VectorXd& MpcMain::runMpcStep() {
-  // 1. update the current state of the low-level-controller
-  mpc_controller_->setInitialState(current_state_);
+void MpcMain::runMpcStep() {
+  // 1. update the current state
+  mpc_controller_->setInitialState(state_);
   // 2. solve with the current state
   mpc_controller_->solve();
   // 3. update control variable
-  current_motor_thrust_ = mpc_controller_->getControls();
-  computeSpeedControls();
-  // 4. update low_level->reference trajecotry with the next state from the mpc_main->reference trajectory
+  motor_thrust_ = mpc_controller_->getControls();
+  thrustToSpeed(motor_thrust_, motor_speed_);
+  ff_gains_ = mpc_controller_->getFeedForwardGains();
+  fb_gains_ = mpc_controller_->getFeedBackGains();
+  // 4. update problem
   ++trajectory_cursor_;
   mpc_controller_->updateProblem(trajectory_cursor_);
+
+  // Print state when reached the final knot
   if (trajectory_cursor_ == mpc_controller_knots_ + mpc_controller_->getMission()->getTotalKnots()) {
-    std::cout << "End of trajectory reached. State: \n" << current_state_ << std::endl;
+    std::cout << "End of trajectory reached. State: \n" << state_ << std::endl;
   }
-
-  return current_motor_speed_;
 }
 
-void MpcMain::computeSpeedControls() {
-  current_motor_speed_ = (current_motor_thrust_.array() / mc_params_->cf_).sqrt();
+void MpcMain::thrustToSpeed(const Eigen::Ref<const Eigen::VectorXd>& motors_thrust,
+                            Eigen::Ref<Eigen::VectorXd> motors_speed) {
+  motors_speed = (motors_thrust.array() / mc_params_->cf_).sqrt();
 }
+
+void MpcMain::setCurrentState(const Eigen::Ref<Eigen::VectorXd>& current_state) { state_ = current_state; }
+
+const boost::shared_ptr<const MpcAbstract> MpcMain::getMpcController() { return mpc_controller_; }
+
+const Eigen::VectorXd& MpcMain::getMotorsSpeed() { return motor_speed_; }
+
+const Eigen::VectorXd& MpcMain::getMotorsThrust() { return motor_thrust_; }
+
+const Eigen::VectorXd& MpcMain::getFeedForwardGains() { return ff_gains_; }
+
+const Eigen::MatrixXd& MpcMain::getFeedBackGains() { return fb_gains_; }
+
+void MpcMain::getStateDiff(const Eigen::Ref<const Eigen::VectorXd>& state0,
+                           const Eigen::Ref<const Eigen::VectorXd>& state1, Eigen::Ref<Eigen::VectorXd> state_diff) {
+  mpc_controller_->getStateMultibody()->diff(state0, state1, state_diff);
+}
+
 }  // namespace multicopter_mpc

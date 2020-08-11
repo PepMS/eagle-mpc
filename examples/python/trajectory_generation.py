@@ -22,21 +22,19 @@ mc_params = multicopter_mpc.MultiCopterBaseParams()
 mc_params.fill(server_uav)
 
 # Mission
-yaml_mission = yaml_parser.ParserYAML(MULTICOPTER_MPC_MISSION_DIR + "/loop
-.yaml", "", True)
+yaml_mission = yaml_parser.ParserYAML(MULTICOPTER_MPC_MISSION_DIR + "/passthrough.yaml", "", True)
 server_mission = yaml_parser.ParamsServer(yaml_mission.getParams())
 mission = multicopter_mpc.Mission(uav.nq + uav.nv)
 mission.fillWaypoints(server_mission)
 mission.fillInitialState(server_mission)
 
-dt = 4e-3
+dt = 1e-2
 trajectory = multicopter_mpc.TrajectoryGenerator(uav_model, mc_params, dt, mission)
 trajectory.createProblem(multicopter_mpc.SolverType.SolverTypeBoxFDDP)
 trajectory.setSolverCallbacks(True)
 trajectory.solve()
 
 state_trajectory = trajectory.getStateTrajectory(0, trajectory.n_knots - 1)
-# control_trajectory = [trajectory.getCon]
 time_lst = [trajectory.dt for i in range(0, trajectory.n_knots + 1)]
 
 if WITHDISPLAY:
@@ -50,4 +48,3 @@ if WITHDISPLAY:
     display.display(state_trajectory, [], [], time_lst, 1)
 
 # crocoddyl.plotOCSolution(state_trajectory, [], figIndex=1, show=False)
-

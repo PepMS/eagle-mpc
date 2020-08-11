@@ -68,7 +68,7 @@ const boost::shared_ptr<crocoddyl::ActuationModelMultiCopterBase> OcpAbstract::g
   return actuation_;
 }
 const boost::shared_ptr<crocoddyl::ShootingProblem> OcpAbstract::getProblem() const { return problem_; }
-const boost::shared_ptr<crocoddyl::SolverAbstract> OcpAbstract::getSolver() const { return solver_; }
+const boost::shared_ptr<crocoddyl::SolverDDP> OcpAbstract::getSolver() const { return solver_; }
 const double& OcpAbstract::getTimeStep() const { return dt_; }
 const Eigen::VectorXd& OcpAbstract::getActuationLowerBounds() const { return tau_lb_; }
 const Eigen::VectorXd& OcpAbstract::getActuationUpperBounds() const { return tau_ub_; }

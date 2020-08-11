@@ -58,7 +58,7 @@ class OcpAbstract {
   const boost::shared_ptr<crocoddyl::StateMultibody> getStateMultibody() const;
   const boost::shared_ptr<crocoddyl::ActuationModelMultiCopterBase> getActuation() const;
   const boost::shared_ptr<crocoddyl::ShootingProblem> getProblem() const;
-  const boost::shared_ptr<crocoddyl::SolverAbstract> getSolver() const;
+  const boost::shared_ptr<crocoddyl::SolverDDP> getSolver() const;
   const double& getTimeStep() const;
   const Eigen::VectorXd& getActuationLowerBounds() const;
   const Eigen::VectorXd& getActuationUpperBounds() const;
@@ -88,7 +88,7 @@ class OcpAbstract {
   boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> int_model_terminal_;
   boost::shared_ptr<crocoddyl::ShootingProblem> problem_;
 
-  boost::shared_ptr<crocoddyl::SolverAbstract> solver_;
+  boost::shared_ptr<crocoddyl::SolverDDP> solver_;
   std::vector<boost::shared_ptr<crocoddyl::CallbackAbstract>> solver_callbacks_;
   std::size_t solver_iters_;
   SolverTypes::Type solver_type_;

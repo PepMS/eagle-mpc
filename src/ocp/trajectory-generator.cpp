@@ -247,7 +247,7 @@ void TrajectoryGenerator::setTimeStep(const double& dt) {
   }
 }
 
-const boost::shared_ptr<const crocoddyl::SolverAbstract> TrajectoryGenerator::getSolver() const { return solver_; }
+const boost::shared_ptr<const crocoddyl::SolverDDP> TrajectoryGenerator::getSolver() const { return solver_; }
 
 const boost::shared_ptr<Mission> TrajectoryGenerator::getMission() const { return mission_; }
 

@@ -38,7 +38,7 @@ class RailMpcDerived : public multicopter_mpc::RailMpc {
     return int_model_terminal_;
   }
 
-  const boost::shared_ptr<crocoddyl::SolverAbstract>& getSolver() { return solver_; }
+  const boost::shared_ptr<crocoddyl::SolverDDP>& getSolver() { return solver_; }
 };
 
 class RailMpcTest {

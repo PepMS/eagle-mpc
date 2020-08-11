@@ -54,7 +54,7 @@ class TrajectoryGenerator : public OcpAbstract {
   std::vector<Eigen::VectorXd> getControlTrajectory(const std::size_t& idx_init, const std::size_t& idx_end) const;
   const Eigen::VectorXd& getState(const std::size_t& cursor) const;
   const Eigen::VectorXd& getControl(const std::size_t& cursor) const;
-  const boost::shared_ptr<const crocoddyl::SolverAbstract> getSolver() const;
+  const boost::shared_ptr<const crocoddyl::SolverDDP> getSolver() const;
   const TrajectoryGeneratorParams& getParams() const;
 
  private:
