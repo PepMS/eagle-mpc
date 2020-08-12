@@ -218,7 +218,9 @@ void TrajectoryGenerator::solve(const std::vector<Eigen::VectorXd>& state_trajec
                                 const std::vector<Eigen::VectorXd>& control_trajectory) {
   std::cout << "inside of solver guess! \n";
   problem_->set_x0(state_initial_);
+  std::cout << "Here \n";
   solver_->solve(state_trajectory, control_trajectory, solver_iters_, false);
+  std::cout << "Solved! \n";
   // in the unit test check that the solve trajectory and the state_trajectory have the same size
   // std::copy(solver_->get_xs().begin(), solver_->get_xs().end(), state_trajectory_.begin());
   state_hover_ = state_->zero();

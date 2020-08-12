@@ -94,7 +94,17 @@ void Mission::countTotalKnots() {
   n_knots_ = knots;
 }
 
-std::vector<Eigen::VectorXd> Mission::interpolateTrajectory() {
+std::vector<Eigen::VectorXd> Mission::interpolateTrajectory(const std::string& interpolation_type) {
+  if (interpolation_type == "SE3") {
+    return interpolateSE3();
+  } else if (interpolation_type == "R3SO3") {
+    return interpolateR3SO3();
+  } else {
+    return interpolateR3SO3();
+  }
+}
+
+std::vector<Eigen::VectorXd> Mission::interpolateSE3() {
   std::vector<Eigen::VectorXd> state_trajectory;
   Eigen::Quaterniond quat(static_cast<Eigen::Vector4d>(x0_.segment(3, 7)));
   Eigen::Vector3d pos(static_cast<Eigen::Vector3d>(x0_.head(3)));
@@ -112,6 +122,38 @@ std::vector<Eigen::VectorXd> Mission::interpolateTrajectory() {
       pinocchio::SE3 M = pinocchio::SE3::Interpolate(pose_initial, wp->pose, alpha);
       Eigen::VectorXd state = Eigen::VectorXd::Zero(x0_.size());
       state.head(3) = M.translation();
+      quat = Eigen::Quaterniond(M.rotation());
+      state(3) = quat.x();
+      state(4) = quat.y();
+      state(5) = quat.z();
+      state(6) = quat.w();
+      state_trajectory.push_back(state);
+      alpha += step;
+    }
+    pose_initial = wp->pose;
+  }
+
+  return state_trajectory;
+}
+
+std::vector<Eigen::VectorXd> Mission::interpolateR3SO3() {
+  std::vector<Eigen::VectorXd> state_trajectory;
+  Eigen::Quaterniond quat(static_cast<Eigen::Vector4d>(x0_.segment(3, 7)));
+  Eigen::Vector3d pos(static_cast<Eigen::Vector3d>(x0_.head(3)));
+  pinocchio::SE3 pose_initial(quat, pos);
+  for (std::vector<WayPoint>::iterator wp = waypoints_.begin(); wp != waypoints_.end(); ++wp) {
+    std::size_t knots;
+    if (wp == waypoints_.begin()) {
+      knots = wp->knots;
+    } else {
+      knots = wp->knots - 1;
+    }
+    double alpha = 0;
+    double step = 1.0 / double(knots - 1);
+    for (std::size_t i = 0; i < knots; ++i) {
+      pinocchio::SE3 M = pinocchio::SE3::Interpolate(pose_initial, wp->pose, alpha);
+      Eigen::VectorXd state = Eigen::VectorXd::Zero(x0_.size());
+      state.head(3) = pose_initial.translation() + alpha*(wp->pose.translation() - pose_initial.translation());
       quat = Eigen::Quaterniond(M.rotation());
       state(3) = quat.x();
       state(4) = quat.y();

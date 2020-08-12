@@ -24,7 +24,7 @@ void exposeMission() {
   bp::class_<Mission>("Mission", bp::init<int>(bp::args("self", "nx"), "Initialize mission params"))
       .def("fillWaypoints", fillWP_yaml, bp::args("self", "server"))
       .def("fillInitialState", &Mission::fillInitialState, bp::args("self", "server"))
-      .def("interpolateTrajectory", &Mission::interpolateTrajectory, bp::args("self"))
+      .def("interpolateTrajectory", &Mission::interpolateTrajectory, bp::args("self", "inter_type"))
       .add_property("x0", bp::make_function(&Mission::getInitialState, bp::return_value_policy<bp::return_by_value>()),
                     bp::make_function(&Mission::setInitialState), "Initial state")
       .add_property("waypoints",

@@ -1,9 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import pinocchio
 
 from mpl_toolkits.mplot3d import Axes3D
 
-from multicopter_mpc.utils.tools import wayPointLitToStateArray
+from multicopter_mpc.utils.tools import wayPointListToStateArray
 
 colors = ['tab:blue', 'tab:orange', 'tab:red', 'tab:green']
 
@@ -57,15 +58,19 @@ def PlotControls(us, dt, wp_list=None):
     plotTrajectory(us, 4e-3, axs, 0, 4, names=['Rotor 1', 'Rotor 2', 'Rotor3', 'Rotor4'], wp_list=wp_list)
 
 
+def PlotStateErrors(errors, dt, wp_list):   
+    fig, axs = plt.subplots(4, 1, figsize=(15, 10))
+    plotTrajectory(errors, dt, axs, 0, 4, names=['Pos. error', 'Att.', 'Vel. lin.', 'Vel. ang.'], wp_list=None)    
+
 def PlotPosition(xs, dt, wp_list=None):
     fig, axs = plt.subplots(3, 1, figsize=(15, 10), sharex=True)
-    plotTrajectory(xs, 4e-3, axs, 0, 3, names=['X pos', 'Y pos', 'Z pos'], wp_list=wp_list)
+    plotTrajectory(xs, dt, axs, 0, 3, names=['X pos', 'Y pos', 'Z pos'], wp_list=wp_list)
 
 
 def PlotAttitude(xs, dt, wp_list=None):
     fig, axs = plt.subplots(4, 1, figsize=(15, 10), sharex=True)
     plotTrajectory(xs,
-                   4e-3,
+                   dt,
                    axs,
                    3,
                    7,
@@ -75,7 +80,7 @@ def PlotAttitude(xs, dt, wp_list=None):
 def PlotVelocityLin(xs, dt, wp_list=None):
     fig, axs = plt.subplots(3, 1, figsize=(15, 10), sharex=True)
     plotTrajectory(xs,
-                   4e-3,
+                   dt,
                    axs,
                    7,
                    10,
@@ -85,7 +90,7 @@ def PlotVelocityLin(xs, dt, wp_list=None):
 def PlotVelocityAng(xs, dt, wp_list=None):
     fig, axs = plt.subplots(3, 1, figsize=(15, 10), sharex=True)
     plotTrajectory(xs,
-                   4e-3,
+                   dt,
                    axs,
                    10,
                    13,
@@ -94,7 +99,7 @@ def PlotVelocityAng(xs, dt, wp_list=None):
 
 def PlotMotorSpeed(us, dt, wp_list=None):
     fig, axs = plt.subplots(4, 1, figsize=(15, 10), sharex=True)
-    plotTrajectory(us, 4e-3, axs, 0, 4)
+    plotTrajectory(us, dt, axs, 0, 4)
 
 
 def plotTrajectory(data, dt, axs, row_init, row_end, names=None, wp_list=None):
@@ -110,7 +115,7 @@ def plotTrajectory(data, dt, axs, row_init, row_end, names=None, wp_list=None):
                 if names is not None:
                     axs[i].set_title(names[i])
                 if wp_list is not None:
-                    wp_array, time_array = wayPointLitToStateArray(wp_list)
+                    wp_array, time_array = wayPointListToStateArray(wp_list)
                     axs[i].plot(time_array, wp_array[row_init + i, :], 'r+')
                 axs[i].grid(linestyle='--', linewidth=0.5)
                 axs[i].margins(x=0, y=0, z=0)
@@ -118,12 +123,23 @@ def plotTrajectory(data, dt, axs, row_init, row_end, names=None, wp_list=None):
     else:
         knots = np.size(data, 1)
         t = np.arange(0, round(knots * dt, 4), dt)
-        for i in range(row_end - row_init):
-            axs[i].plot(t, data[row_init + i, :])
+        if row_end - row_init == 1:
+            axs.plot(t, data[0, :])
             if names is not None:
-                axs[i].set_title(names[i])
-        plt.grid()
-
+                axs.set_title(names[0])
+        else:
+            for i in range(row_end - row_init):
+                y_min = np.amin(data[row_init + i, :])
+                y_max = np.amax(data[row_init + i, :])
+                axs[i].plot(t, data[row_init + i, :])
+                if names is not None:
+                    axs[i].set_title(names[i])
+                if wp_list is not None:
+                    wp_array, time_array = wayPointListToStateArray(wp_list)
+                    axs[i].plot(time_array, wp_array[row_init + i, :], 'r+')
+                axs[i].grid(linestyle='--', linewidth=0.5)
+                axs[i].margins(x=0, y=0, z=0)
+                axs[i].set_ylim(y_min * 1.1, y_max * 1.1)
 
 def plotWpReferenceFrame(ax, wp, wp_number=None):
     origin = wp.pose.translation
