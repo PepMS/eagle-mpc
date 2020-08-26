@@ -188,6 +188,7 @@ const std::vector<WayPoint>& Mission::getWaypoints() const { return waypoints_; 
 
 const std::size_t& Mission::getTotalKnots() const { return n_knots_; }
 const std::vector<std::size_t>& Mission::getWpTrajIdx() const { return wp_traj_idx_; }
+const double& Mission::getTimeStep() const { return dt_;}
 
 std::size_t Mission::getWpFromTrajIdx(const std::size_t& traj_idx) const {
   assert(n_knots_ > 0);

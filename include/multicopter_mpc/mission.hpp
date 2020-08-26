@@ -26,6 +26,7 @@ class Mission {
   const std::vector<WayPoint>& getWaypoints() const;
   const std::size_t& getTotalKnots() const;
   const std::vector<std::size_t>& getWpTrajIdx() const;
+  const double& getTimeStep() const;
 
   std::size_t getWpFromTrajIdx(const std::size_t& traj_idx) const;
 

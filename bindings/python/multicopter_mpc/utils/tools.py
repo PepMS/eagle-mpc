@@ -63,3 +63,22 @@ def computeMissionStateError(xs, wp_list):
             traj_idx += knots
 
     return errors
+
+
+def saveLogfile(filename, log, dt):
+    import pickle
+    data = {
+        "xs": log.xs,
+        "us": log.us,
+        "fs": log.fs,
+        "steps": log.steps,
+        "iters": log.iters,
+        "costs": log.costs,
+        "muLM": log.u_regs,
+        "muV": log.x_regs,
+        "stops": log.stops,
+        "grads": log.grads,
+        "dt": dt
+    }
+    with open(filename, "wb") as f:
+        pickle.dump(data, f)

@@ -22,13 +22,13 @@ mc_params = multicopter_mpc.MultiCopterBaseParams()
 mc_params.fill(server_uav)
 
 # Mission
-yaml_mission = yaml_parser.ParserYAML(MULTICOPTER_MPC_MISSION_DIR + "/simple.yaml", "", True)
+yaml_mission = yaml_parser.ParserYAML(MULTICOPTER_MPC_MISSION_DIR + "/passthrough.yaml", "", True)
 server_mission = yaml_parser.ParamsServer(yaml_mission.getParams())
 mission = multicopter_mpc.Mission(uav.nq + uav.nv)
 mission.fillWaypoints(server_mission)
 mission.fillInitialState(server_mission)
 
-dt = 4e-3
+dt = 1e-2
 trajectory = multicopter_mpc.TrajectoryGenerator(uav_model, mc_params, dt, mission)
 trajectory.createProblem(multicopter_mpc.SolverType.SolverTypeBoxFDDP)
 trajectory.setSolverCallbacks(True)
@@ -36,6 +36,7 @@ trajectory.setSolverCallbacks(True)
 state_guess = mission.interpolateTrajectory("R3SO3")
 control_guess = [pinocchio.utils.zero(4) for _ in range(0, len(state_guess) - 1)]
 trajectory.solve(state_guess, control_guess)
+# trajectory.solve()
 
 state_trajectory = trajectory.getStateTrajectory(0, trajectory.n_knots - 1)
 time_lst = [trajectory.dt for i in range(0, trajectory.n_knots + 1)]

@@ -44,8 +44,23 @@ def Plot3DTrajectory(xs, wp_list=None, subplot_axis=0, elev=None, azim=None):
             plt.gca().set_aspect('equal', adjustable='datalim')
     else:
         fig = plt.figure(figsize=(5, 5))
+        xlim_min = np.amin(xs[0, :])
+        xlim_max = np.amax(xs[0, :])
+        ylim_min = np.amin(xs[1, :])
+        ylim_max = np.amax(xs[1, :])
+        zlim_min = np.amin(xs[2, :])
+        zlim_max = np.amax(xs[2, :])
         ax = fig.add_subplot(1, 1, 1, projection='3d')
         ax.plot(xs=xs[0, :], ys=xs[1, :], zs=xs[2, :])
+        ax.set_xlim(xlim_min, xlim_max)
+        ax.set_ylim(ylim_min, ylim_max)
+        ax.set_zlim(xlim_min, zlim_max)
+        if elev is not None and azim is not None:
+            ax.view_init(elev=elev, azim=azim)
+        if wp_list is not None:
+            for idx, wp in enumerate(wp_list):
+                plotWpReferenceFrame(ax, wp, idx)
+        plt.gca().set_aspect('equal', adjustable='datalim')
 
 
 def PlotControls(us, dt, wp_list=None):
@@ -58,12 +73,14 @@ def PlotControls(us, dt, wp_list=None):
     plotTrajectory(us, 4e-3, axs, 0, 4, names=['Rotor 1', 'Rotor 2', 'Rotor3', 'Rotor4'], wp_list=wp_list)
 
 
-def PlotStateErrors(errors, dt, wp_list):   
+def PlotStateErrors(errors, dt, wp_list,fig_title=''):   
     fig, axs = plt.subplots(4, 1, figsize=(15, 10))
+    fig.suptitle(fig_title)
     plotTrajectory(errors, dt, axs, 0, 4, names=['Pos. error', 'Att.', 'Vel. lin.', 'Vel. ang.'], wp_list=None)    
 
-def PlotPosition(xs, dt, wp_list=None):
+def PlotPosition(xs, dt, wp_list=None, fig_title=''):
     fig, axs = plt.subplots(3, 1, figsize=(15, 10), sharex=True)
+    fig.suptitle(fig_title)
     plotTrajectory(xs, dt, axs, 0, 3, names=['X pos', 'Y pos', 'Z pos'], wp_list=wp_list)
 
 
@@ -106,7 +123,11 @@ def plotTrajectory(data, dt, axs, row_init, row_end, names=None, wp_list=None):
     if isinstance(data, list):
         for idx, d in enumerate(data):
             knots = np.size(d, 1)
-            t = np.arange(0, round(knots * dt, 4), dt)
+            if isinstance(dt, list):
+                dt_ = dt[idx]
+            else:
+                dt_ = dt
+            t = np.arange(0, round(knots * dt_, 4), dt_)
             for i in range(row_end - row_init):
                 # Inneficient search for min
                 y_min = min([np.amin(arr[row_init + i, :]) for arr in data])

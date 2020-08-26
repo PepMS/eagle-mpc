@@ -70,6 +70,8 @@ void exposeOcpAbstract() {
   void (OcpAbstract::*solve_init)(const std::vector<Eigen::VectorXd>& state_trajectory,
                                   const std::vector<Eigen::VectorXd>& control_trajectory) = &OcpAbstract::solve;
 
+  bp::register_ptr_to_python<boost::shared_ptr<crocoddyl::SolverDDP>>();
+
   bp::class_<OcpAbstract_wrap, boost::noncopyable>(
       "OcpAbstract",
       "Abstract class to generate an optimal control problem designed to run on multicopter or aerial manipulators",
