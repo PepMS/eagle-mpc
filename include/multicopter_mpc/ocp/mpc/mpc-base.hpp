@@ -17,7 +17,7 @@ class MpcAbstract : public OcpAbstract {
               const boost::shared_ptr<MultiCopterBaseParams>& mc_params, const double& dt,
               const boost::shared_ptr<Mission>& mission, const std::size_t& n_knots);
 
-  ~MpcAbstract();
+  virtual ~MpcAbstract();
 
   virtual void updateProblem(const std::size_t idx_trajectory) = 0;
 
@@ -28,7 +28,8 @@ class MpcAbstract : public OcpAbstract {
   const boost::shared_ptr<Mission> getMission() const;
 
  protected:
-  virtual void initializeTrajectoryGenerator(const SolverTypes::Type& solver_type) = 0;
+  virtual void initializeTrajectoryGenerator(const SolverTypes::Type& solver_type,
+                                             const IntegratorTypes::Type& integrator_type) = 0;
 
   boost::shared_ptr<TrajectoryGenerator> trajectory_generator_;
   boost::shared_ptr<Mission> mission_;
@@ -48,10 +49,10 @@ class FactoryMpc {
 
   bool registerMpcController(const std::string& mpc_name, createMethod create_method);
   boost::shared_ptr<MpcAbstract> createMpcController(const std::string& mpc_name,
-                                                            const boost::shared_ptr<pinocchio::Model>& model,
-                                                            const boost::shared_ptr<MultiCopterBaseParams>& mc_params,
-                                                            const double& dt, const boost::shared_ptr<Mission>& mission,
-                                                            const std::size_t& n_knots);
+                                                     const boost::shared_ptr<pinocchio::Model>& model,
+                                                     const boost::shared_ptr<MultiCopterBaseParams>& mc_params,
+                                                     const double& dt, const boost::shared_ptr<Mission>& mission,
+                                                     const std::size_t& n_knots);
 
  private:
   std::map<std::string, createMethod> s_methods_;
