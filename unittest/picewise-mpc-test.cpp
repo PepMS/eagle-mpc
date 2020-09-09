@@ -465,7 +465,7 @@ BOOST_AUTO_TEST_CASE(update_terminal_cost_test, *boost::unit_test::tolerance(1e-
               ->get_costs()
               .find("pose_desired")
               ->second->cost);
-  BOOST_CHECK(cost_pose->get_Mref().placement == pw_mpc_test.pw_mpc_->getMission()->getWaypoints()[1].pose);
+  BOOST_CHECK(cost_pose->get_reference<crocoddyl::FramePlacement>().placement == pw_mpc_test.pw_mpc_->getMission()->getWaypoints()[1].pose);
   BOOST_CHECK(pw_mpc_test.pw_mpc_->getHasMotionRef() == true);
 }
 

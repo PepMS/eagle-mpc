@@ -297,21 +297,22 @@ BOOST_AUTO_TEST_CASE(create_problem_test, *boost::unit_test::tolerance(1e-7)) {
                   .find("vel_desired")
                   ->second->cost);
       // Reference
-      BOOST_CHECK(cost_pose->get_Mref().placement.translation() ==
+
+      BOOST_CHECK(cost_pose->get_reference<crocoddyl::FramePlacement>().placement.translation() ==
                   static_cast<Eigen::Vector3d>(carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()
                                                    ->getState(carrot_mpc_test.carrot_mpc_->getKnots() - 1)
                                                    .head(3)));
       BOOST_CHECK(
-          cost_pose->get_Mref().placement.rotation() ==
+          cost_pose->get_reference<crocoddyl::FramePlacement>().placement.rotation() ==
           Eigen::Quaterniond(static_cast<Eigen::Vector4d>(carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()
                                                               ->getState(carrot_mpc_test.carrot_mpc_->getKnots() - 1)
                                                               .segment(3, 7)))
               .toRotationMatrix());
-      BOOST_CHECK(cost_vel->get_vref().motion.linear() ==
+      BOOST_CHECK(cost_vel->get_reference<crocoddyl::FrameMotion>().motion.linear() ==
                   static_cast<Eigen::Vector3d>(carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()
                                                    ->getState(carrot_mpc_test.carrot_mpc_->getKnots() - 1)
                                                    .segment(7, 10)));
-      BOOST_CHECK(cost_vel->get_vref().motion.angular() ==
+      BOOST_CHECK(cost_vel->get_reference<crocoddyl::FrameMotion>().motion.angular() ==
                   static_cast<Eigen::Vector3d>(carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()
                                                    ->getState(carrot_mpc_test.carrot_mpc_->getKnots() - 1)
                                                    .segment(10, 13)));
@@ -354,21 +355,21 @@ BOOST_AUTO_TEST_CASE(create_problem_test, *boost::unit_test::tolerance(1e-7)) {
                   ->second->cost);
 
       // Reference
-      BOOST_CHECK(cost_pose->get_Mref().placement.translation() ==
+      BOOST_CHECK(cost_pose->get_reference<crocoddyl::FramePlacement>().placement.translation() ==
                   static_cast<Eigen::Vector3d>(carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()
                                                    ->getState(carrot_mpc_test.carrot_mpc_->getKnots() - 1)
                                                    .head(3)));
       BOOST_CHECK(
-          cost_pose->get_Mref().placement.rotation() ==
+          cost_pose->get_reference<crocoddyl::FramePlacement>().placement.rotation() ==
           Eigen::Quaterniond(static_cast<Eigen::Vector4d>(carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()
                                                               ->getState(carrot_mpc_test.carrot_mpc_->getKnots() - 1)
                                                               .segment(3, 7)))
               .toRotationMatrix());
-      BOOST_CHECK(cost_vel->get_vref().motion.linear() ==
+      BOOST_CHECK(cost_vel->get_reference<crocoddyl::FrameMotion>().motion.linear() ==
                   static_cast<Eigen::Vector3d>(carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()
                                                    ->getState(carrot_mpc_test.carrot_mpc_->getKnots() - 1)
                                                    .segment(7, 10)));
-      BOOST_CHECK(cost_vel->get_vref().motion.angular() ==
+      BOOST_CHECK(cost_vel->get_reference<crocoddyl::FrameMotion>().motion.angular() ==
                   static_cast<Eigen::Vector3d>(carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()
                                                    ->getState(carrot_mpc_test.carrot_mpc_->getKnots() - 1)
                                                    .segment(10, 13)));
@@ -431,10 +432,10 @@ BOOST_AUTO_TEST_CASE(create_problem_test, *boost::unit_test::tolerance(1e-7)) {
           carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()->getState(knot_idx).segment(7, 10));
       vel_ang_ref = static_cast<Eigen::Vector3d>(
           carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()->getState(knot_idx).segment(10, 13));
-      BOOST_CHECK(cost_pose->get_Mref().placement.translation() == pos_ref);
-      BOOST_CHECK(cost_pose->get_Mref().placement.rotation() == quat_ref.toRotationMatrix());
-      BOOST_CHECK(cost_vel->get_vref().motion.linear() == vel_lin_ref);
-      BOOST_CHECK(cost_vel->get_vref().motion.angular() == vel_ang_ref);
+      BOOST_CHECK(cost_pose->get_reference<crocoddyl::FramePlacement>().placement.translation() == pos_ref);
+      BOOST_CHECK(cost_pose->get_reference<crocoddyl::FramePlacement>().placement.rotation() == quat_ref.toRotationMatrix());
+      BOOST_CHECK(cost_vel->get_reference<crocoddyl::FrameMotion>().motion.linear() == vel_lin_ref);
+      BOOST_CHECK(cost_vel->get_reference<crocoddyl::FrameMotion>().motion.angular() == vel_ang_ref);
       // Weights
       bool active = i == knot_idx && i != carrot_mpc_test.carrot_mpc_->getKnots() - 1;
       BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()[i]
@@ -495,10 +496,10 @@ BOOST_AUTO_TEST_CASE(create_problem_test, *boost::unit_test::tolerance(1e-7)) {
           carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()->getState(knot_idx).segment(7, 10));
       vel_ang_ref = static_cast<Eigen::Vector3d>(
           carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()->getState(knot_idx).segment(10, 13));
-      BOOST_CHECK(cost_pose->get_Mref().placement.translation() == pos_ref);
-      BOOST_CHECK(cost_pose->get_Mref().placement.rotation() == quat_ref.toRotationMatrix());
-      BOOST_CHECK(cost_vel->get_vref().motion.linear() == vel_lin_ref);
-      BOOST_CHECK(cost_vel->get_vref().motion.angular() == vel_ang_ref);
+      BOOST_CHECK(cost_pose->get_reference<crocoddyl::FramePlacement>().placement.translation() == pos_ref);
+      BOOST_CHECK(cost_pose->get_reference<crocoddyl::FramePlacement>().placement.rotation() == quat_ref.toRotationMatrix());
+      BOOST_CHECK(cost_vel->get_reference<crocoddyl::FrameMotion>().motion.linear() == vel_lin_ref);
+      BOOST_CHECK(cost_vel->get_reference<crocoddyl::FrameMotion>().motion.angular() == vel_ang_ref);
       // Weights
       bool active = i == knot_idx;
       BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()[i]
@@ -586,10 +587,10 @@ BOOST_AUTO_TEST_CASE(update_problem_references_test, *boost::unit_test::toleranc
         carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()->getState(knot_idx).segment(7, 10));
     vel_ang_ref = static_cast<Eigen::Vector3d>(
         carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()->getState(knot_idx).segment(10, 13));
-    BOOST_CHECK(cost_pose->get_Mref().placement.translation() == pos_ref);
-    BOOST_CHECK(cost_pose->get_Mref().placement.rotation() == quat_ref.toRotationMatrix());
-    BOOST_CHECK(cost_vel->get_vref().motion.linear() == vel_lin_ref);
-    BOOST_CHECK(cost_vel->get_vref().motion.angular() == vel_ang_ref);
+    BOOST_CHECK(cost_pose->get_reference<crocoddyl::FramePlacement>().placement.translation() == pos_ref);
+    BOOST_CHECK(cost_pose->get_reference<crocoddyl::FramePlacement>().placement.rotation() == quat_ref.toRotationMatrix());
+    BOOST_CHECK(cost_vel->get_reference<crocoddyl::FrameMotion>().motion.linear() == vel_lin_ref);
+    BOOST_CHECK(cost_vel->get_reference<crocoddyl::FrameMotion>().motion.angular() == vel_ang_ref);
     // Weights
     bool active = i == knot_idx - 1 && i != carrot_mpc_test.carrot_mpc_->getKnots() - 1;
     BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()[i]
