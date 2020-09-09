@@ -63,55 +63,48 @@ def Plot3DTrajectory(xs, wp_list=None, subplot_axis=0, elev=None, azim=None):
         plt.gca().set_aspect('equal', adjustable='datalim')
 
 
-def PlotControls(us, dt, wp_list=None):
+def PlotControls(us, dt, wp_list=None, legend=None):
     if isinstance(us, list):
         n_subplots = us[0].shape[0]
     else:
         n_subplots = us.shape[0]
 
     fig, axs = plt.subplots(n_subplots, 1, figsize=(15, 10), sharex=True)
-    plotTrajectory(us, 4e-3, axs, 0, 4, names=['Rotor 1', 'Rotor 2', 'Rotor3', 'Rotor4'], wp_list=wp_list)
+    plotTrajectory(us, dt, axs, 0, 4, names=['Rotor 1', 'Rotor 2', 'Rotor3', 'Rotor4'], wp_list=wp_list, legend=legend)
 
 
-def PlotStateErrors(errors, dt, wp_list,fig_title=''):   
+def PlotStateErrors(errors, dt, wp_list, fig_title='', legend=None):
     fig, axs = plt.subplots(4, 1, figsize=(15, 10))
     fig.suptitle(fig_title)
-    plotTrajectory(errors, dt, axs, 0, 4, names=['Pos. error', 'Att.', 'Vel. lin.', 'Vel. ang.'], wp_list=None)    
+    plotTrajectory(errors, dt, axs, 0, 4, names=['Pos. error', 'Att.',
+                                                 'Vel. lin.', 'Vel. ang.'], wp_list=None, legend=legend)
 
-def PlotPosition(xs, dt, wp_list=None, fig_title=''):
+
+def PlotPosition(xs, dt, wp_list=None, fig_title='', legend=None):
     fig, axs = plt.subplots(3, 1, figsize=(15, 10), sharex=True)
     fig.suptitle(fig_title)
-    plotTrajectory(xs, dt, axs, 0, 3, names=['X pos', 'Y pos', 'Z pos'], wp_list=wp_list)
+    plotTrajectory(xs, dt, axs, 0, 3, names=['X pos', 'Y pos', 'Z pos'], wp_list=wp_list, legend=legend)
 
 
-def PlotAttitude(xs, dt, wp_list=None):
+def PlotAttitude(xs, dt, wp_list=None, legend=None):
     fig, axs = plt.subplots(4, 1, figsize=(15, 10), sharex=True)
-    plotTrajectory(xs,
-                   dt,
-                   axs,
-                   3,
-                   7,
-                   names=['X quat', 'Y quat', 'Z quat', 'W quat'], wp_list=wp_list)
+    plotTrajectory(xs, dt, axs, 3, 7, names=['X quat', 'Y quat', 'Z quat', 'W quat'], wp_list=wp_list, legend=legend)
 
 
-def PlotVelocityLin(xs, dt, wp_list=None):
+def PlotVelocityLin(xs, dt, wp_list=None, legend=None):
     fig, axs = plt.subplots(3, 1, figsize=(15, 10), sharex=True)
-    plotTrajectory(xs,
-                   dt,
-                   axs,
-                   7,
-                   10,
-                   names=['X vel. lin.', 'Y vel. lin.', 'Z vel. lin.'], wp_list=wp_list)
+    plotTrajectory(xs, dt, axs, 7, 10, names=['X vel. lin.', 'Y vel. lin.',
+                                              'Z vel. lin.'], wp_list=wp_list, legend=legend)
 
 
-def PlotVelocityAng(xs, dt, wp_list=None):
+def PlotVelocityAng(xs, dt, wp_list=None, legend=None):
     fig, axs = plt.subplots(3, 1, figsize=(15, 10), sharex=True)
     plotTrajectory(xs,
                    dt,
                    axs,
                    10,
                    13,
-                   names=['X vel. ang.', 'Y vel. ang.', 'Z vel. ang.'], wp_list=wp_list)
+                   names=['X vel. ang.', 'Y vel. ang.', 'Z vel. ang.'], wp_list=wp_list, legend=legend)
 
 
 def PlotMotorSpeed(us, dt, wp_list=None):
@@ -119,7 +112,7 @@ def PlotMotorSpeed(us, dt, wp_list=None):
     plotTrajectory(us, dt, axs, 0, 4)
 
 
-def plotTrajectory(data, dt, axs, row_init, row_end, names=None, wp_list=None):
+def plotTrajectory(data, dt, axs, row_init, row_end, names=None, wp_list=None, legend=None):
     if isinstance(data, list):
         for idx, d in enumerate(data):
             knots = np.size(d, 1)
@@ -137,10 +130,12 @@ def plotTrajectory(data, dt, axs, row_init, row_end, names=None, wp_list=None):
                     axs[i].set_title(names[i])
                 if wp_list is not None:
                     wp_array, time_array = wayPointListToStateArray(wp_list)
-                    axs[i].plot(time_array, wp_array[row_init + i, :], 'r+')
+                    axs[i].plot(time_array, wp_array[row_init + i, :], 'r+', label='_nolegend_')
                 axs[i].grid(linestyle='--', linewidth=0.5)
                 axs[i].margins(x=0, y=0, z=0)
                 axs[i].set_ylim(y_min - 0.1, y_max + 0.1)
+        if legend is not None:
+            axs[0].legend(legend)
     else:
         knots = np.size(data, 1)
         t = np.arange(0, round(knots * dt, 4), dt)
@@ -161,6 +156,7 @@ def plotTrajectory(data, dt, axs, row_init, row_end, names=None, wp_list=None):
                 axs[i].grid(linestyle='--', linewidth=0.5)
                 axs[i].margins(x=0, y=0, z=0)
                 axs[i].set_ylim(y_min * 1.1, y_max * 1.1)
+
 
 def plotWpReferenceFrame(ax, wp, wp_number=None):
     origin = wp.pose.translation
