@@ -11,6 +11,7 @@
 #include "crocoddyl/core/action-base.hpp"
 #include "crocoddyl/core/activations/weighted-quadratic.hpp"
 #include "crocoddyl/core/integrator/euler.hpp"
+#include "crocoddyl/core/integrator/rk4.hpp"
 #include "crocoddyl/core/optctrl/shooting.hpp"
 #include "crocoddyl/core/solver-base.hpp"
 #include "crocoddyl/core/solvers/fddp.hpp"
@@ -33,6 +34,10 @@ struct SolverTypes {
   enum Type { BoxFDDP, SquashBoxFDDP, NbSolverTypes };
 };
 
+struct IntegratorTypes {
+  enum Type { Euler, RK4 };
+};
+
 class OcpAbstract {
  public:
   // Constructor & Destructor
@@ -41,16 +46,19 @@ class OcpAbstract {
   ~OcpAbstract();
 
   // Other methods
-  virtual void createProblem(const SolverTypes::Type& solver_type) = 0;
+  virtual void createProblem(const SolverTypes::Type& solver_type, const IntegratorTypes::Type& integrator_type) = 0;
   virtual void loadParameters(const std::string& yaml_path) = 0;
-  virtual void setTimeStep(const double& dt) = 0;
 
-  virtual void setSolverCallbacks(const bool& activated);
   virtual void solve();
   virtual void solve(const std::vector<Eigen::VectorXd>& state_trajectory,
-             const std::vector<Eigen::VectorXd>& control_trajectory);
+                     const std::vector<Eigen::VectorXd>& control_trajectory);
 
+  // Setters
+  virtual void setSolverCallbacks(const bool& activated);
+  virtual void setTimeStep(const double& dt) = 0;
+  virtual void setInitialState(const Eigen::VectorXd& initial_state);
   void setSolverIters(const std::size_t& n_iters);
+  void setSolverStopTh(const double& stop_th);
 
   // Getters
   const boost::shared_ptr<pinocchio::Model> getModel() const;
@@ -65,10 +73,6 @@ class OcpAbstract {
   const Eigen::VectorXd& getInitialState() const;
   const int& getBaseLinkId() const;
   const std::size_t& getKnots() const;
-  const std::string& getParametersPath() const;
-
-  // Setters
-  virtual void setInitialState(const Eigen::VectorXd& initial_state);
 
  protected:
   // Methods
@@ -85,7 +89,7 @@ class OcpAbstract {
   std::vector<boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics>> diff_models_running_;
   std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> int_models_running_;
   boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model_terminal_;
-  boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> int_model_terminal_;
+  boost::shared_ptr<crocoddyl::ActionModelAbstract> int_model_terminal_;
   boost::shared_ptr<crocoddyl::ShootingProblem> problem_;
 
   boost::shared_ptr<crocoddyl::SolverDDP> solver_;
@@ -100,8 +104,6 @@ class OcpAbstract {
   Eigen::VectorXd tau_lb_;
 
   Eigen::VectorXd state_initial_;
-
-  std::string parameters_yaml_path_;
 };
 
 }  // namespace multicopter_mpc

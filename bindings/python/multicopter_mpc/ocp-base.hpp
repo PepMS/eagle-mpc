@@ -22,8 +22,8 @@ class OcpAbstract_wrap : public OcpAbstract, public bp::wrapper<OcpAbstract> {
                    const boost::shared_ptr<MultiCopterBaseParams>& mc_params, const double& dt)
       : OcpAbstract(model, mc_params, dt), bp::wrapper<OcpAbstract>() {}
 
-  void createProblem(const SolverTypes::Type& solver_type) {
-    return bp::call<void>(this->get_override("createProblem").ptr(), solver_type);
+  void createProblem(const SolverTypes::Type& solver_type, const IntegratorTypes::Type& integrator_type) {
+    return bp::call<void>(this->get_override("createProblem").ptr(), solver_type, integrator_type);
   }
 
   void loadParameters(const std::string& yaml_path) {
@@ -65,6 +65,10 @@ void exposeOcpAbstract() {
   bp::enum_<SolverTypes::Type>("SolverType")
       .value("SolverTypeBoxFDDP", SolverTypes::BoxFDDP)
       .value("SolverTypeSquashBoxFDDP", SolverTypes::SquashBoxFDDP);
+  
+  bp::enum_<IntegratorTypes::Type>("IntegratorType")
+      .value("IntegratorTypeEuler", IntegratorTypes::Euler)
+      .value("IntegratorTypeRK4", IntegratorTypes::RK4);
 
   void (OcpAbstract::*solve_void)(void) = &OcpAbstract::solve;
   void (OcpAbstract::*solve_init)(const std::vector<Eigen::VectorXd>& state_trajectory,
@@ -85,6 +89,7 @@ void exposeOcpAbstract() {
       .def("solve", solve_init, &OcpAbstract_wrap::default_solve_2,
            bp::args("self", "state_trajectory", "control_trajectory"))
       .def("setSolverIters", &OcpAbstract_wrap::setSolverIters, bp::args("self", "num_iters"))
+      .def("setSolverStopTh", &OcpAbstract_wrap::setSolverStopTh, bp::args("self", "stop_th"))
       .add_property("model",
                     bp::make_function(&OcpAbstract_wrap::getModel, bp::return_value_policy<bp::return_by_value>()))
       .add_property("mc_params",

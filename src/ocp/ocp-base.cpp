@@ -53,6 +53,7 @@ void OcpAbstract::setSolverCallbacks(const bool& activated) {
 }
 
 void OcpAbstract::setSolverIters(const std::size_t& n_iters) { solver_iters_ = n_iters; }
+void OcpAbstract::setSolverStopTh(const double& stop_th) { solver_->set_th_stop(stop_th); }
 
 void OcpAbstract::solve() { solver_->solve(); }
 void OcpAbstract::solve(const std::vector<Eigen::VectorXd>& state_trajectory,
@@ -80,7 +81,6 @@ const std::size_t& OcpAbstract::getKnots() const {
   }
   return n_knots_;
 }
-const std::string& OcpAbstract::getParametersPath() const { return parameters_yaml_path_; }
 
 void OcpAbstract::setInitialState(const Eigen::VectorXd& initial_state) {
   assert(initial_state.size() == state_->get_nx());  // Might not be efficient to do this here
