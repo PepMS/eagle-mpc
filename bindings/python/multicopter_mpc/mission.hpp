@@ -19,13 +19,12 @@ void exposeMission() {
 
   bp::register_ptr_to_python<boost::shared_ptr<Mission>>();
 
-  void (Mission::*fillWP_yaml)(const yaml_parser::ParamsServer&) = &Mission::fillWaypoints;
-  void (Mission::*fillWP_yaml_dt)(const yaml_parser::ParamsServer&, const double&) = &Mission::fillWaypoints;
+  void (Mission::*fillWP_yaml)(const std::string&) = &Mission::fillWaypoints;
+  void (Mission::*fillWP_yaml_dt)(const std::string&, const double&) = &Mission::fillWaypoints;
 
   bp::class_<Mission>("Mission", bp::init<int>(bp::args("self", "nx"), "Initialize mission params"))
-      .def("fillWaypoints", fillWP_yaml, bp::args("self", "server"))
-      .def("fillWaypoints", fillWP_yaml_dt, bp::args("self", "server", "dt"))
-      .def("fillInitialState", &Mission::fillInitialState, bp::args("self", "server"))
+      .def("fillWaypoints", fillWP_yaml, bp::args("self", "yaml_path"))
+      .def("fillWaypoints", fillWP_yaml_dt, bp::args("self", "yaml_path", "dt"))
       .def("interpolateTrajectory", &Mission::interpolateTrajectory, bp::args("self", "inter_type"))
       .add_property("x0", bp::make_function(&Mission::getInitialState, bp::return_value_policy<bp::return_by_value>()),
                     bp::make_function(&Mission::setInitialState), "Initial state")

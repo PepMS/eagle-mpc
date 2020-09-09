@@ -1,6 +1,7 @@
 #ifndef MULTICOPTER_MPC_MISSION_HPP_
 #define MULTICOPTER_MPC_MISSION_HPP_
 
+#include "yaml_parser/parser_yaml.h"
 #include "yaml_parser/params_server.hpp"
 
 #include "multicopter_mpc/waypoint.hpp"
@@ -11,9 +12,8 @@ class Mission {
   Mission(const std::size_t& nx);
   ~Mission();
 
-  void fillWaypoints(const yaml_parser::ParamsServer& server);
-  void fillWaypoints(const yaml_parser::ParamsServer& server, const double& dt);
-  void fillInitialState(const yaml_parser::ParamsServer& server);
+  void fillWaypoints(const std::string& yaml_path);
+  void fillWaypoints(const std::string& yaml_path, const double& dt);
 
   void addWaypoint(WayPoint waypoint);
   void countTotalKnots();
