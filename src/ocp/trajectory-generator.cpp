@@ -13,8 +13,6 @@ TrajectoryGenerator::TrajectoryGenerator(const boost::shared_ptr<pinocchio::Mode
 
   // To be changed!!!!!
   control_hover_ = Eigen::VectorXd::Ones(mc_params_->n_rotors_) * 3.78;
-
-  parameters_yaml_path_ = MULTICOPTER_MPC_OCP_DIR "/trajectory-generator.yaml";
 }
 
 TrajectoryGenerator::~TrajectoryGenerator() {}
@@ -55,7 +53,8 @@ void TrajectoryGenerator::loadParameters(const std::string& yaml_path) {
   params_.w_vel_terminal = server.getParam<double>("ocp/cost_terminal_vel_weight");
 }
 
-void TrajectoryGenerator::createProblem(const SolverTypes::Type& solver_type) {
+void TrajectoryGenerator::createProblem(const SolverTypes::Type& solver_type,
+                                        const IntegratorTypes::Type& integrator_type) {
   assert(mission_->getWaypoints().size() > 0);
 
   for (std::vector<WayPoint>::const_iterator wp = mission_->getWaypoints().cbegin();
@@ -67,10 +66,22 @@ void TrajectoryGenerator::createProblem(const SolverTypes::Type& solver_type) {
     boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model_terminal =
         createTerminalDifferentialModel(*wp, is_last_wp);
 
-    boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> int_model_running =
-        boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_model_running, dt_);
-    boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> int_model_terminal =
-        boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_model_terminal, dt_);
+    boost::shared_ptr<crocoddyl::ActionModelAbstract> int_model_running;
+    boost::shared_ptr<crocoddyl::ActionModelAbstract> int_model_terminal;
+    switch (integrator_type) {
+      case IntegratorTypes::Euler:
+        int_model_running = boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_model_running, dt_);
+        int_model_terminal = boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_model_terminal, 0.);
+        break;
+      case IntegratorTypes::RK4:
+        int_model_running = boost::make_shared<crocoddyl::IntegratedActionModelRK4>(diff_model_running, dt_);
+        int_model_terminal = boost::make_shared<crocoddyl::IntegratedActionModelRK4>(diff_model_terminal, 0.);
+        break;
+      default:
+        int_model_running = boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_model_running, dt_);
+        int_model_terminal = boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_model_terminal, 0.);
+        break;
+    }
 
     int n_run_knots = wp == mission_->getWaypoints().cbegin() ? wp->knots - 1 : wp->knots - 2;
 
@@ -124,17 +135,17 @@ TrajectoryGenerator::createRunningDifferentialModel(const WayPoint& waypoint) {
   cost_model_running->addCost("control_reg", cost_reg_control, params_.w_control_running);  // 1e-4
 
   // Waypoint cost related
-  crocoddyl::FramePlacement frame_ref = crocoddyl::FramePlacement(frame_base_link_id_, waypoint.pose);
-  boost::shared_ptr<crocoddyl::CostModelAbstract> cost_goal =
-      boost::make_shared<crocoddyl::CostModelFramePlacement>(state_, frame_ref, actuation_->get_nu());
-  cost_model_running->addCost("pos_desired", cost_goal, params_.w_pos_running);  // 1e-2
+  // crocoddyl::FramePlacement frame_ref = crocoddyl::FramePlacement(frame_base_link_id_, waypoint.pose);
+  // boost::shared_ptr<crocoddyl::CostModelAbstract> cost_goal =
+  //     boost::make_shared<crocoddyl::CostModelFramePlacement>(state_, frame_ref, actuation_->get_nu());
+  // cost_model_running->addCost("pos_desired", cost_goal, params_.w_pos_running);  // 1e-2
 
-  if (waypoint.vel != boost::none) {
-    crocoddyl::FrameMotion vel_ref(frame_base_link_id_, *(waypoint.vel));
-    boost::shared_ptr<crocoddyl::CostModelAbstract> cost_goal_vel =
-        boost::make_shared<crocoddyl::CostModelFrameVelocity>(state_, vel_ref, actuation_->get_nu());
-    cost_model_running->addCost("vel_desired", cost_goal_vel, params_.w_vel_running);  // 1e-2
-  }
+  // if (waypoint.vel != boost::none) {
+  //   crocoddyl::FrameMotion vel_ref(frame_base_link_id_, *(waypoint.vel));
+  //   boost::shared_ptr<crocoddyl::CostModelAbstract> cost_goal_vel =
+  //       boost::make_shared<crocoddyl::CostModelFrameVelocity>(state_, vel_ref, actuation_->get_nu());
+  //   cost_model_running->addCost("vel_desired", cost_goal_vel, params_.w_vel_running);  // 1e-2
+  // }
 
   // Diff & Integrated models
   boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model_running =
@@ -216,11 +227,8 @@ void TrajectoryGenerator::solve() {
 
 void TrajectoryGenerator::solve(const std::vector<Eigen::VectorXd>& state_trajectory,
                                 const std::vector<Eigen::VectorXd>& control_trajectory) {
-  std::cout << "inside of solver guess! \n";
   problem_->set_x0(state_initial_);
-  std::cout << "Here \n";
   solver_->solve(state_trajectory, control_trajectory, solver_iters_, false);
-  std::cout << "Solved! \n";
   // in the unit test check that the solve trajectory and the state_trajectory have the same size
   // std::copy(solver_->get_xs().begin(), solver_->get_xs().end(), state_trajectory_.begin());
   state_hover_ = state_->zero();
@@ -242,7 +250,7 @@ void TrajectoryGenerator::setTimeStep(const double& dt) {
 
     int_models_running_.clear();
     int_model_terminal_ = nullptr;
-    
+
     problem_ = nullptr;
     solver_ = nullptr;
     // Notice that when changind the dt, create problem should be called again!
@@ -282,7 +290,7 @@ const Eigen::VectorXd& TrajectoryGenerator::getState(const std::size_t& cursor) 
 }
 
 const Eigen::VectorXd& TrajectoryGenerator::getControl(const std::size_t& cursor) const {
-    if (cursor < solver_->get_us().size()) {
+  if (cursor < solver_->get_us().size()) {
     return solver_->get_us()[cursor];
   } else {
     return control_hover_;

@@ -36,10 +36,10 @@ class TrajectoryGenerator : public OcpAbstract {
   TrajectoryGenerator(const boost::shared_ptr<pinocchio::Model> model,
                       const boost::shared_ptr<MultiCopterBaseParams>& mc_params, const double& dt,
                       const boost::shared_ptr<Mission>& mission);
-  ~TrajectoryGenerator();
+  virtual ~TrajectoryGenerator();
 
   void loadParameters(const std::string& yaml_path) override;
-  void createProblem(const SolverTypes::Type& solver_type) override;
+  void createProblem(const SolverTypes::Type& solver_type, const IntegratorTypes::Type& integrator_type) override;
   void setTimeStep(const double& dt) override;
 
   boost::shared_ptr<crocoddyl::CostModelAbstract> createCostStateRegularization();
