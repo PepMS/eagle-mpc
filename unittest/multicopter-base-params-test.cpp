@@ -45,11 +45,9 @@ BOOST_AUTO_TEST_CASE(fill_test, *boost::unit_test::tolerance(1e-7)) {
 
   std::string mc_params_yaml_path =
       std::string(MULTICOPTER_MPC_ROOT_DIR) + "/unittest/config/multirotor/hector-test.yaml";
-  yaml_parser::ParserYAML yaml_mc_params(mc_params_yaml_path, "", true);
-  yaml_parser::ParamsServer server_mc_params(yaml_mc_params.getParams());
 
   multicopter_mpc::MultiCopterBaseParams m00;
-  m00.fill(server_mc_params);
+  m00.fill(mc_params_yaml_path);
 
   BOOST_CHECK(cf == m00.cf_);
   BOOST_CHECK(cm == m00.cm_);

@@ -27,7 +27,10 @@ MultiCopterBaseParams::MultiCopterBaseParams(double cf, double cm, Eigen::Matrix
 //       base_link_name_(base_link) {}
 MultiCopterBaseParams::~MultiCopterBaseParams() {}
 
-void MultiCopterBaseParams::fill(const yaml_parser::ParamsServer& server) {
+void MultiCopterBaseParams::fill(const std::string& yaml_path) {
+  yaml_parser::ParserYAML yaml_params(yaml_path, "", true);
+  yaml_parser::ParamsServer server(yaml_params.getParams());
+
   cf_ = server.getParam<double>("multirotor/cf");
   cm_ = server.getParam<double>("multirotor/cm");
   max_thrust_ = server.getParam<double>("multirotor/max_thrust");
@@ -53,5 +56,17 @@ void MultiCopterBaseParams::fill(const yaml_parser::ParamsServer& server) {
     S(5, ii) = z * cm_ / cf_;  // Mz
   }
   tau_f_ = S;
+
+  try
+  {
+    max_torque_ = server.getParam<Eigen::VectorXd>("arm/max_torque");
+    min_torque_ = server.getParam<Eigen::VectorXd>("arm/min_torque");
+  }
+  catch(const std::exception& e)
+  {
+    std::cout << "Multicopter params: Multirotor detected, no arm." << '\n';
+  }
+  
+  
 }
 }  // namespace multicopter_mpc

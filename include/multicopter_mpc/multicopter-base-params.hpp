@@ -6,6 +6,7 @@
 #include "Eigen/Dense"
 
 #include "yaml_parser/params_server.hpp"
+#include "yaml_parser/parser_yaml.h"
 
 namespace multicopter_mpc {
 class MultiCopterBaseParams {
@@ -17,7 +18,7 @@ class MultiCopterBaseParams {
   //                       Eigen::VectorXd max_torque, Eigen::VectorXd min_torque, const std::string& base_link);
   ~MultiCopterBaseParams();
 
-  void fill(const yaml_parser::ParamsServer& server);
+  void fill(const std::string& yaml_path);
 
   double cf_;                   // Propeller's lift force coefficient
   double cm_;                   // Propeller's drag moment coefficient
@@ -28,8 +29,8 @@ class MultiCopterBaseParams {
   std::string base_link_name_;  // Flying platform base_link name
 
   // To be used when dealing with UAM
-  // Eigen::VectorXd max_torque_;  // Max torque for each manipulator's joint
-  // Eigen::VectorXd min_torque_;  // Min torque for each manipulator's joint
+  Eigen::VectorXd max_torque_;  // Max torque for each manipulator's joint
+  Eigen::VectorXd min_torque_;  // Min torque for each manipulator's joint
 };
 }  // namespace multicopter_mpc
 #endif  // MULTICOPTER_MPC_MULTICOPTER_BASE_PARAMS_HPP_
