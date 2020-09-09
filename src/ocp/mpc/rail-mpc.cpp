@@ -9,7 +9,6 @@ RailMpc::RailMpc(const boost::shared_ptr<pinocchio::Model>& model,
   initializeDefaultParameters();
   state_ref_.resize(n_knots_, state_->zero());
   control_ref_.resize(n_knots_ - 1, Eigen::VectorXd::Zero(4));
-  parameters_yaml_path_ = MULTICOPTER_MPC_OCP_DIR "/rail-mpc.yaml";
 }
 
 RailMpc::~RailMpc() {}
@@ -24,7 +23,8 @@ boost::shared_ptr<MpcAbstract> RailMpc::createMpcController(const boost::shared_
   return boost::make_shared<RailMpc>(model, mc_params, dt, mission, n_knots);
 }
 
-bool RailMpc::registered_ = FactoryMpc::get().registerMpcController(RailMpc::getFactoryName(), RailMpc::createMpcController);
+bool RailMpc::registered_ =
+    FactoryMpc::get().registerMpcController(RailMpc::getFactoryName(), RailMpc::createMpcController);
 
 void RailMpc::initializeDefaultParameters() {
   params_.w_state = 1e-2;
@@ -38,7 +38,7 @@ void RailMpc::initializeDefaultParameters() {
 void RailMpc::loadParameters(const std::string& yaml_path) {
   yaml_parser::ParserYAML yaml_params(yaml_path, "", true);
   yaml_parser::ParamsServer server(yaml_params.getParams());
-  
+
   std::vector<std::string> state_weights = server.getParam<std::vector<std::string>>("ocp/state_weights");
   std::map<std::string, std::string> current_state =
       yaml_parser::converter<std::map<std::string, std::string>>::convert(state_weights[0]);
@@ -52,8 +52,9 @@ void RailMpc::loadParameters(const std::string& yaml_path) {
   params_.w_control = server.getParam<double>("ocp/cost_control_weight");
 }
 
-void RailMpc::initializeTrajectoryGenerator(const SolverTypes::Type& solver_type) {
-  trajectory_generator_->createProblem(solver_type);
+void RailMpc::initializeTrajectoryGenerator(const SolverTypes::Type& solver_type,
+                                            const IntegratorTypes::Type& integrator_type) {
+  trajectory_generator_->createProblem(solver_type, integrator_type);
   trajectory_generator_->setSolverIters(300);
   trajectory_generator_->solve();
 
@@ -63,8 +64,8 @@ void RailMpc::initializeTrajectoryGenerator(const SolverTypes::Type& solver_type
                 trajectory_generator_->getControlTrajectory(0, n_knots_ - 2));
 }
 
-void RailMpc::createProblem(const SolverTypes::Type& solver_type) {
-  initializeTrajectoryGenerator(solver_type);
+void RailMpc::createProblem(const SolverTypes::Type& solver_type, const IntegratorTypes::Type& integrator_type) {
+  initializeTrajectoryGenerator(solver_type, integrator_type);
 
   for (int i = 0; i < n_knots_ - 1; ++i) {
     boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model = createDifferentialModel(i);

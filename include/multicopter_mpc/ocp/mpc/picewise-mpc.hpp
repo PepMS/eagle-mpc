@@ -23,7 +23,7 @@ class PiceWiseMpc : public MpcAbstract {
                                                             const std::size_t& n_knots);
 
   void loadParameters(const std::string& yaml_path) override;
-  void createProblem(const SolverTypes::Type& solver_type) override;
+  void createProblem(const SolverTypes::Type& solver_type, const IntegratorTypes::Type& integrator_type) override;
   void setTimeStep(const double& dt) override;
 
   void solve() override;
@@ -37,7 +37,8 @@ class PiceWiseMpc : public MpcAbstract {
 
  protected:
   void initializeDefaultParameters() override;
-  void initializeTrajectoryGenerator(const SolverTypes::Type& solver_type) override;
+  void initializeTrajectoryGenerator(const SolverTypes::Type& solver_type,
+                                     const IntegratorTypes::Type& integrator_type) override;
 
   std::size_t splitWaypoint(const std::size_t& wp_original_knots);
   boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> createRunningDifferentialModel(

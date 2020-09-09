@@ -8,8 +8,6 @@ PiceWiseMpc::PiceWiseMpc(const boost::shared_ptr<pinocchio::Model>& model,
     : MpcAbstract(model, mc_params, dt, mission, n_knots) {
   initializeDefaultParameters();
   mission_ = boost::make_shared<Mission>(mission->getInitialState().size());
-
-  parameters_yaml_path_ = MULTICOPTER_MPC_OCP_DIR "/picewise-mpc.yaml";
 }
 
 PiceWiseMpc::~PiceWiseMpc() {}
@@ -61,10 +59,11 @@ void PiceWiseMpc::loadParameters(const std::string& yaml_path) {
   params_.w_vel_terminal = server.getParam<double>("ocp/cost_terminal_vel_weight");
 }
 
-void PiceWiseMpc::initializeTrajectoryGenerator(const SolverTypes::Type& solver_type) {
+void PiceWiseMpc::initializeTrajectoryGenerator(const SolverTypes::Type& solver_type,
+                                                const IntegratorTypes::Type& integrator_type) {
   has_motion_ref_ = false;
 
-  trajectory_generator_->createProblem(solver_type);
+  trajectory_generator_->createProblem(solver_type, integrator_type);
   trajectory_generator_->solve();
 
   std::size_t wp_idx = 1;
@@ -109,8 +108,8 @@ std::size_t PiceWiseMpc::splitWaypoint(const std::size_t& wp_original_knots) {
   return divider;
 }
 
-void PiceWiseMpc::createProblem(const SolverTypes::Type& solver_type) {
-  initializeTrajectoryGenerator(solver_type);
+void PiceWiseMpc::createProblem(const SolverTypes::Type& solver_type, const IntegratorTypes::Type& integrator_type) {
+  initializeTrajectoryGenerator(solver_type, integrator_type);
 
   for (std::size_t i = 0; i < n_knots_ - 1; ++i) {
     boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model =
@@ -324,10 +323,10 @@ void PiceWiseMpc::updateTerminalCost(const std::size_t idx_trajectory) {
 
 void PiceWiseMpc::setTimeStep(const double& dt) {
   dt_ = dt;
-  
+
   std::size_t nx = mission_->getInitialState().size();
   mission_ = boost::make_shared<Mission>(nx);
-  
+
   trajectory_generator_->setTimeStep(dt_);
 
   if (problem_ != nullptr) {
@@ -347,15 +346,15 @@ const crocoddyl::FrameMotion& PiceWiseMpc::getVelocityRef() const { return motio
 const TrajectoryGeneratorParams& PiceWiseMpc::getParams() const { return params_; };
 
 void PiceWiseMpc::setPoseRef(const std::size_t& idx_trajectory) {
-  pose_ref_.frame = frame_base_link_id_;
-  pose_ref_.oMf = mission_->getWaypoints()[mission_->getWpFromTrajIdx(idx_trajectory)].pose;
+  pose_ref_.id = frame_base_link_id_;
+  pose_ref_.placement = mission_->getWaypoints()[mission_->getWpFromTrajIdx(idx_trajectory)].pose;
 }
 
 void PiceWiseMpc::setMotionRef(const std::size_t& idx_trajectory) {
   has_motion_ref_ = mission_->getWaypoints()[mission_->getWpFromTrajIdx(idx_trajectory)].vel != boost::none;
   if (has_motion_ref_) {
-    motion_ref_.frame = frame_base_link_id_;
-    motion_ref_.oMf = mission_->getWaypoints()[mission_->getWpFromTrajIdx(idx_trajectory)].vel.get();
+    motion_ref_.id = frame_base_link_id_;
+    motion_ref_.motion = mission_->getWaypoints()[mission_->getWpFromTrajIdx(idx_trajectory)].vel.get();
   }
 }
 

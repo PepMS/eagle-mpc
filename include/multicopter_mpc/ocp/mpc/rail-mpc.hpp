@@ -38,7 +38,7 @@ class RailMpc : public MpcAbstract {
                                                             const std::size_t& n_knots);
 
   void loadParameters(const std::string& yaml_path) override;
-  void createProblem(const SolverTypes::Type& solver_type) override;
+  void createProblem(const SolverTypes::Type& solver_type, const IntegratorTypes::Type& integrator_type) override;
   void setTimeStep(const double& dt) override;
 
   void solve() override;
@@ -54,7 +54,8 @@ class RailMpc : public MpcAbstract {
   void printCosts();
 
  protected:
-  void initializeTrajectoryGenerator(const SolverTypes::Type& solver_type) override;
+  void initializeTrajectoryGenerator(const SolverTypes::Type& solver_type,
+                                     const IntegratorTypes::Type& integrator_type) override;
   void initializeDefaultParameters() override;
 
   boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> createDifferentialModel(

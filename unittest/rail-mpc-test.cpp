@@ -34,8 +34,8 @@ class RailMpcDerived : public multicopter_mpc::RailMpc {
   const boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics>& getDifferentialTerminalModel() {
     return diff_model_terminal_;
   }
-  const boost::shared_ptr<crocoddyl::IntegratedActionModelEuler>& getIntegratedTerminalModel() {
-    return int_model_terminal_;
+  const boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> getIntegratedTerminalModel() {
+    return boost::static_pointer_cast<crocoddyl::IntegratedActionModelEuler>(int_model_terminal_);
   }
 
   const boost::shared_ptr<crocoddyl::SolverDDP>& getSolver() { return solver_; }
@@ -50,20 +50,13 @@ class RailMpcTest {
     pinocchio::urdf::buildModel(EXAMPLE_ROBOT_DATA_MODEL_DIR "/iris_description/robots/iris_simple.urdf",
                                 pinocchio::JointModelFreeFlyer(), model_);
 
-    yaml_parser::ParserYAML yaml_file(multirotor_yaml_path, "", true);
-    yaml_parser::ParamsServer server_params(yaml_file.getParams());
-
-    yaml_parser::ParserYAML mission_yaml_file(mission_yaml_path, "", true);
-    yaml_parser::ParamsServer mission_server_params(mission_yaml_file.getParams());
-
     mc_params_ = boost::make_shared<multicopter_mpc::MultiCopterBaseParams>();
-    mc_params_->fill(server_params);
+    mc_params_->fill(multirotor_yaml_path);
 
     mc_model_ = boost::make_shared<pinocchio::Model>(model_);
 
     mc_mission_ = boost::make_shared<multicopter_mpc::Mission>(mc_model_->nq + mc_model_->nv);
-    mc_mission_->fillWaypoints(mission_server_params);
-    mc_mission_->fillInitialState(mission_server_params);
+    mc_mission_->fillWaypoints(mission_yaml_path);
 
     dt_ = 1e-2;
     n_knots_ = 100;
@@ -159,7 +152,7 @@ BOOST_AUTO_TEST_CASE(load_parameters_test, *boost::unit_test::tolerance(1e-7)) {
 BOOST_AUTO_TEST_CASE(create_problem_test, *boost::unit_test::tolerance(1e-7)) {
   RailMpcTest llc_test("mission-test.yaml");
 
-  llc_test.rail_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
+  llc_test.rail_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP, multicopter_mpc::IntegratorTypes::Euler);
 
   BOOST_CHECK(llc_test.rail_mpc_->getDifferentialRunningModels().size() == llc_test.rail_mpc_->getKnots() - 1);
   BOOST_CHECK(llc_test.rail_mpc_->getIntegratedRunningModels().size() == llc_test.rail_mpc_->getKnots() - 1);
@@ -190,7 +183,7 @@ BOOST_AUTO_TEST_CASE(create_problem_test, *boost::unit_test::tolerance(1e-7)) {
 BOOST_AUTO_TEST_CASE(create_costs_test, *boost::unit_test::tolerance(1e-7)) {
   RailMpcTest llc_test("mission-test.yaml");
 
-  llc_test.rail_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
+  llc_test.rail_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP, multicopter_mpc::IntegratorTypes::Euler);
 
   for (std::size_t i = 0; i < llc_test.rail_mpc_->getKnots() - 1; ++i) {
     BOOST_CHECK(llc_test.rail_mpc_->getDifferentialRunningModels()[i]
@@ -214,7 +207,7 @@ BOOST_AUTO_TEST_CASE(create_costs_test, *boost::unit_test::tolerance(1e-7)) {
 BOOST_AUTO_TEST_CASE(create_cost_state_test, *boost::unit_test::tolerance(1e-7)) {
   RailMpcTest llc_test("mission-test.yaml");
 
-  llc_test.rail_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
+  llc_test.rail_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP, multicopter_mpc::IntegratorTypes::Euler);
 
   for (std::size_t i = 0; i < llc_test.rail_mpc_->getKnots() - 1; ++i) {
     boost::shared_ptr<crocoddyl::ActivationModelWeightedQuad> activation =
@@ -255,7 +248,7 @@ BOOST_AUTO_TEST_CASE(create_cost_state_test, *boost::unit_test::tolerance(1e-7))
 //   }
 
 //   llc_test.rail_mpc_->setReferences(state_reference_trajectory, control_reference_trajectory);
-//   llc_test.rail_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
+//   llc_test.rail_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP, multicopter_mpc::IntegratorTypes::Euler);
 
 //   for (std::size_t i = 0; i < llc_test.rail_mpc_->getKnots() - 1; ++i) {
 //     boost::shared_ptr<crocoddyl::CostModelState> cost_state = boost::static_pointer_cast<crocoddyl::CostModelState>(
@@ -283,7 +276,7 @@ BOOST_AUTO_TEST_CASE(create_cost_state_test, *boost::unit_test::tolerance(1e-7))
 BOOST_AUTO_TEST_CASE(set_reference_test_2, *boost::unit_test::tolerance(1e-7)) {
   RailMpcTest llc_test("mission-test.yaml");
 
-  llc_test.rail_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
+  llc_test.rail_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP, multicopter_mpc::IntegratorTypes::Euler);
 
   std::vector<Eigen::VectorXd> state_reference_trajectory(llc_test.rail_mpc_->getKnots(),
                                                           llc_test.rail_mpc_->getStateMultibody()->zero());
@@ -319,7 +312,7 @@ BOOST_AUTO_TEST_CASE(set_reference_test_2, *boost::unit_test::tolerance(1e-7)) {
 BOOST_AUTO_TEST_CASE(update_reference_trajectory_test, *boost::unit_test::tolerance(1e-7)) {
   // RailMpcTest llc_test("mission-test.yaml");
 
-  // llc_test.rail_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
+  // llc_test.rail_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP, multicopter_mpc::IntegratorTypes::Euler);
 
   // std::vector<Eigen::VectorXd> state_reference_trajectory(llc_test.rail_mpc_->getKnots(),
   //                                                         llc_test.rail_mpc_->getStateMultibody()->zero());
@@ -354,14 +347,14 @@ BOOST_AUTO_TEST_CASE(update_reference_trajectory_test, *boost::unit_test::tolera
 BOOST_AUTO_TEST_CASE(set_solver_test, *boost::unit_test::tolerance(1e-7)) {
   RailMpcTest llc_test("mission-test.yaml");
 
-  llc_test.rail_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
+  llc_test.rail_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP, multicopter_mpc::IntegratorTypes::Euler);
   BOOST_CHECK(llc_test.rail_mpc_->getSolver() != nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(solve_test, *boost::unit_test::tolerance(1e-7)) {
   RailMpcTest llc_test("mission-test.yaml");
 
-  llc_test.rail_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP);
+  llc_test.rail_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP, multicopter_mpc::IntegratorTypes::Euler);
 
   Eigen::VectorXd state = llc_test.rail_mpc_->getStateMultibody()->zero();
   Eigen::VectorXd control = Eigen::VectorXd::Zero(llc_test.rail_mpc_->getActuation()->get_nu());
