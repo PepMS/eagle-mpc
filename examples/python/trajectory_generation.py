@@ -24,7 +24,7 @@ mc_params.fill(MULTICOPTER_MPC_MULTIROTOR_DIR + "/iris.yaml")
 
 # Mission
 mission = multicopter_mpc.Mission(uav.nq + uav.nv)
-mission.fillWaypoints(MULTICOPTER_MPC_MISSION_DIR + "/takeoff.yaml")
+mission.fillWaypoints(MULTICOPTER_MPC_MISSION_DIR + "/simple.yaml")
 
 dt = 1e-2
 trajectory = multicopter_mpc.TrajectoryGenerator(uav_model, mc_params, mission)
@@ -34,11 +34,11 @@ trajectory.createProblem(multicopter_mpc.SolverType.SolverTypeBoxFDDP,
 trajectory.setSolverCallbacks(True)
 
 # state_guess = mission.interpolateTrajectory("cold")
-state = np.array([0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0])
-state_guess = [state for _ in range(0, mission.total_knots)]
-control = pinocchio.utils.zero(4)
-control += 3.7
-control_guess = [control for _ in range(0, len(state_guess) - 1)]
+# state = np.array([0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0])
+# state_guess = [state for _ in range(0, mission.total_knots)]
+# control = pinocchio.utils.zero(4)
+# control += 3.7
+# control_guess = [control for _ in range(0, len(state_guess) - 1)]
 trajectory.setSolverIters(500)
 trajectory.setSolverCallbacks(True)
 # trajectory.solve(state_guess, control_guess)

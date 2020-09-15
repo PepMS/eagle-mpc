@@ -79,15 +79,15 @@ void TrajectoryGenerator::createProblem(const SolverTypes::Type& solver_type,
     switch (integrator_type_) {
       case IntegratorTypes::Euler:
         int_model_running = boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_model_running, dt_);
-        int_model_terminal = boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_model_terminal, 0.);
+        int_model_terminal = boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_model_terminal, dt_);
         break;
       case IntegratorTypes::RK4:
         int_model_running = boost::make_shared<crocoddyl::IntegratedActionModelRK4>(diff_model_running, dt_);
-        int_model_terminal = boost::make_shared<crocoddyl::IntegratedActionModelRK4>(diff_model_terminal, 0.);
+        int_model_terminal = boost::make_shared<crocoddyl::IntegratedActionModelRK4>(diff_model_terminal, dt_);
         break;
       default:
         int_model_running = boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_model_running, dt_);
-        int_model_terminal = boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_model_terminal, 0.);
+        int_model_terminal = boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_model_terminal, dt_);
         break;
     }
 
@@ -139,8 +139,8 @@ TrajectoryGenerator::createRunningDifferentialModel(const WayPoint& waypoint) {
       boost::make_shared<crocoddyl::CostModelSum>(state_, actuation_->get_nu());
 
   // Regularitzations
-  cost_model_running->addCost("state_reg", cost_reg_state, params_.w_state_running);        // 1e-6
-  cost_model_running->addCost("control_reg", cost_reg_control, params_.w_control_running);  // 1e-4
+  cost_model_running->addCost("state_reg", cost_reg_state, params_.w_state_running);        
+  cost_model_running->addCost("control_reg", cost_reg_control, params_.w_control_running);  
 
   // Diff & Integrated models
   boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model_running =
