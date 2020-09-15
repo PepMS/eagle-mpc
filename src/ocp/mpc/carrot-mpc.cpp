@@ -3,9 +3,9 @@
 namespace multicopter_mpc {
 
 CarrotMpc::CarrotMpc(const boost::shared_ptr<pinocchio::Model>& model,
-                     const boost::shared_ptr<MultiCopterBaseParams>& mc_params, const double& dt,
-                     const boost::shared_ptr<Mission>& mission, const std::size_t& n_knots)
-    : MpcAbstract(model, mc_params, dt, mission, n_knots) {
+                     const boost::shared_ptr<MultiCopterBaseParams>& mc_params,
+                     const boost::shared_ptr<Mission>& mission)
+    : MpcAbstract(model, mc_params, mission) {
   initializeDefaultParameters();
   terminal_weights_idx_ = std::vector<bool>(n_knots_, false);
 }
@@ -16,8 +16,8 @@ std::string CarrotMpc::getFactoryName() { return "CarrotMpc"; }
 
 boost::shared_ptr<MpcAbstract> CarrotMpc::createMpcController(
     const boost::shared_ptr<pinocchio::Model>& model, const boost::shared_ptr<MultiCopterBaseParams>& mc_params,
-    const double& dt, const boost::shared_ptr<Mission>& mission, const std::size_t& n_knots) {
-  return boost::make_shared<CarrotMpc>(model, mc_params, dt, mission, n_knots);
+    const boost::shared_ptr<Mission>& mission) {
+  return boost::make_shared<CarrotMpc>(model, mc_params, mission);
 }
 
 bool CarrotMpc::registered_ =
@@ -59,20 +59,6 @@ void CarrotMpc::loadParameters(const std::string& yaml_path) {
   params_.w_vel_terminal = server.getParam<double>("ocp/cost_terminal_vel_weight");
 }
 
-void CarrotMpc::initializeTrajectoryGenerator(const SolverTypes::Type& solver_type,
-                                              const IntegratorTypes::Type& integrator_type) {
-  has_motion_ref_ = false;
-
-  trajectory_generator_->createProblem(solver_type, integrator_type);
-  trajectory_generator_->setSolverIters(300);
-  // std::vector<Eigen::VectorXd> state_trajectory = trajectory_generator_->getMission()->interpolateTrajectory("");
-  // std::vector<Eigen::VectorXd> control_trajectory(trajectory_generator_->getKnots() - 1,
-  //                                                 Eigen::VectorXd::Zero(actuation_->get_nu()));
-  // trajectory_generator_->solve(state_trajectory, control_trajectory);
-  trajectory_generator_->solve();
-  mission_ = trajectory_generator_->getMission();
-}
-
 void CarrotMpc::initializeTerminalWeights() {
   std::size_t last_wp_idx = 0;
   while (last_wp_idx < mission_->getWpTrajIdx().size() && n_knots_ - 1 >= mission_->getWpTrajIdx()[last_wp_idx]) {
@@ -93,8 +79,17 @@ const bool CarrotMpc::existsTerminalWeight() {
 }
 
 void CarrotMpc::createProblem(const SolverTypes::Type& solver_type, const IntegratorTypes::Type& integrator_type) {
-  initializeTrajectoryGenerator(solver_type, integrator_type);
+  assert(dt_ > 0.0);
+  assert(n_knots_ > 0);
+  
+  solver_type_ = solver_type;
+  integrator_type_ = integrator_type;
+  
+  has_motion_ref_ = false;
+  initializeTrajectoryGenerator();
   initializeTerminalWeights();
+
+  assert(dt_ == trajectory_generator_->getTimeStep());
 
   {
     boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model =
@@ -189,11 +184,6 @@ boost::shared_ptr<crocoddyl::CostModelAbstract> CarrotMpc::createCostControlRegu
   return cost_reg_control;
 }
 
-void CarrotMpc::solve() {
-  problem_->set_x0(state_initial_);
-  solver_->solve(solver_->get_xs(), solver_->get_us(), solver_iters_, false, 1e-9);
-}
-
 void CarrotMpc::updateProblem(const std::size_t idx_trajectory) {
   // first update the terminal weight vector
   std::rotate(terminal_weights_idx_.begin(), terminal_weights_idx_.begin() + 1, terminal_weights_idx_.end());
@@ -210,8 +200,8 @@ void CarrotMpc::updateProblem(const std::size_t idx_trajectory) {
   boost::shared_ptr<crocoddyl::CostModelFrameVelocity> cost_vel =
       boost::static_pointer_cast<crocoddyl::CostModelFrameVelocity>(
           (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->cost);
-  cost_pose->set_Mref(pose_ref_);
-  cost_vel->set_vref(motion_ref_);
+  cost_pose->set_reference<crocoddyl::FramePlacement>(pose_ref_);
+  cost_vel->set_reference<crocoddyl::FrameMotion>(motion_ref_);
   // -- Weights
   if (existsTerminalWeight()) {
     (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->active = false;
@@ -238,8 +228,8 @@ void CarrotMpc::updateProblem(const std::size_t idx_trajectory) {
         (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->cost);
     cost_vel = boost::static_pointer_cast<crocoddyl::CostModelFrameVelocity>(
         (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->cost);
-    cost_pose->set_Mref(pose_ref_);
-    cost_vel->set_vref(motion_ref_);
+    cost_pose->set_reference<crocoddyl::FramePlacement>(pose_ref_);
+    cost_vel->set_reference<crocoddyl::FrameMotion>(motion_ref_);
 
     --diff_model_iter_;
   }
@@ -248,7 +238,7 @@ void CarrotMpc::updateProblem(const std::size_t idx_trajectory) {
 
 void CarrotMpc::setTimeStep(const double& dt) {
   dt_ = dt;
-  mission_->setTimeStep(dt_);
+  mission_ = nullptr;
   trajectory_generator_->setTimeStep(dt_);
 
   if (problem_ != nullptr) {

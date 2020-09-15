@@ -42,23 +42,32 @@ class OcpAbstract {
  public:
   // Constructor & Destructor
   OcpAbstract(const boost::shared_ptr<pinocchio::Model>& model,
-              const boost::shared_ptr<MultiCopterBaseParams>& mc_params, const double& dt);
-  ~OcpAbstract();
+              const boost::shared_ptr<MultiCopterBaseParams>& mc_params);
+  virtual ~OcpAbstract();
+
+  // Pure virtual
+  virtual void loadParameters(const std::string& yaml_path) = 0;
+  /**
+   * @brief Set time step for the optimal control problem.
+   *
+   * Pure virtual. Each class requires different problem modification depending on its specific purpose.
+   *
+   * @param[in]  dt     time step
+   */
+  virtual void setTimeStep(const double& dt) = 0;
 
   // Other methods
-  virtual void createProblem(const SolverTypes::Type& solver_type, const IntegratorTypes::Type& integrator_type) = 0;
-  virtual void loadParameters(const std::string& yaml_path) = 0;
-
-  virtual void solve();
-  virtual void solve(const std::vector<Eigen::VectorXd>& state_trajectory,
-                     const std::vector<Eigen::VectorXd>& control_trajectory);
+  virtual void solve(const std::vector<Eigen::VectorXd>& state_trajectory = crocoddyl::DEFAULT_VECTOR,
+                     const std::vector<Eigen::VectorXd>& control_trajectory = crocoddyl::DEFAULT_VECTOR);
+  void createProblem(const SolverTypes::Type& solver_type, const IntegratorTypes::Type& integrator_type,
+                     const double& dt);
 
   // Setters
-  virtual void setSolverCallbacks(const bool& activated);
-  virtual void setTimeStep(const double& dt) = 0;
-  virtual void setInitialState(const Eigen::VectorXd& initial_state);
+  void setSolverCallbacks(const bool& activated);
+  void setInitialState(const Eigen::VectorXd& initial_state);
   void setSolverIters(const std::size_t& n_iters);
   void setSolverStopTh(const double& stop_th);
+  void setIntegratorType(const IntegratorTypes::Type& integrator_type);
 
   // Getters
   const boost::shared_ptr<pinocchio::Model> getModel() const;
@@ -74,11 +83,13 @@ class OcpAbstract {
   const int& getBaseLinkId() const;
   const std::size_t& getKnots() const;
 
+
  protected:
   // Methods
+  virtual void createProblem(const SolverTypes::Type& solver_type, const IntegratorTypes::Type& integrator_type) = 0;
   virtual void initializeDefaultParameters();
 
-  virtual void setSolver(const SolverTypes::Type& solver_type);
+  void setSolver(const SolverTypes::Type& solver_type);
 
   // Class members
   boost::shared_ptr<MultiCopterBaseParams> mc_params_;
@@ -96,6 +107,7 @@ class OcpAbstract {
   std::vector<boost::shared_ptr<crocoddyl::CallbackAbstract>> solver_callbacks_;
   std::size_t solver_iters_;
   SolverTypes::Type solver_type_;
+  IntegratorTypes::Type integrator_type_;
 
   int frame_base_link_id_;
   std::size_t n_knots_;

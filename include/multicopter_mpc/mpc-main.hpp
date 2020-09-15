@@ -32,7 +32,7 @@ class MpcMain {
  public:
   MpcMain();
   MpcMain(const MultiCopterTypes::Type& mc_type, const SolverTypes::Type& solver_type, const std::string& mission_name,
-          const std::string& mpc_type, const double& dt);
+          const std::string& mpc_type, const std::string& mpc_yaml_path, const double& dt);
   ~MpcMain();
 
   void setCurrentState(const Eigen::Ref<Eigen::VectorXd>& current_state);

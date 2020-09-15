@@ -3,9 +3,8 @@
 namespace multicopter_mpc {
 
 RailMpc::RailMpc(const boost::shared_ptr<pinocchio::Model>& model,
-                 const boost::shared_ptr<MultiCopterBaseParams>& mc_params, const double& dt,
-                 const boost::shared_ptr<Mission>& mission, const std::size_t& n_knots)
-    : MpcAbstract(model, mc_params, dt, mission, n_knots) {
+                 const boost::shared_ptr<MultiCopterBaseParams>& mc_params, const boost::shared_ptr<Mission>& mission)
+    : MpcAbstract(model, mc_params, mission) {
   initializeDefaultParameters();
   state_ref_.resize(n_knots_, state_->zero());
   control_ref_.resize(n_knots_ - 1, Eigen::VectorXd::Zero(4));
@@ -17,10 +16,8 @@ std::string RailMpc::getFactoryName() { return "RailMpc"; }
 
 boost::shared_ptr<MpcAbstract> RailMpc::createMpcController(const boost::shared_ptr<pinocchio::Model>& model,
                                                             const boost::shared_ptr<MultiCopterBaseParams>& mc_params,
-                                                            const double& dt,
-                                                            const boost::shared_ptr<Mission>& mission,
-                                                            const std::size_t& n_knots) {
-  return boost::make_shared<RailMpc>(model, mc_params, dt, mission, n_knots);
+                                                            const boost::shared_ptr<Mission>& mission) {
+  return boost::make_shared<RailMpc>(model, mc_params, mission);
 }
 
 bool RailMpc::registered_ =
@@ -52,20 +49,11 @@ void RailMpc::loadParameters(const std::string& yaml_path) {
   params_.w_control = server.getParam<double>("ocp/cost_control_weight");
 }
 
-void RailMpc::initializeTrajectoryGenerator(const SolverTypes::Type& solver_type,
-                                            const IntegratorTypes::Type& integrator_type) {
-  trajectory_generator_->createProblem(solver_type, integrator_type);
-  trajectory_generator_->setSolverIters(300);
-  trajectory_generator_->solve();
-
-  mission_ = trajectory_generator_->getMission();
+void RailMpc::createProblem(const SolverTypes::Type& solver_type, const IntegratorTypes::Type& integrator_type) {
+  initializeTrajectoryGenerator();
 
   setReferences(trajectory_generator_->getStateTrajectory(0, n_knots_ - 1),
                 trajectory_generator_->getControlTrajectory(0, n_knots_ - 2));
-}
-
-void RailMpc::createProblem(const SolverTypes::Type& solver_type, const IntegratorTypes::Type& integrator_type) {
-  initializeTrajectoryGenerator(solver_type, integrator_type);
 
   for (int i = 0; i < n_knots_ - 1; ++i) {
     boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model = createDifferentialModel(i);
@@ -135,35 +123,30 @@ boost::shared_ptr<crocoddyl::CostModelAbstract> RailMpc::createCostControl(const
   return cost_control;
 }
 
-void RailMpc::solve() {
-  problem_->set_x0(state_initial_);
-  solver_->solve(solver_->get_xs(), solver_->get_us(), solver_iters_, false, 1e-9);
-}
-
 void RailMpc::updateProblem(const std::size_t idx_trajectory) {
   for (std::size_t t = 0; t < n_knots_ - 1; ++t) {
     state_ref_[t] = state_ref_[t + 1];
 
     boost::shared_ptr<crocoddyl::CostModelState> cost_state = boost::static_pointer_cast<crocoddyl::CostModelState>(
         diff_models_running_[t]->get_costs()->get_costs().find("state_error")->second->cost);
-    cost_state->set_xref(state_ref_[t]);
+    cost_state->set_reference<Eigen::VectorXd>(state_ref_[t]);
 
     boost::shared_ptr<crocoddyl::CostModelControl> cost_control =
         boost::static_pointer_cast<crocoddyl::CostModelControl>(
             diff_models_running_[t]->get_costs()->get_costs().find("control_error")->second->cost);
     if (t < n_knots_ - 2) {
       control_ref_[t] = control_ref_[t + 1];
-      cost_control->set_uref(control_ref_[t]);
+      cost_control->set_reference<Eigen::VectorXd>(control_ref_[t]);
     } else {
       control_ref_[t] = trajectory_generator_->getControl(idx_trajectory - 1);
-      cost_control->set_uref(control_ref_[t]);
+      cost_control->set_reference<Eigen::VectorXd>(control_ref_[t]);
     }
   }
 
   state_ref_[n_knots_ - 1] = trajectory_generator_->getState(idx_trajectory);
   boost::shared_ptr<crocoddyl::CostModelState> cost_state = boost::static_pointer_cast<crocoddyl::CostModelState>(
       diff_model_terminal_->get_costs()->get_costs().find("state_error")->second->cost);
-  cost_state->set_xref(state_ref_[n_knots_ - 1]);
+  cost_state->set_reference<Eigen::VectorXd>(state_ref_[n_knots_ - 1]);
 }
 
 void RailMpc::setTimeStep(const double& dt) {
@@ -195,15 +178,15 @@ void RailMpc::setReferences(const std::vector<Eigen::VectorXd>& state_trajectory
     for (std::size_t t = 0; t < n_knots_ - 1; ++t) {
       boost::shared_ptr<crocoddyl::CostModelState> cost_state = boost::static_pointer_cast<crocoddyl::CostModelState>(
           diff_models_running_[t]->get_costs()->get_costs().find("state_error")->second->cost);
-      cost_state->set_xref(state_ref_[t]);
+      cost_state->set_reference<Eigen::VectorXd>(state_ref_[t]);
       boost::shared_ptr<crocoddyl::CostModelControl> cost_control =
           boost::static_pointer_cast<crocoddyl::CostModelControl>(
               diff_models_running_[t]->get_costs()->get_costs().find("control_error")->second->cost);
-      cost_control->set_uref(control_ref_[t]);
+      cost_control->set_reference<Eigen::VectorXd>(control_ref_[t]);
     }
     boost::shared_ptr<crocoddyl::CostModelState> cost_state = boost::static_pointer_cast<crocoddyl::CostModelState>(
         diff_model_terminal_->get_costs()->get_costs().find("state_error")->second->cost);
-    cost_state->set_xref(state_ref_[n_knots_ - 1]);
+    cost_state->set_reference<Eigen::VectorXd>(state_ref_[n_knots_ - 1]);
   }
 }
 
@@ -211,11 +194,11 @@ void RailMpc::printCosts() {
   for (std::size_t t = 0; t < n_knots_ - 1; ++t) {
     boost::shared_ptr<crocoddyl::CostModelState> cost_state = boost::static_pointer_cast<crocoddyl::CostModelState>(
         diff_models_running_[t]->get_costs()->get_costs().find("state_error")->second->cost);
-    std::cout << "Node number " << t << ": \n" << cost_state->get_xref() << std::endl;
+    std::cout << "Node number " << t << ": \n" << cost_state->get_reference<Eigen::VectorXd>() << std::endl;
   }
   boost::shared_ptr<crocoddyl::CostModelState> cost_state = boost::static_pointer_cast<crocoddyl::CostModelState>(
       diff_model_terminal_->get_costs()->get_costs().find("state_error")->second->cost);
-  std::cout << "Node number " << n_knots_ - 1 << ": \n" << cost_state->get_xref() << std::endl;
+  std::cout << "Node number " << n_knots_ - 1 << ": \n" << cost_state->get_reference<Eigen::VectorXd>() << std::endl;
 }
 
 }  // namespace multicopter_mpc

@@ -3,11 +3,10 @@
 namespace multicopter_mpc {
 
 PiceWiseMpc::PiceWiseMpc(const boost::shared_ptr<pinocchio::Model>& model,
-                         const boost::shared_ptr<MultiCopterBaseParams>& mc_params, const double& dt,
-                         const boost::shared_ptr<Mission>& mission, const std::size_t& n_knots)
-    : MpcAbstract(model, mc_params, dt, mission, n_knots) {
+                         const boost::shared_ptr<MultiCopterBaseParams>& mc_params,
+                         const boost::shared_ptr<Mission>& mission)
+    : MpcAbstract(model, mc_params, mission) {
   initializeDefaultParameters();
-  mission_ = boost::make_shared<Mission>(mission->getInitialState().size());
 }
 
 PiceWiseMpc::~PiceWiseMpc() {}
@@ -16,8 +15,8 @@ std::string PiceWiseMpc::getFactoryName() { return "PiceWiseMpc"; }
 
 boost::shared_ptr<MpcAbstract> PiceWiseMpc::createMpcController(
     const boost::shared_ptr<pinocchio::Model>& model, const boost::shared_ptr<MultiCopterBaseParams>& mc_params,
-    const double& dt, const boost::shared_ptr<Mission>& mission, const std::size_t& n_knots) {
-  return boost::make_shared<PiceWiseMpc>(model, mc_params, dt, mission, n_knots);
+    const boost::shared_ptr<Mission>& mission) {
+  return boost::make_shared<PiceWiseMpc>(model, mc_params, mission);
 }
 
 bool PiceWiseMpc::registered_ =
@@ -59,12 +58,8 @@ void PiceWiseMpc::loadParameters(const std::string& yaml_path) {
   params_.w_vel_terminal = server.getParam<double>("ocp/cost_terminal_vel_weight");
 }
 
-void PiceWiseMpc::initializeTrajectoryGenerator(const SolverTypes::Type& solver_type,
-                                                const IntegratorTypes::Type& integrator_type) {
-  has_motion_ref_ = false;
-
-  trajectory_generator_->createProblem(solver_type, integrator_type);
-  trajectory_generator_->solve();
+void PiceWiseMpc::generateMission() {
+  mission_ = boost::make_shared<Mission>(state_->get_nx());
 
   std::size_t wp_idx = 1;
   std::size_t wp_cursor = 0;
@@ -109,7 +104,16 @@ std::size_t PiceWiseMpc::splitWaypoint(const std::size_t& wp_original_knots) {
 }
 
 void PiceWiseMpc::createProblem(const SolverTypes::Type& solver_type, const IntegratorTypes::Type& integrator_type) {
-  initializeTrajectoryGenerator(solver_type, integrator_type);
+  assert(dt_ > 0.0);
+  assert(n_knots_ > 0);
+
+  solver_type_ = solver_type;
+  integrator_type_ = integrator_type;
+
+  has_motion_ref_ = false;
+  initializeTrajectoryGenerator();
+
+  assert(dt_ == trajectory_generator_->getTimeStep());
 
   for (std::size_t i = 0; i < n_knots_ - 1; ++i) {
     boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model =
@@ -225,11 +229,6 @@ boost::shared_ptr<crocoddyl::CostModelAbstract> PiceWiseMpc::createCostControlRe
   return cost_reg_control;
 }
 
-void PiceWiseMpc::solve() {
-  problem_->set_x0(state_initial_);
-  solver_->solve(solver_->get_xs(), solver_->get_us(), solver_iters_, false, 1e-9);
-}
-
 void PiceWiseMpc::updateProblem(const std::size_t idx_trajectory) {
   (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->weight = params_.w_pos_running;
   if (has_motion_ref_) {
@@ -242,12 +241,12 @@ void PiceWiseMpc::updateProblem(const std::size_t idx_trajectory) {
   boost::shared_ptr<crocoddyl::CostModelFramePlacement> cost_pose =
       boost::static_pointer_cast<crocoddyl::CostModelFramePlacement>(
           (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->cost);
-  cost_pose->set_Mref(pose_ref_);
+  cost_pose->set_reference<crocoddyl::FramePlacement>(pose_ref_);
   if (has_motion_ref_) {
     boost::shared_ptr<crocoddyl::CostModelFrameVelocity> cost_vel =
         boost::static_pointer_cast<crocoddyl::CostModelFrameVelocity>(
             (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->cost);
-    cost_vel->set_vref(motion_ref_);
+    cost_vel->set_reference<crocoddyl::FrameMotion>(motion_ref_);
   }
 
   if (diff_model_iter_ - 1 == diff_models_running_.begin()) {
@@ -312,21 +311,18 @@ void PiceWiseMpc::updateTerminalCost(const std::size_t idx_trajectory) {
   boost::shared_ptr<crocoddyl::CostModelFramePlacement> cost_pose =
       boost::static_pointer_cast<crocoddyl::CostModelFramePlacement>(
           (*(diff_models_running_.end() - 1))->get_costs()->get_costs().find("pose_desired")->second->cost);
-  cost_pose->set_Mref(pose_ref_);
+  cost_pose->set_reference<crocoddyl::FramePlacement>(pose_ref_);
   if (has_motion_ref_) {
     boost::shared_ptr<crocoddyl::CostModelFrameVelocity> cost_vel =
         boost::static_pointer_cast<crocoddyl::CostModelFrameVelocity>(
             (*(diff_models_running_.end() - 1))->get_costs()->get_costs().find("vel_desired")->second->cost);
-    cost_vel->set_vref(motion_ref_);
+    cost_vel->set_reference<crocoddyl::FrameMotion>(motion_ref_);
   }
 }
 
 void PiceWiseMpc::setTimeStep(const double& dt) {
   dt_ = dt;
-
-  std::size_t nx = mission_->getInitialState().size();
-  mission_ = boost::make_shared<Mission>(nx);
-
+  mission_ = nullptr;
   trajectory_generator_->setTimeStep(dt_);
 
   if (problem_ != nullptr) {

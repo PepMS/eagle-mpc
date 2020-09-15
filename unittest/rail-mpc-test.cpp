@@ -18,9 +18,9 @@ BOOST_AUTO_TEST_SUITE(multicopter_mpc_trajectory_generator_test)
 class RailMpcDerived : public multicopter_mpc::RailMpc {
  public:
   RailMpcDerived(const boost::shared_ptr<pinocchio::Model>& model,
-                 const boost::shared_ptr<multicopter_mpc::MultiCopterBaseParams>& mc_params, const double& dt,
-                 const boost::shared_ptr<multicopter_mpc::Mission>& mission, const std::size_t& n_knots)
-      : multicopter_mpc::RailMpc(model, mc_params, dt, mission, n_knots) {}
+                 const boost::shared_ptr<multicopter_mpc::MultiCopterBaseParams>& mc_params,
+                 const boost::shared_ptr<multicopter_mpc::Mission>& mission)
+      : multicopter_mpc::RailMpc(model, mc_params, mission) {}
 
   ~RailMpcDerived(){};
 
@@ -60,7 +60,8 @@ class RailMpcTest {
 
     dt_ = 1e-2;
     n_knots_ = 100;
-    rail_mpc_ = boost::make_shared<RailMpcDerived>(mc_model_, mc_params_, dt_, mc_mission_, n_knots_);
+    rail_mpc_ = boost::make_shared<RailMpcDerived>(mc_model_, mc_params_, mc_mission_);
+    rail_mpc_->setTimeStep(dt_);
   }
 
   ~RailMpcTest() {}
@@ -258,7 +259,7 @@ BOOST_AUTO_TEST_CASE(create_cost_state_test, *boost::unit_test::tolerance(1e-7))
 //             .find("state_error")
 //             ->second->cost);
 //     BOOST_CHECK(state_reference_trajectory[i] == llc_test.rail_mpc_->getStateRef()[i]);
-//     BOOST_CHECK(cost_state->get_xref() == llc_test.rail_mpc_->getStateRef()[i]);
+//     BOOST_CHECK(cost_state->get_reference<Eigen::VectorXd>() == llc_test.rail_mpc_->getStateRef()[i]);
 //   }
 //   boost::shared_ptr<crocoddyl::CostModelState> cost_state = boost::static_pointer_cast<crocoddyl::CostModelState>(
 //       llc_test.rail_mpc_->getDifferentialTerminalModel()
@@ -268,7 +269,7 @@ BOOST_AUTO_TEST_CASE(create_cost_state_test, *boost::unit_test::tolerance(1e-7))
 //           ->second->cost);
 //   BOOST_CHECK(state_reference_trajectory[llc_test.rail_mpc_->getKnots() - 1] ==
 //               llc_test.rail_mpc_->getStateRef()[llc_test.rail_mpc_->getKnots() - 1]);
-//   BOOST_CHECK(cost_state->get_xref() ==
+//   BOOST_CHECK(cost_state->get_reference<Eigen::VectorXd>() ==
 //               llc_test.rail_mpc_->getStateRef()[llc_test.rail_mpc_->getKnots() - 1]);
 // }
 
@@ -299,13 +300,13 @@ BOOST_AUTO_TEST_CASE(set_reference_test_2, *boost::unit_test::tolerance(1e-7)) {
                                                                   .find("state_error")
                                                                   ->second->cost);
     BOOST_CHECK(state_reference_trajectory[i] == llc_test.rail_mpc_->getStateRef()[i]);
-    BOOST_CHECK(cost_state->get_xref() == llc_test.rail_mpc_->getStateRef()[i]);
+    BOOST_CHECK(cost_state->get_reference<Eigen::VectorXd>() == llc_test.rail_mpc_->getStateRef()[i]);
   }
   boost::shared_ptr<crocoddyl::CostModelState> cost_state = boost::static_pointer_cast<crocoddyl::CostModelState>(
       llc_test.rail_mpc_->getDifferentialTerminalModel()->get_costs()->get_costs().find("state_error")->second->cost);
   BOOST_CHECK(state_reference_trajectory[llc_test.rail_mpc_->getKnots() - 1] ==
               llc_test.rail_mpc_->getStateRef()[llc_test.rail_mpc_->getKnots() - 1]);
-  BOOST_CHECK(cost_state->get_xref() == llc_test.rail_mpc_->getStateRef()[llc_test.rail_mpc_->getKnots() - 1]);
+  BOOST_CHECK(cost_state->get_reference<Eigen::VectorXd>() == llc_test.rail_mpc_->getStateRef()[llc_test.rail_mpc_->getKnots() - 1]);
 }
 
 // Set reference after creating the problem
@@ -339,7 +340,7 @@ BOOST_AUTO_TEST_CASE(update_reference_trajectory_test, *boost::unit_test::tolera
   //         .find("state_error")
   //         ->second->cost);
   // BOOST_CHECK(state == llc_test.rail_mpc_->getStateRef()[llc_test.rail_mpc_->getKnots() - 1]);
-  // BOOST_CHECK(cost_state->get_xref() ==
+  // BOOST_CHECK(cost_state->get_reference<Eigen::VectorXd>() ==
   //             llc_test.rail_mpc_->getStateRef()[llc_test.rail_mpc_->getKnots() - 1]);
 }
 

@@ -3,8 +3,8 @@
 namespace multicopter_mpc {
 
 OcpAbstract::OcpAbstract(const boost::shared_ptr<pinocchio::Model>& model,
-                         const boost::shared_ptr<MultiCopterBaseParams>& mc_params, const double& dt)
-    : model_(model), mc_params_(mc_params), dt_(dt) {
+                         const boost::shared_ptr<MultiCopterBaseParams>& mc_params)
+    : model_(model), mc_params_(mc_params) {
   state_ = boost::make_shared<crocoddyl::StateMultibody>(model_);
   actuation_ =
       boost::make_shared<crocoddyl::ActuationModelMultiCopterBase>(state_, mc_params_->n_rotors_, mc_params_->tau_f_);
@@ -16,11 +16,29 @@ OcpAbstract::OcpAbstract(const boost::shared_ptr<pinocchio::Model>& model,
 
   state_initial_ = state_->zero();
   frame_base_link_id_ = model_->getFrameId(mc_params_->base_link_name_);
+
+  solver_iters_ = 100;
+  solver_type_ = SolverTypes::BoxFDDP;
+  integrator_type_ = IntegratorTypes::Euler;
+  n_knots_ = 100;
+  dt_ = 0.0;
 }
 
 OcpAbstract::~OcpAbstract() {}
 
 void OcpAbstract::initializeDefaultParameters(){};
+
+void OcpAbstract::createProblem(const SolverTypes::Type& solver_type, const IntegratorTypes::Type& integrator_type,
+                                const double& dt) {
+  assert(dt > 0.0);
+  setTimeStep(dt);
+  createProblem(solver_type, integrator_type);
+}
+
+void OcpAbstract::solve(const std::vector<Eigen::VectorXd>& state_trajectory,
+                        const std::vector<Eigen::VectorXd>& control_trajectory) {
+  solver_->solve(state_trajectory, control_trajectory, solver_iters_, false);
+}
 
 void OcpAbstract::setSolver(const SolverTypes::Type& solver_type) {
   assert(problem_ != nullptr);
@@ -35,6 +53,8 @@ void OcpAbstract::setSolver(const SolverTypes::Type& solver_type) {
       break;
     }
     default:
+      std::cout << "Solver set: BoxFDDP" << std::endl;
+      solver_ = boost::make_shared<crocoddyl::SolverBoxFDDP>(problem_);
       break;
   }
 
@@ -42,6 +62,8 @@ void OcpAbstract::setSolver(const SolverTypes::Type& solver_type) {
 }
 
 void OcpAbstract::setSolverCallbacks(const bool& activated) {
+  assert(solver_ != nullptr);
+
   if (activated) {
     if (solver_callbacks_.size() == 0) {
       solver_callbacks_.push_back(boost::make_shared<crocoddyl::CallbackVerbose>());
@@ -53,13 +75,52 @@ void OcpAbstract::setSolverCallbacks(const bool& activated) {
 }
 
 void OcpAbstract::setSolverIters(const std::size_t& n_iters) { solver_iters_ = n_iters; }
+
 void OcpAbstract::setSolverStopTh(const double& stop_th) { solver_->set_th_stop(stop_th); }
 
-void OcpAbstract::solve() { solver_->solve(); }
-void OcpAbstract::solve(const std::vector<Eigen::VectorXd>& state_trajectory,
-                        const std::vector<Eigen::VectorXd>& control_trajectory) {
-  std::cout << "State Trajectory: " << state_trajectory[10] << std::endl;
-  solver_->solve(state_trajectory, control_trajectory, solver_iters_, false);
+void OcpAbstract::setInitialState(const Eigen::VectorXd& initial_state) {
+  assert(initial_state.size() == state_->get_nx());  // Might not be efficient to do this here
+  state_initial_ = initial_state;
+
+  if (problem_ != nullptr) {
+    problem_->set_x0(state_initial_);
+  }
+}
+
+void OcpAbstract::setIntegratorType(const IntegratorTypes::Type& integrator_type) {
+  if (integrator_type == integrator_type_) {
+    return;
+  } else {
+    integrator_type_ = integrator_type;
+    if (problem_ != nullptr) {
+      int_models_running_.clear();
+      int_model_terminal_ = nullptr;
+
+      switch (integrator_type_) {
+        case IntegratorTypes::Euler:
+          for (std::size_t i = 0; i < diff_models_running_.size(); ++i) {
+            int_models_running_.push_back(
+                boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_models_running_[i], dt_));
+          }
+          int_model_terminal_ = boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_model_terminal_, 0.);
+          break;
+        case IntegratorTypes::RK4:
+          for (std::size_t i = 0; i < diff_models_running_.size(); ++i) {
+            int_models_running_.push_back(
+                boost::make_shared<crocoddyl::IntegratedActionModelRK4>(diff_models_running_[i], dt_));
+          }
+          int_model_terminal_ = boost::make_shared<crocoddyl::IntegratedActionModelRK4>(diff_model_terminal_, 0.);
+          break;
+        default:
+          for (std::size_t i = 0; i < diff_models_running_.size(); ++i) {
+            int_models_running_.push_back(
+                boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_models_running_[i], dt_));
+          }
+          int_model_terminal_ = boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_model_terminal_, 0.);
+          break;
+      }
+    }
+  }
 }
 
 const boost::shared_ptr<pinocchio::Model> OcpAbstract::getModel() const { return model_; }
@@ -80,11 +141,6 @@ const std::size_t& OcpAbstract::getKnots() const {
     std::cout << "WARN: number of knots is 0" << std::endl;
   }
   return n_knots_;
-}
-
-void OcpAbstract::setInitialState(const Eigen::VectorXd& initial_state) {
-  assert(initial_state.size() == state_->get_nx());  // Might not be efficient to do this here
-  state_initial_ = initial_state;
 }
 
 }  // namespace multicopter_mpc

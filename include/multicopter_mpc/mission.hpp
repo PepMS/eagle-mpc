@@ -22,6 +22,7 @@ class Mission {
 
   void setTimeStep(const double& dt);
   void setInitialState(const Eigen::VectorXd& x0);
+  
   const Eigen::VectorXd& getInitialState() const;
   const std::vector<WayPoint>& getWaypoints() const;
   const std::size_t& getTotalKnots() const;

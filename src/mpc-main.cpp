@@ -2,7 +2,8 @@
 
 namespace multicopter_mpc {
 MpcMain::MpcMain(const MultiCopterTypes::Type& mc_type, const SolverTypes::Type& solver_type,
-                 const std::string& mission_name, const std::string& mpc_type, const double& dt)
+                 const std::string& mission_name, const std::string& mpc_type, const std::string& mpc_yaml_path,
+                 const double& dt)
     : mc_type_(mc_type), solver_type_(solver_type) {
   std::string model_description_path;
   std::string model_yaml_path;
@@ -23,34 +24,27 @@ MpcMain::MpcMain(const MultiCopterTypes::Type& mc_type, const SolverTypes::Type&
       break;
   }
 
-  yaml_parser::ParserYAML yaml_mc(model_yaml_path, "", true);
-  yaml_parser::ParamsServer server_params(yaml_mc.getParams());
-
-  yaml_parser::ParserYAML yaml_mission(mission_yaml_path, "", true);
-  yaml_parser::ParamsServer server_mission(yaml_mission.getParams());
-
   pinocchio::Model model;
   pinocchio::urdf::buildModel(model_description_path, pinocchio::JointModelFreeFlyer(), model);
   model_ = boost::make_shared<pinocchio::Model>(model);
 
   // Multicopter mission and params
   mc_params_ = boost::make_shared<MultiCopterBaseParams>();
-  mc_params_->fill(server_params);
+  mc_params_->fill(model_yaml_path);
 
   mission_ = boost::make_shared<Mission>(model_->nq + model_->nv);
-  mission_->fillWaypoints(server_mission);
-  mission_->fillInitialState(server_mission);
+  mission_->fillWaypoints(mission_yaml_path);
 
   dt_ = dt;
 
   // Low Level Controller initialization
   mpc_controller_knots_ = 100;
   mpc_controller_ =
-      FactoryMpc::get().createMpcController(mpc_type, model_, mc_params_, dt_, mission_, mpc_controller_knots_);
-  mpc_controller_->loadParameters(mpc_controller_->getParametersPath());
+      FactoryMpc::get().createMpcController(mpc_type, model_, mc_params_, mission_);
+  mpc_controller_->loadParameters(mpc_yaml_path);
   state_ = mpc_controller_->getStateMultibody()->zero();
   mpc_controller_->setInitialState(state_);
-  mpc_controller_->createProblem(solver_type_);
+  mpc_controller_->createProblem(solver_type_, IntegratorTypes::Euler, dt_);
   mpc_controller_->setSolverCallbacks(true);
   mpc_controller_->setSolverIters(100);
   mpc_controller_->solve();
@@ -62,7 +56,7 @@ MpcMain::MpcMain(const MultiCopterTypes::Type& mc_type, const SolverTypes::Type&
 
   ff_gains_ = Eigen::VectorXd::Zero(mpc_controller_->getStateMultibody()->get_ndx());
   fb_gains_ = Eigen::MatrixXd::Zero(mpc_controller_->getActuation()->get_nu(),
-                                            mpc_controller_->getStateMultibody()->get_ndx());
+                                    mpc_controller_->getStateMultibody()->get_ndx());
 
   // Do check to ensure that the guess of the solver is right
   trajectory_cursor_ = mpc_controller_knots_ - 1;
@@ -77,7 +71,7 @@ void MpcMain::runMpcStep() {
   // 1. update the current state
   mpc_controller_->setInitialState(state_);
   // 2. solve with the current state
-  mpc_controller_->solve();
+  mpc_controller_->solve(mpc_controller_->getSolver()->get_xs(), mpc_controller_->getSolver()->get_us());
   // 3. update control variable
   motor_thrust_ = mpc_controller_->getControls();
   thrustToSpeed(motor_thrust_, motor_speed_);

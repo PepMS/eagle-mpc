@@ -3,12 +3,9 @@
 namespace multicopter_mpc {
 
 TrajectoryGenerator::TrajectoryGenerator(const boost::shared_ptr<pinocchio::Model> model,
-                                         const boost::shared_ptr<MultiCopterBaseParams>& mc_params, const double& dt,
+                                         const boost::shared_ptr<MultiCopterBaseParams>& mc_params,
                                          const boost::shared_ptr<Mission>& mission)
-    : OcpAbstract(model, mc_params, dt), mission_(mission) {
-  mission_->setTimeStep(dt_);
-  n_knots_ = mission_->getTotalKnots();
-
+    : OcpAbstract(model, mc_params), mission_(mission) {
   initializeDefaultParameters();
 
   // To be changed!!!!!
@@ -51,11 +48,22 @@ void TrajectoryGenerator::loadParameters(const std::string& yaml_path) {
   params_.w_vel_running = server.getParam<double>("ocp/cost_running_vel_weight");
   params_.w_pos_terminal = server.getParam<double>("ocp/cost_terminal_pos_weight");
   params_.w_vel_terminal = server.getParam<double>("ocp/cost_terminal_vel_weight");
+
+  dt_ = server.getParam<double>("ocp/dt");
+  if (server.getParam<std::string>("ocp/integrator") == "Euler") {
+    integrator_type_ = IntegratorTypes::Euler;
+  } else if (server.getParam<std::string>("ocp/integrator") == "RK4") {
+    integrator_type_ = IntegratorTypes::RK4;
+  }
 }
 
 void TrajectoryGenerator::createProblem(const SolverTypes::Type& solver_type,
                                         const IntegratorTypes::Type& integrator_type) {
-  assert(mission_->getWaypoints().size() > 0);
+  assert(dt_ > 0.0);
+  assert(n_knots_ == mission_->getTotalKnots() && n_knots_ > 0);
+
+  integrator_type_ = integrator_type;
+  solver_type_ = solver_type;
 
   for (std::vector<WayPoint>::const_iterator wp = mission_->getWaypoints().cbegin();
        wp != mission_->getWaypoints().cend(); ++wp) {
@@ -68,7 +76,7 @@ void TrajectoryGenerator::createProblem(const SolverTypes::Type& solver_type,
 
     boost::shared_ptr<crocoddyl::ActionModelAbstract> int_model_running;
     boost::shared_ptr<crocoddyl::ActionModelAbstract> int_model_terminal;
-    switch (integrator_type) {
+    switch (integrator_type_) {
       case IntegratorTypes::Euler:
         int_model_running = boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_model_running, dt_);
         int_model_terminal = boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_model_terminal, 0.);
@@ -117,8 +125,8 @@ void TrajectoryGenerator::createProblem(const SolverTypes::Type& solver_type,
   }
   problem_ = boost::make_shared<crocoddyl::ShootingProblem>(mission_->getInitialState(), int_models_running_,
                                                             int_model_terminal_);
-  setSolver(solver_type);
 
+  setSolver(solver_type_);
   setInitialState(mission_->getInitialState());
 }
 
@@ -133,19 +141,6 @@ TrajectoryGenerator::createRunningDifferentialModel(const WayPoint& waypoint) {
   // Regularitzations
   cost_model_running->addCost("state_reg", cost_reg_state, params_.w_state_running);        // 1e-6
   cost_model_running->addCost("control_reg", cost_reg_control, params_.w_control_running);  // 1e-4
-
-  // Waypoint cost related
-  // crocoddyl::FramePlacement frame_ref = crocoddyl::FramePlacement(frame_base_link_id_, waypoint.pose);
-  // boost::shared_ptr<crocoddyl::CostModelAbstract> cost_goal =
-  //     boost::make_shared<crocoddyl::CostModelFramePlacement>(state_, frame_ref, actuation_->get_nu());
-  // cost_model_running->addCost("pos_desired", cost_goal, params_.w_pos_running);  // 1e-2
-
-  // if (waypoint.vel != boost::none) {
-  //   crocoddyl::FrameMotion vel_ref(frame_base_link_id_, *(waypoint.vel));
-  //   boost::shared_ptr<crocoddyl::CostModelAbstract> cost_goal_vel =
-  //       boost::make_shared<crocoddyl::CostModelFrameVelocity>(state_, vel_ref, actuation_->get_nu());
-  //   cost_model_running->addCost("vel_desired", cost_goal_vel, params_.w_vel_running);  // 1e-2
-  // }
 
   // Diff & Integrated models
   boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model_running =
@@ -212,36 +207,9 @@ boost::shared_ptr<crocoddyl::CostModelAbstract> TrajectoryGenerator::createCostC
   return cost_reg_control;
 }
 
-void TrajectoryGenerator::solve() {
-  problem_->set_x0(state_initial_);
-  solver_->solve();
-  // in the unit test check that the solve trajectory and the state_trajectory have the same size
-  // std::copy(solver_->get_xs().begin(), solver_->get_xs().end(), state_trajectory_.begin());
-  state_hover_ = state_->zero();
-  state_hover_.head(3) = solver_->get_xs().back().head(3);
-  Eigen::Quaterniond quat = Eigen::Quaterniond(solver_->get_xs().back()(6), 0.0, 0.0, solver_->get_xs().back()(5));
-  quat.normalize();
-  state_hover_(5) = quat.z();
-  state_hover_(6) = quat.w();
-}
-
-void TrajectoryGenerator::solve(const std::vector<Eigen::VectorXd>& state_trajectory,
-                                const std::vector<Eigen::VectorXd>& control_trajectory) {
-  problem_->set_x0(state_initial_);
-  solver_->solve(state_trajectory, control_trajectory, solver_iters_, false);
-  // in the unit test check that the solve trajectory and the state_trajectory have the same size
-  // std::copy(solver_->get_xs().begin(), solver_->get_xs().end(), state_trajectory_.begin());
-  state_hover_ = state_->zero();
-  state_hover_.head(3) = solver_->get_xs().back().head(3);
-  Eigen::Quaterniond quat = Eigen::Quaterniond(solver_->get_xs().back()(6), 0.0, 0.0, solver_->get_xs().back()(5));
-  quat.normalize();
-  state_hover_(5) = quat.z();
-  state_hover_(6) = quat.w();
-}
-
 void TrajectoryGenerator::setTimeStep(const double& dt) {
   dt_ = dt;
-  mission_->setTimeStep(dt_);
+  mission_->setTimeStep(dt);
   n_knots_ = mission_->getTotalKnots();
 
   if (problem_ != nullptr) {
@@ -253,11 +221,26 @@ void TrajectoryGenerator::setTimeStep(const double& dt) {
 
     problem_ = nullptr;
     solver_ = nullptr;
-    // Notice that when changind the dt, create problem should be called again!
+    // Notice that when changing the dt, create problem should be called again!
   }
 }
 
-const boost::shared_ptr<const crocoddyl::SolverDDP> TrajectoryGenerator::getSolver() const { return solver_; }
+void TrajectoryGenerator::solve(const std::vector<Eigen::VectorXd>& state_trajectory,
+                                const std::vector<Eigen::VectorXd>& control_trajectory) {
+  OcpAbstract::solve(state_trajectory, control_trajectory);
+  setStateHover();
+}
+
+void TrajectoryGenerator::setStateHover() {
+  assert(solver_->get_xs().size() > 0);
+
+  state_hover_ = state_->zero();
+  state_hover_.head(3) = solver_->get_xs().back().head(3);
+  Eigen::Quaterniond quat = Eigen::Quaterniond(solver_->get_xs().back()(6), 0.0, 0.0, solver_->get_xs().back()(5));
+  quat.normalize();
+  state_hover_(5) = quat.z();
+  state_hover_(6) = quat.w();
+}
 
 const boost::shared_ptr<Mission> TrajectoryGenerator::getMission() const { return mission_; }
 
@@ -266,8 +249,6 @@ const TrajectoryGeneratorParams& TrajectoryGenerator::getParams() const { return
 std::vector<Eigen::VectorXd> TrajectoryGenerator::getStateTrajectory(const std::size_t& idx_init,
                                                                      const std::size_t& idx_end) const {
   assert(idx_init < idx_end);
-  // std::vector<Eigen::VectorXd>::const_iterator first = state_trajectory_.begin() + idx_init;
-  // std::vector<Eigen::VectorXd>::const_iterator last = state_trajectory_.begin() + idx_end + 1;
   std::vector<Eigen::VectorXd>::const_iterator first = solver_->get_xs().begin() + idx_init;
   std::vector<Eigen::VectorXd>::const_iterator last = solver_->get_xs().begin() + idx_end + 1;
   return std::vector<Eigen::VectorXd>(first, last);

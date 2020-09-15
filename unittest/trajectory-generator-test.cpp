@@ -19,8 +19,8 @@ class TrajectoryGeneratorDerived : public multicopter_mpc::TrajectoryGenerator {
  public:
   TrajectoryGeneratorDerived(const boost::shared_ptr<pinocchio::Model>& model,
                              const boost::shared_ptr<multicopter_mpc::MultiCopterBaseParams>& mc_params,
-                             const double& dt, const boost::shared_ptr<multicopter_mpc::Mission>& mission)
-      : multicopter_mpc::TrajectoryGenerator(model, mc_params, dt, mission) {}
+                             const boost::shared_ptr<multicopter_mpc::Mission>& mission)
+      : multicopter_mpc::TrajectoryGenerator(model, mc_params, mission) {}
 
   ~TrajectoryGeneratorDerived(){};
 
@@ -59,7 +59,8 @@ class TrajectoryGeneratorTest {
 
     mc_model_ = boost::make_shared<pinocchio::Model>(model_);
 
-    trajectory_generator_ = boost::make_shared<TrajectoryGeneratorDerived>(mc_model_, mc_params_, dt_, mission_);
+    trajectory_generator_ = boost::make_shared<TrajectoryGeneratorDerived>(mc_model_, mc_params_, mission_);
+    trajectory_generator_->setTimeStep(dt_);
   }
 
   ~TrajectoryGeneratorTest() {}
@@ -158,7 +159,7 @@ BOOST_AUTO_TEST_CASE(trajectory_create_differential_model_test, *boost::unit_tes
   TrajectoryGeneratorTest tg_test;
 
   tg_test.trajectory_generator_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP,
-                                               multicopter_mpc::IntegratorTypes::Euler);
+                                               multicopter_mpc::IntegratorTypes::Euler, tg_test.dt_);
 
   std::size_t knot_cursor = 0;
   for (std::vector<multicopter_mpc::WayPoint>::const_iterator wp =
@@ -211,7 +212,7 @@ BOOST_AUTO_TEST_CASE(trajectory_create_differential_model_state_test, *boost::un
   TrajectoryGeneratorTest tg_test;
 
   tg_test.trajectory_generator_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP,
-                                               multicopter_mpc::IntegratorTypes::Euler);
+                                               multicopter_mpc::IntegratorTypes::Euler, tg_test.dt_);;
 
   boost::shared_ptr<crocoddyl::ActivationModelWeightedQuad> activation =
       boost::static_pointer_cast<crocoddyl::ActivationModelWeightedQuad>(
@@ -238,7 +239,7 @@ BOOST_AUTO_TEST_CASE(trajectory_create_problem_action_models_test, *boost::unit_
   TrajectoryGeneratorTest tg_test;
 
   tg_test.trajectory_generator_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP,
-                                               multicopter_mpc::IntegratorTypes::Euler);
+                                               multicopter_mpc::IntegratorTypes::Euler, tg_test.dt_);;
 
   BOOST_CHECK(tg_test.trajectory_generator_->getDifferentialRunningModels().size() ==
               tg_test.trajectory_generator_->getKnots() - 1);
@@ -283,7 +284,7 @@ BOOST_AUTO_TEST_CASE(set_solver_test, *boost::unit_test::tolerance(1e-7)) {
   TrajectoryGeneratorTest tg_test;
 
   tg_test.trajectory_generator_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP,
-                                               multicopter_mpc::IntegratorTypes::Euler);
+                                               multicopter_mpc::IntegratorTypes::Euler, tg_test.dt_);;
   BOOST_CHECK(tg_test.trajectory_generator_->getSolver() != nullptr);
 }
 
@@ -291,7 +292,7 @@ BOOST_AUTO_TEST_CASE(solve_test, *boost::unit_test::tolerance(1e-7)) {
   TrajectoryGeneratorTest tg_test;
 
   tg_test.trajectory_generator_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP,
-                                               multicopter_mpc::IntegratorTypes::Euler);
+                                               multicopter_mpc::IntegratorTypes::Euler, tg_test.dt_);;
   tg_test.trajectory_generator_->setSolverCallbacks(true);
   tg_test.trajectory_generator_->solve();
   BOOST_CHECK(tg_test.trajectory_generator_->getSolver()->get_xs().size() ==
@@ -305,7 +306,7 @@ BOOST_AUTO_TEST_CASE(hover_test, *boost::unit_test::tolerance(1e-7)) {
   TrajectoryGeneratorTest tg_test;
 
   tg_test.trajectory_generator_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP,
-                                               multicopter_mpc::IntegratorTypes::Euler);
+                                               multicopter_mpc::IntegratorTypes::Euler, tg_test.dt_);;
   tg_test.trajectory_generator_->setSolverCallbacks(true);
   tg_test.trajectory_generator_->solve();
 

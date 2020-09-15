@@ -1,4 +1,5 @@
 import sys
+import numpy as np
 
 import multicopter_mpc
 
@@ -7,38 +8,45 @@ import crocoddyl
 import example_robot_data
 import yaml_parser
 
-from multicopter_mpc.utils.path import MULTICOPTER_MPC_MULTIROTOR_DIR, MULTICOPTER_MPC_MISSION_DIR
+from multicopter_mpc.utils.path import MULTICOPTER_MPC_MULTIROTOR_DIR, MULTICOPTER_MPC_MISSION_DIR, MULTICOPTER_MPC_OCP_DIR
 
 WITHDISPLAY = 'display' in sys.argv
 WITHPLOT = 'plot' in sys.argv
 
 uav = example_robot_data.loadIris()
-yaml_uav = yaml_parser.ParserYAML(MULTICOPTER_MPC_MULTIROTOR_DIR + "/iris.yaml", "", True)
 uav_model = uav.model
 
 # # UAV Params
+yaml_uav = yaml_parser.ParserYAML(MULTICOPTER_MPC_MULTIROTOR_DIR + "/iris.yaml", "", True)
 server_uav = yaml_parser.ParamsServer(yaml_uav.getParams())
 mc_params = multicopter_mpc.MultiCopterBaseParams()
-mc_params.fill(server_uav)
+mc_params.fill(MULTICOPTER_MPC_MULTIROTOR_DIR + "/iris.yaml")
 
 # Mission
-yaml_mission = yaml_parser.ParserYAML(MULTICOPTER_MPC_MISSION_DIR + "/passthrough.yaml", "", True)
-server_mission = yaml_parser.ParamsServer(yaml_mission.getParams())
 mission = multicopter_mpc.Mission(uav.nq + uav.nv)
-mission.fillWaypoints(server_mission)
-mission.fillInitialState(server_mission)
+mission.fillWaypoints(MULTICOPTER_MPC_MISSION_DIR + "/takeoff.yaml")
 
 dt = 1e-2
-trajectory = multicopter_mpc.TrajectoryGenerator(uav_model, mc_params, dt, mission)
-trajectory.createProblem(multicopter_mpc.SolverType.SolverTypeBoxFDDP)
+trajectory = multicopter_mpc.TrajectoryGenerator(uav_model, mc_params, mission)
+trajectory.loadParameters(MULTICOPTER_MPC_OCP_DIR + "/trajectory-generator.yaml")
+trajectory.createProblem(multicopter_mpc.SolverType.SolverTypeBoxFDDP,
+                         multicopter_mpc.IntegratorType.IntegratorTypeEuler, dt)
 trajectory.setSolverCallbacks(True)
 
-state_guess = mission.interpolateTrajectory("R3SO3")
-control_guess = [pinocchio.utils.zero(4) for _ in range(0, len(state_guess) - 1)]
-trajectory.solve(state_guess, control_guess)
+# state_guess = mission.interpolateTrajectory("cold")
+state = np.array([0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0])
+state_guess = [state for _ in range(0, mission.total_knots)]
+control = pinocchio.utils.zero(4)
+control += 3.7
+control_guess = [control for _ in range(0, len(state_guess) - 1)]
+trajectory.setSolverIters(500)
+trajectory.setSolverCallbacks(True)
+# trajectory.solve(state_guess, control_guess)
+trajectory.solver.solve()
 # trajectory.solve()
 
 state_trajectory = trajectory.getStateTrajectory(0, trajectory.n_knots - 1)
+control_trajectory = trajectory.getControlTrajectory(0, trajectory.n_knots - 2)
 time_lst = [trajectory.dt for i in range(0, trajectory.n_knots + 1)]
 
 if WITHDISPLAY:
@@ -51,4 +59,4 @@ if WITHDISPLAY:
 
     display.display(state_trajectory, [], [], time_lst, 1)
 
-# crocoddyl.plotOCSolution(state_trajectory, [], figIndex=1, show=False)
+# crocoddyl.plotOCSolution(state_trajectory, control_trajectory, figIndex=1, show=True)

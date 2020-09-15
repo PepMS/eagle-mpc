@@ -11,22 +11,17 @@ namespace multicopter_mpc {
 class PiceWiseMpc : public MpcAbstract {
  public:
   PiceWiseMpc(const boost::shared_ptr<pinocchio::Model>& model,
-              const boost::shared_ptr<MultiCopterBaseParams>& mc_params, const double& dt,
-              const boost::shared_ptr<Mission>& mission, const std::size_t& n_knots);
+              const boost::shared_ptr<MultiCopterBaseParams>& mc_params, const boost::shared_ptr<Mission>& mission);
   ~PiceWiseMpc();
 
   static std::string getFactoryName();
   static boost::shared_ptr<MpcAbstract> createMpcController(const boost::shared_ptr<pinocchio::Model>& model,
                                                             const boost::shared_ptr<MultiCopterBaseParams>& mc_params,
-                                                            const double& dt,
-                                                            const boost::shared_ptr<Mission>& mission,
-                                                            const std::size_t& n_knots);
+                                                            const boost::shared_ptr<Mission>& mission);
 
   void loadParameters(const std::string& yaml_path) override;
   void createProblem(const SolverTypes::Type& solver_type, const IntegratorTypes::Type& integrator_type) override;
   void setTimeStep(const double& dt) override;
-
-  void solve() override;
 
   void updateProblem(const std::size_t idx_trajectory);
 
@@ -35,10 +30,11 @@ class PiceWiseMpc : public MpcAbstract {
   const TrajectoryGeneratorParams& getParams() const;
   const Eigen::VectorXd& getControls(const std::size_t& idx = 0) const;
 
+  using OcpAbstract::createProblem;
+
  protected:
   void initializeDefaultParameters() override;
-  void initializeTrajectoryGenerator(const SolverTypes::Type& solver_type,
-                                     const IntegratorTypes::Type& integrator_type) override;
+  void generateMission() override;
 
   std::size_t splitWaypoint(const std::size_t& wp_original_knots);
   boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> createRunningDifferentialModel(

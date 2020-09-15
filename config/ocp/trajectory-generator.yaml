@@ -1,4 +1,6 @@
 ocp:
+  integrator: "Euler"
+  dt: 1e-2
   cost_running_state_weight: 1e-5
   cost_running_control_weight: 1e-1
   cost_running_pos_weight: 1e-2

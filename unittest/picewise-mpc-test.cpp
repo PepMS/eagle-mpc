@@ -19,9 +19,9 @@ BOOST_AUTO_TEST_SUITE(multicopter_mpc_trajectory_generator_test)
 class PiceWiseMpcDerived : public multicopter_mpc::PiceWiseMpc {
  public:
   PiceWiseMpcDerived(const boost::shared_ptr<pinocchio::Model>& model,
-                     const boost::shared_ptr<multicopter_mpc::MultiCopterBaseParams>& mc_params, const double& dt,
-                     const boost::shared_ptr<multicopter_mpc::Mission>& mission, std::size_t& n_knots)
-      : multicopter_mpc::PiceWiseMpc(model, mc_params, dt, mission, n_knots) {}
+                     const boost::shared_ptr<multicopter_mpc::MultiCopterBaseParams>& mc_params,
+                     const boost::shared_ptr<multicopter_mpc::Mission>& mission)
+      : multicopter_mpc::PiceWiseMpc(model, mc_params, mission) {}
 
   ~PiceWiseMpcDerived(){};
 
@@ -46,10 +46,7 @@ class PiceWiseMpcDerived : public multicopter_mpc::PiceWiseMpc {
 
   const bool& getHasMotionRef() { return has_motion_ref_; }
 
-  void initializeTrajectoryGen(const multicopter_mpc::SolverTypes::Type& solver_type,
-                               const multicopter_mpc::IntegratorTypes::Type& integrator_type) {
-    initializeTrajectoryGenerator(solver_type, integrator_type);
-  }
+  void initializeTrajectoryGen() { initializeTrajectoryGenerator(); }
 };
 
 class PiceWiseMpcTest {
@@ -71,7 +68,8 @@ class PiceWiseMpcTest {
 
     dt_ = 1e-2;
     n_knots_ = 101;
-    pw_mpc_ = boost::make_shared<PiceWiseMpcDerived>(mc_model_, mc_params_, dt_, mc_mission_, n_knots_);
+    pw_mpc_ = boost::make_shared<PiceWiseMpcDerived>(mc_model_, mc_params_, mc_mission_);
+    pw_mpc_->setTimeStep(dt_);
   }
 
   ~PiceWiseMpcTest() {}
@@ -171,8 +169,7 @@ BOOST_AUTO_TEST_CASE(load_parameters_test, *boost::unit_test::tolerance(1e-7)) {
 BOOST_AUTO_TEST_CASE(initialize_tg_test, *boost::unit_test::tolerance(1e-7)) {
   PiceWiseMpcTest pw_mpc_test("takeoff.yaml");
 
-  pw_mpc_test.pw_mpc_->initializeTrajectoryGen(multicopter_mpc::SolverTypes::BoxFDDP,
-                                               multicopter_mpc::IntegratorTypes::Euler);
+  pw_mpc_test.pw_mpc_->initializeTrajectoryGen();
 
   // Testing the knots assignment once the split has been done
   BOOST_CHECK(pw_mpc_test.pw_mpc_->getTrajectoryGenerator()->getProblem() != nullptr);
@@ -465,7 +462,8 @@ BOOST_AUTO_TEST_CASE(update_terminal_cost_test, *boost::unit_test::tolerance(1e-
               ->get_costs()
               .find("pose_desired")
               ->second->cost);
-  BOOST_CHECK(cost_pose->get_reference<crocoddyl::FramePlacement>().placement == pw_mpc_test.pw_mpc_->getMission()->getWaypoints()[1].pose);
+  BOOST_CHECK(cost_pose->get_reference<crocoddyl::FramePlacement>().placement ==
+              pw_mpc_test.pw_mpc_->getMission()->getWaypoints()[1].pose);
   BOOST_CHECK(pw_mpc_test.pw_mpc_->getHasMotionRef() == true);
 }
 

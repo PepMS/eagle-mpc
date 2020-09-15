@@ -34,35 +34,37 @@ struct TrajectoryGeneratorParams {
 class TrajectoryGenerator : public OcpAbstract {
  public:
   TrajectoryGenerator(const boost::shared_ptr<pinocchio::Model> model,
-                      const boost::shared_ptr<MultiCopterBaseParams>& mc_params, const double& dt,
+                      const boost::shared_ptr<MultiCopterBaseParams>& mc_params,
                       const boost::shared_ptr<Mission>& mission);
   virtual ~TrajectoryGenerator();
 
   void loadParameters(const std::string& yaml_path) override;
-  void createProblem(const SolverTypes::Type& solver_type, const IntegratorTypes::Type& integrator_type) override;
   void setTimeStep(const double& dt) override;
 
   boost::shared_ptr<crocoddyl::CostModelAbstract> createCostStateRegularization();
   boost::shared_ptr<crocoddyl::CostModelAbstract> createCostControlRegularization();
 
-  void solve() override;
-  void solve(const std::vector<Eigen::VectorXd>& state_trajectory,
-             const std::vector<Eigen::VectorXd>& control_trajectory) override;
+  void solve(const std::vector<Eigen::VectorXd>& state_trajectory = crocoddyl::DEFAULT_VECTOR,
+             const std::vector<Eigen::VectorXd>& control_trajectory = crocoddyl::DEFAULT_VECTOR) override;
 
   const boost::shared_ptr<Mission> getMission() const;
   std::vector<Eigen::VectorXd> getStateTrajectory(const std::size_t& idx_init, const std::size_t& idx_end) const;
   std::vector<Eigen::VectorXd> getControlTrajectory(const std::size_t& idx_init, const std::size_t& idx_end) const;
   const Eigen::VectorXd& getState(const std::size_t& cursor) const;
   const Eigen::VectorXd& getControl(const std::size_t& cursor) const;
-  const boost::shared_ptr<const crocoddyl::SolverDDP> getSolver() const;
   const TrajectoryGeneratorParams& getParams() const;
+  
+  using OcpAbstract::createProblem;
 
- private:
+protected:
+  void createProblem(const SolverTypes::Type& solver_type, const IntegratorTypes::Type& integrator_type) override;
   void initializeDefaultParameters() override;
   boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> createRunningDifferentialModel(
       const WayPoint& waypoint);
   boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> createTerminalDifferentialModel(
       const WayPoint& waypoint, const bool& is_last_wp);
+
+  void setStateHover();
 
   boost::shared_ptr<Mission> mission_;
   Eigen::VectorXd state_hover_;
