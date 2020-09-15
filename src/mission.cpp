@@ -101,7 +101,7 @@ std::vector<Eigen::VectorXd> Mission::interpolateTrajectory(const std::string& i
   } else if (interpolation_type == "R3SO3") {
     return interpolateR3SO3();
   } else {
-    std::vector<Eigen::VectorXd> state_trajectory(n_knots_ - 1, x0_);
+    std::vector<Eigen::VectorXd> state_trajectory(n_knots_, x0_);
     return state_trajectory;
   }
 }

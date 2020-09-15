@@ -29,11 +29,12 @@ class OcpAbstract_wrap : public OcpAbstract, public bp::wrapper<OcpAbstract> {
 
   void setTimeStep(const double& dt) { return bp::call<void>(this->get_override("setTimeStep").ptr(), dt); }
 
-  void solve(const std::vector<Eigen::VectorXd>& state_trajectory,
-             const std::vector<Eigen::VectorXd>& control_trajectory) {
-    // return bp::call<void>(this->get_override("solve").ptr(), state_trajectory, control_trajectory);
-    return OcpAbstract::solve(state_trajectory, control_trajectory);
-  }
+  //   void solve(const std::vector<Eigen::VectorXd>& state_trajectory,
+  //              const std::vector<Eigen::VectorXd>& control_trajectory) {
+  //     // return bp::call<void>(this->get_override("solve").ptr(), state_trajectory, control_trajectory);
+  //     if (bp::override solve = )
+  //     return OcpAbstract::solve(state_trajectory, control_trajectory);
+  //   }
 
   void createProblem(const SolverTypes::Type& solver_type, const IntegratorTypes::Type& integrator_type) {
     return bp::call<void>(this->get_override("createProblem").ptr(), solver_type, integrator_type);
@@ -46,31 +47,31 @@ class OcpAbstract_wrap : public OcpAbstract, public bp::wrapper<OcpAbstract> {
   //   }
   //   return OcpAbstract::createProblem(solver_type, integrator_type, dt);
   // }
-  // void solve() {
-  //   if (bp::override solve = this->get_override("solve")) {
-  //     return bp::call<void>(solve.ptr());
+  //   void solve() {
+  //     if (bp::override solve = this->get_override("solve")) {
+  //       return bp::call<void>(solve.ptr());
+  //     }
+  //     std::cout << "Called solve void!" << std::endl;
+  //     return OcpAbstract::solve();
   //   }
-  //   std::cout << "Called solve void!" << std::endl;
-  //   return OcpAbstract::solve();
-  // }
-  // void default_solve() {
-  //   std::cout << "Called default solve void!" << std::endl;
-  //   return this->OcpAbstract::solve();
-  // }
+  //   void default_solve() {
+  //     std::cout << "Called default solve void!" << std::endl;
+  //     return this->OcpAbstract::solve();
+  //   }
 
-  // void solve(const std::vector<Eigen::VectorXd>& state_trajectory,
-  //            const std::vector<Eigen::VectorXd>& control_trajectory) {
-  //   if (bp::override solve = this->get_override("solve")) {
-  //     return bp::call<void>(solve.ptr(), state_trajectory, control_trajectory);
-  //   }
-  //   std::cout << "Called solve init!" << std::endl;
-  //   return OcpAbstract::solve(state_trajectory, control_trajectory);
-  // }
-  // void default_solve_2(const std::vector<Eigen::VectorXd>& state_trajectory,
-  //                      const std::vector<Eigen::VectorXd>& control_trajectory) {
-  //   std::cout << "Called solve init default!" << std::endl;
-  //   return this->OcpAbstract::solve(state_trajectory, control_trajectory);
-  // }
+  void solve(const std::vector<Eigen::VectorXd>& state_trajectory,
+             const std::vector<Eigen::VectorXd>& control_trajectory) {
+    if (bp::override solve = this->get_override("solve")) {
+      return bp::call<void>(solve.ptr(), state_trajectory, control_trajectory);
+    }
+    std::cout << "Called solve init!" << std::endl;
+    return OcpAbstract::solve(state_trajectory, control_trajectory);
+  }
+  void default_solve(const std::vector<Eigen::VectorXd>& state_trajectory,
+                     const std::vector<Eigen::VectorXd>& control_trajectory) {
+    std::cout << "Called solve init default!" << std::endl;
+    return this->OcpAbstract::solve(state_trajectory, control_trajectory);
+  }
 };
 
 void exposeOcpAbstract() {
@@ -105,7 +106,7 @@ void exposeOcpAbstract() {
       .def("loadParameters", pure_virtual(&OcpAbstract_wrap::loadParameters), bp::args("self", "yaml_path"))
       .def("setSolverCallbacks", &OcpAbstract_wrap::setSolverCallbacks, bp::args("self", "activated"))
       // .def("solve", solve_void, &OcpAbstract_wrap::default_solve, bp::args("self"))
-      .def("solve", &OcpAbstract_wrap::solve, bp::args("self", "state_trajectory", "control_trajectory"))
+      .def("solve", &OcpAbstract_wrap::solve, &OcpAbstract_wrap::default_solve, bp::args("self", "state_trajectory", "control_trajectory"))
       .def("setSolverIters", &OcpAbstract_wrap::setSolverIters, bp::args("self", "num_iters"))
       .def("setSolverStopTh", &OcpAbstract_wrap::setSolverStopTh, bp::args("self", "stop_th"))
       .add_property("model",
