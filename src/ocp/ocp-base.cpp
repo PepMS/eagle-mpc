@@ -18,8 +18,8 @@ OcpAbstract::OcpAbstract(const boost::shared_ptr<pinocchio::Model>& model,
   frame_base_link_id_ = model_->getFrameId(mc_params_->base_link_name_);
 
   solver_iters_ = 100;
-  solver_type_ = SolverTypes::BoxFDDP;
-  integrator_type_ = IntegratorTypes::Euler;
+  solver_type_ = SolverTypes::NbSolverTypes;
+  integrator_type_ = IntegratorTypes::NbIntegratorTypes;
   n_knots_ = 100;
   dt_ = 0.0;
 }
@@ -31,7 +31,12 @@ void OcpAbstract::initializeDefaultParameters(){};
 void OcpAbstract::createProblem(const SolverTypes::Type& solver_type, const IntegratorTypes::Type& integrator_type,
                                 const double& dt) {
   assert(dt > 0.0);
+  assert(solver_type < SolverTypes::NbSolverTypes);
+  assert(integrator_type < IntegratorTypes::NbIntegratorTypes);
+
   setTimeStep(dt);
+  solver_type_ = solver_type;
+  integrator_type_ = integrator_type;
   createProblem(solver_type, integrator_type);
 }
 
@@ -142,5 +147,6 @@ const std::size_t& OcpAbstract::getKnots() const {
   }
   return n_knots_;
 }
+const IntegratorTypes::Type& OcpAbstract::getIntegratorType() const { return integrator_type_; }
 
 }  // namespace multicopter_mpc

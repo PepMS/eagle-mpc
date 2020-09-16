@@ -17,6 +17,7 @@ std::string RailMpc::getFactoryName() { return "RailMpc"; }
 boost::shared_ptr<MpcAbstract> RailMpc::createMpcController(const boost::shared_ptr<pinocchio::Model>& model,
                                                             const boost::shared_ptr<MultiCopterBaseParams>& mc_params,
                                                             const boost::shared_ptr<Mission>& mission) {
+  std::cout << "Created Rail MPC Controller \n";
   return boost::make_shared<RailMpc>(model, mc_params, mission);
 }
 
@@ -33,6 +34,8 @@ void RailMpc::initializeDefaultParameters() {
 }
 
 void RailMpc::loadParameters(const std::string& yaml_path) {
+  MpcAbstract::loadParameters(yaml_path);
+
   yaml_parser::ParserYAML yaml_params(yaml_path, "", true);
   yaml_parser::ParamsServer server(yaml_params.getParams());
 
@@ -47,6 +50,12 @@ void RailMpc::loadParameters(const std::string& yaml_path) {
 
   params_.w_state = server.getParam<double>("ocp/cost_state_weight");
   params_.w_control = server.getParam<double>("ocp/cost_control_weight");
+  try {
+    double dt = server.getParam<double>("ocp/dt");
+    setTimeStep(dt);
+  } catch (const std::exception& e) {
+    std::cout << "TRAJECTORY GENERATOR PARAMS. dt not found, setting default: " << dt_ << '\n';
+  }
 }
 
 void RailMpc::createProblem(const SolverTypes::Type& solver_type, const IntegratorTypes::Type& integrator_type) {

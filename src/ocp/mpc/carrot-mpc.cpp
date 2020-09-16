@@ -17,6 +17,7 @@ std::string CarrotMpc::getFactoryName() { return "CarrotMpc"; }
 boost::shared_ptr<MpcAbstract> CarrotMpc::createMpcController(
     const boost::shared_ptr<pinocchio::Model>& model, const boost::shared_ptr<MultiCopterBaseParams>& mc_params,
     const boost::shared_ptr<Mission>& mission) {
+  std::cout << "Created Carrot MPC Controller \n";
   return boost::make_shared<CarrotMpc>(model, mc_params, mission);
 }
 
@@ -39,6 +40,8 @@ void CarrotMpc::initializeDefaultParameters() {
 }
 
 void CarrotMpc::loadParameters(const std::string& yaml_path) {
+  MpcAbstract::loadParameters(yaml_path);
+
   yaml_parser::ParserYAML yaml_params(yaml_path, "", true);
   yaml_parser::ParamsServer server(yaml_params.getParams());
 
@@ -57,6 +60,13 @@ void CarrotMpc::loadParameters(const std::string& yaml_path) {
   params_.w_vel_running = server.getParam<double>("ocp/cost_running_vel_weight");
   params_.w_pos_terminal = server.getParam<double>("ocp/cost_terminal_pos_weight");
   params_.w_vel_terminal = server.getParam<double>("ocp/cost_terminal_vel_weight");
+
+  try {
+    double dt = server.getParam<double>("ocp/dt");
+    setTimeStep(dt);
+  } catch (const std::exception& e) {
+    std::cout << "TRAJECTORY GENERATOR PARAMS. dt not found, setting default: " << dt_ << '\n';
+  }
 }
 
 void CarrotMpc::initializeTerminalWeights() {
@@ -81,10 +91,7 @@ const bool CarrotMpc::existsTerminalWeight() {
 void CarrotMpc::createProblem(const SolverTypes::Type& solver_type, const IntegratorTypes::Type& integrator_type) {
   assert(dt_ > 0.0);
   assert(n_knots_ > 0);
-  
-  solver_type_ = solver_type;
-  integrator_type_ = integrator_type;
-  
+
   has_motion_ref_ = false;
   initializeTrajectoryGenerator();
   initializeTerminalWeights();

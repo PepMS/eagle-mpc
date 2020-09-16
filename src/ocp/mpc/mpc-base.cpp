@@ -11,27 +11,91 @@ MpcAbstract::MpcAbstract(const boost::shared_ptr<pinocchio::Model>& model,
   trajectory_generator_ = boost::make_shared<TrajectoryGenerator>(model_, mc_params_, mission);
 
   trajectory_generator_specs_.yaml_path = "";
-  trajectory_generator_specs_.initial_guess_type = "";
+  trajectory_generator_specs_.initial_guess = "";
+  trajectory_generator_specs_.integrator = IntegratorTypes::NbIntegratorTypes;
+  trajectory_generator_specs_.solver = SolverTypes::NbSolverTypes;
 }
 
 MpcAbstract::~MpcAbstract() {}
+
+void MpcAbstract::loadParameters(const std::string& yaml_path) {
+  yaml_parser::ParserYAML yaml_params(yaml_path, "", true);
+  yaml_parser::ParamsServer server(yaml_params.getParams());
+
+  try {
+    std::string solver = server.getParam<std::string>("trajectory_generator/solver");
+    if (solver == "BoxFDDP") {
+      trajectory_generator_specs_.solver = SolverTypes::BoxFDDP;
+    } else {
+      trajectory_generator_specs_.solver = SolverTypes::NbSolverTypes;
+    }
+  } catch (const std::exception& e) {
+    std::cout << "TRAJECTORY GENERATOR PARAMS. Solver type not found. \n";
+  }
+
+  try {
+    std::string integrator = server.getParam<std::string>("trajectory_generator/integrator");
+    if (integrator == "Euler") {
+      trajectory_generator_specs_.integrator = IntegratorTypes::Euler;
+    } else if (integrator == "RK4") {
+      trajectory_generator_specs_.integrator = IntegratorTypes::RK4;
+    } else {
+      trajectory_generator_specs_.integrator = IntegratorTypes::NbIntegratorTypes;
+    }
+  } catch (const std::exception& e) {
+    std::cout << "TRAJECTORY GENERATOR PARAMS. Integrator type not found. \n";
+  }
+
+  try {
+    std::string path = server.getParam<std::string>("trajectory_generator/yaml_path");
+    trajectory_generator_specs_.yaml_path = path;
+  } catch (const std::exception& e) {
+    std::cout << "TRAJECTORY GENERATOR PARAMS. yaml_path not found. \n";
+  }
+
+  try {
+    n_knots_ = server.getParam<std::size_t>("ocp/n_knots");
+  } catch (const std::exception& e) {
+    std::cout << "MPC CONTROLLER PARAMS. n_knots not found, set to default: " << n_knots_ << std::endl;
+  }
+}
 
 void MpcAbstract::initializeTrajectoryGenerator() {
   if (trajectory_generator_specs_.yaml_path != "") {
     trajectory_generator_->loadParameters(trajectory_generator_specs_.yaml_path);
   }
-  trajectory_generator_->createProblem(solver_type_, integrator_type_, dt_);
+
+  SolverTypes::Type solver = (trajectory_generator_specs_.solver != SolverTypes::NbSolverTypes)
+                                 ? trajectory_generator_specs_.solver
+                                 : solver_type_;
+  IntegratorTypes::Type integrator = (trajectory_generator_specs_.integrator != IntegratorTypes::NbIntegratorTypes)
+                                         ? trajectory_generator_specs_.integrator
+                                         : integrator_type_;
+  trajectory_generator_->createProblem(solver, integrator, dt_);
   trajectory_generator_->setSolverIters(300);
   std::vector<Eigen::VectorXd> state_trajectory =
-      trajectory_generator_->getMission()->interpolateTrajectory(trajectory_generator_specs_.initial_guess_type);
+      trajectory_generator_->getMission()->interpolateTrajectory(trajectory_generator_specs_.initial_guess);
   std::vector<Eigen::VectorXd> control_trajectory(trajectory_generator_->getKnots() - 1,
                                                   Eigen::VectorXd::Zero(actuation_->get_nu()));
   trajectory_generator_->solve(state_trajectory, control_trajectory);
   generateMission();
 }
 
-void MpcAbstract::generateMission() {
-  mission_ = trajectory_generator_->getMission();
+void MpcAbstract::generateMission() { mission_ = trajectory_generator_->getMission(); }
+
+void MpcAbstract::setNumberKnots(const std::size_t& n_knots) {
+  n_knots_ = n_knots;
+
+  if (problem_ != nullptr) {
+    diff_models_running_.clear();
+    diff_model_terminal_ = nullptr;
+
+    int_models_running_.clear();
+    int_model_terminal_ = nullptr;
+
+    problem_ = nullptr;
+    solver_ = nullptr;
+  }
 }
 
 const Eigen::VectorXd& MpcAbstract::getControls(const std::size_t& idx) const { return solver_->get_us()[idx]; }

@@ -20,6 +20,10 @@ class MpcAbstract : public OcpAbstract {
 
   virtual void updateProblem(const std::size_t idx_trajectory) = 0;
 
+  virtual void loadParameters(const std::string& yaml_path) override;
+
+  void setNumberKnots(const std::size_t& n_knots);
+
   const Eigen::VectorXd& getControls(const std::size_t& idx = 0) const;
   const Eigen::VectorXd& getFeedForwardGains(const std::size_t& idx = 0) const;
   const Eigen::MatrixXd& getFeedBackGains(const std::size_t& idx = 0) const;
@@ -37,7 +41,9 @@ class MpcAbstract : public OcpAbstract {
 
   struct TrajectoryGeneratorSpecs {
     std::string yaml_path;
-    std::string initial_guess_type;
+    std::string initial_guess;
+    SolverTypes::Type solver;
+    IntegratorTypes::Type integrator;
   } trajectory_generator_specs_;
 };
 

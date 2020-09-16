@@ -49,11 +49,10 @@ void TrajectoryGenerator::loadParameters(const std::string& yaml_path) {
   params_.w_pos_terminal = server.getParam<double>("ocp/cost_terminal_pos_weight");
   params_.w_vel_terminal = server.getParam<double>("ocp/cost_terminal_vel_weight");
 
-  dt_ = server.getParam<double>("ocp/dt");
-  if (server.getParam<std::string>("ocp/integrator") == "Euler") {
-    integrator_type_ = IntegratorTypes::Euler;
-  } else if (server.getParam<std::string>("ocp/integrator") == "RK4") {
-    integrator_type_ = IntegratorTypes::RK4;
+  try {
+    dt_ = server.getParam<double>("ocp/dt");
+  } catch (const std::exception& e) {
+    std::cout << "TRAJECTORY GENERATOR PARAMS. dt not found, setting default: " << dt_ << '\n';
   }
 }
 
@@ -61,9 +60,6 @@ void TrajectoryGenerator::createProblem(const SolverTypes::Type& solver_type,
                                         const IntegratorTypes::Type& integrator_type) {
   assert(dt_ > 0.0);
   assert(n_knots_ == mission_->getTotalKnots() && n_knots_ > 0);
-
-  integrator_type_ = integrator_type;
-  solver_type_ = solver_type;
 
   for (std::vector<WayPoint>::const_iterator wp = mission_->getWaypoints().cbegin();
        wp != mission_->getWaypoints().cend(); ++wp) {
@@ -139,8 +135,8 @@ TrajectoryGenerator::createRunningDifferentialModel(const WayPoint& waypoint) {
       boost::make_shared<crocoddyl::CostModelSum>(state_, actuation_->get_nu());
 
   // Regularitzations
-  cost_model_running->addCost("state_reg", cost_reg_state, params_.w_state_running);        
-  cost_model_running->addCost("control_reg", cost_reg_control, params_.w_control_running);  
+  cost_model_running->addCost("state_reg", cost_reg_state, params_.w_state_running);
+  cost_model_running->addCost("control_reg", cost_reg_control, params_.w_control_running);
 
   // Diff & Integrated models
   boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model_running =

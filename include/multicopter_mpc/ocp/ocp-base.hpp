@@ -35,7 +35,7 @@ struct SolverTypes {
 };
 
 struct IntegratorTypes {
-  enum Type { Euler, RK4 };
+  enum Type { Euler, RK4, NbIntegratorTypes};
 };
 
 class OcpAbstract {
@@ -82,6 +82,7 @@ class OcpAbstract {
   const Eigen::VectorXd& getInitialState() const;
   const int& getBaseLinkId() const;
   const std::size_t& getKnots() const;
+  const IntegratorTypes::Type& getIntegratorType() const;
 
 
  protected:
