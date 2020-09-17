@@ -1,5 +1,7 @@
 #include "multicopter_mpc/ocp/mpc/rail-mpc.hpp"
 
+#include "multicopter_mpc/utils/log.hpp"
+
 namespace multicopter_mpc {
 
 RailMpc::RailMpc(const boost::shared_ptr<pinocchio::Model>& model,
@@ -17,7 +19,7 @@ std::string RailMpc::getFactoryName() { return "RailMpc"; }
 boost::shared_ptr<MpcAbstract> RailMpc::createMpcController(const boost::shared_ptr<pinocchio::Model>& model,
                                                             const boost::shared_ptr<MultiCopterBaseParams>& mc_params,
                                                             const boost::shared_ptr<Mission>& mission) {
-  std::cout << "Created Rail MPC Controller \n";
+  MMPC_INFO << "RailMpc controller created";
   return boost::make_shared<RailMpc>(model, mc_params, mission);
 }
 
@@ -54,7 +56,7 @@ void RailMpc::loadParameters(const std::string& yaml_path) {
     double dt = server.getParam<double>("ocp/dt");
     setTimeStep(dt);
   } catch (const std::exception& e) {
-    std::cout << "TRAJECTORY GENERATOR PARAMS. dt not found, setting default: " << dt_ << '\n';
+    MMPC_WARN << "MPC Controller params. dt not found, setting default: " << dt_;
   }
 }
 
@@ -180,6 +182,8 @@ const RailMpcParams& RailMpc::getParams() const { return params_; }
 void RailMpc::setReferences(const std::vector<Eigen::VectorXd>& state_trajectory,
                             const std::vector<Eigen::VectorXd>& control_trajectory) {
   assert(state_ref_.size() == state_trajectory.size());
+  state_ref_.resize(n_knots_, state_->zero());
+  control_ref_.resize(n_knots_ - 1, Eigen::VectorXd::Zero(4));
   std::copy(state_trajectory.begin(), state_trajectory.end(), state_ref_.begin());
   std::copy(control_trajectory.begin(), control_trajectory.end(), control_ref_.begin());
 

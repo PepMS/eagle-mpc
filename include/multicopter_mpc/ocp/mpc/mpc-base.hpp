@@ -22,7 +22,7 @@ class MpcAbstract : public OcpAbstract {
 
   virtual void loadParameters(const std::string& yaml_path) override;
 
-  void setNumberKnots(const std::size_t& n_knots);
+  virtual void setNumberKnots(const std::size_t& n_knots);
 
   const Eigen::VectorXd& getControls(const std::size_t& idx = 0) const;
   const Eigen::VectorXd& getFeedForwardGains(const std::size_t& idx = 0) const;
@@ -31,7 +31,7 @@ class MpcAbstract : public OcpAbstract {
   const boost::shared_ptr<Mission> getMission() const;
 
   using OcpAbstract::createProblem;
-  
+
  protected:
   void initializeTrajectoryGenerator();
   virtual void generateMission();

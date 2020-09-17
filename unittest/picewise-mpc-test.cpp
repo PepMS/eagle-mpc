@@ -70,6 +70,7 @@ class PiceWiseMpcTest {
     n_knots_ = 101;
     pw_mpc_ = boost::make_shared<PiceWiseMpcDerived>(mc_model_, mc_params_, mc_mission_);
     pw_mpc_->setTimeStep(dt_);
+    pw_mpc_->setNumberKnots(n_knots_);
   }
 
   ~PiceWiseMpcTest() {}
@@ -110,7 +111,6 @@ BOOST_AUTO_TEST_CASE(constructor_test, *boost::unit_test::tolerance(1e-7)) {
               pw_mpc_test.pw_mpc_->getBaseLinkId());
 
   // Low Level constructors
-  BOOST_CHECK(pw_mpc_test.pw_mpc_->getMission() != nullptr);
   BOOST_CHECK(pw_mpc_test.n_knots_ == pw_mpc_test.pw_mpc_->getKnots());
   BOOST_CHECK(pw_mpc_test.pw_mpc_->getTrajectoryGenerator() != nullptr);
   BOOST_CHECK(pw_mpc_test.pw_mpc_->getTrajectoryGenerator()->getMission() == pw_mpc_test.mc_mission_);

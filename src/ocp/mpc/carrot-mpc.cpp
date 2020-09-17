@@ -1,5 +1,7 @@
 #include "multicopter_mpc/ocp/mpc/carrot-mpc.hpp"
 
+#include "multicopter_mpc/utils/log.hpp"
+
 namespace multicopter_mpc {
 
 CarrotMpc::CarrotMpc(const boost::shared_ptr<pinocchio::Model>& model,
@@ -7,7 +9,6 @@ CarrotMpc::CarrotMpc(const boost::shared_ptr<pinocchio::Model>& model,
                      const boost::shared_ptr<Mission>& mission)
     : MpcAbstract(model, mc_params, mission) {
   initializeDefaultParameters();
-  terminal_weights_idx_ = std::vector<bool>(n_knots_, false);
 }
 
 CarrotMpc::~CarrotMpc() {}
@@ -17,7 +18,7 @@ std::string CarrotMpc::getFactoryName() { return "CarrotMpc"; }
 boost::shared_ptr<MpcAbstract> CarrotMpc::createMpcController(
     const boost::shared_ptr<pinocchio::Model>& model, const boost::shared_ptr<MultiCopterBaseParams>& mc_params,
     const boost::shared_ptr<Mission>& mission) {
-  std::cout << "Created Carrot MPC Controller \n";
+  MMPC_INFO << "Carrot MPC controller created";
   return boost::make_shared<CarrotMpc>(model, mc_params, mission);
 }
 
@@ -65,12 +66,13 @@ void CarrotMpc::loadParameters(const std::string& yaml_path) {
     double dt = server.getParam<double>("ocp/dt");
     setTimeStep(dt);
   } catch (const std::exception& e) {
-    std::cout << "TRAJECTORY GENERATOR PARAMS. dt not found, setting default: " << dt_ << '\n';
+    MMPC_WARN << "TRAJECTORY GENERATOR PARAMS. dt not found, setting default: " << dt_;
   }
 }
 
 void CarrotMpc::initializeTerminalWeights() {
   std::size_t last_wp_idx = 0;
+  terminal_weights_idx_.resize(n_knots_, false);
   while (last_wp_idx < mission_->getWpTrajIdx().size() && n_knots_ - 1 >= mission_->getWpTrajIdx()[last_wp_idx]) {
     terminal_weights_idx_[mission_->getWpTrajIdx()[last_wp_idx]] = true;
     ++last_wp_idx;
@@ -258,6 +260,22 @@ void CarrotMpc::setTimeStep(const double& dt) {
     problem_ = nullptr;
     solver_ = nullptr;
   }
+}
+
+void CarrotMpc::setNumberKnots(const std::size_t& n_knots) {
+  n_knots_ = n_knots;
+
+  if (problem_ != nullptr) {
+    diff_models_running_.clear();
+    diff_model_terminal_ = nullptr;
+
+    int_models_running_.clear();
+    int_model_terminal_ = nullptr;
+
+    problem_ = nullptr;
+    solver_ = nullptr;
+  }
+  terminal_weights_idx_.resize(n_knots_, false);
 }
 
 const crocoddyl::FramePlacement& CarrotMpc::getPoseRef() const { return pose_ref_; }

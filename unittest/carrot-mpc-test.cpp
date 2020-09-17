@@ -72,6 +72,7 @@ class CarrotMpcTest {
     n_knots_ = 101;
     carrot_mpc_ = boost::make_shared<CarrotMpcDerived>(mc_model_, mc_params_, mc_mission_);
     carrot_mpc_->setTimeStep(dt_);
+    carrot_mpc_->setNumberKnots(n_knots_);
   }
 
   ~CarrotMpcTest() {}

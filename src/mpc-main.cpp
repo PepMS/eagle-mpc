@@ -1,5 +1,7 @@
 #include "multicopter_mpc/mpc-main.hpp"
 
+#include "multicopter_mpc/utils/log.hpp"
+
 namespace multicopter_mpc {
 MpcMain::MpcMain(const MultiCopterTypes::Type& mc_type, const std::string& mission_name,
                  const std::string& mpc_yaml_path)
@@ -7,6 +9,7 @@ MpcMain::MpcMain(const MultiCopterTypes::Type& mc_type, const std::string& missi
   std::string model_description_path;
   std::string model_yaml_path;
   std::string mission_yaml_path = MULTICOPTER_MPC_MISSION_DIR "/" + mission_name;
+  MMPC_INFO << "MULTICOPTER MPC: MPC Main initialization complete";
 
   switch (mc_type_) {
     case MultiCopterTypes::Iris:
@@ -46,7 +49,7 @@ MpcMain::MpcMain(const MultiCopterTypes::Type& mc_type, const std::string& missi
 
   // Do check to ensure that the guess of the solver is right
   trajectory_cursor_ = mpc_controller_->getKnots() - 1;
-  std::cout << "MULTICOPTER MPC: MPC Main initialization complete" << std::endl;
+  MMPC_INFO << "MULTICOPTER MPC: MPC Main initialization complete";
 }
 
 MpcMain::MpcMain() {}
@@ -97,11 +100,6 @@ void MpcMain::runMpcStep() {
   // 4. update problem
   ++trajectory_cursor_;
   mpc_controller_->updateProblem(trajectory_cursor_);
-
-  // Print state when reached the final knot
-  if (trajectory_cursor_ == mpc_controller_->getKnots() + mpc_controller_->getMission()->getTotalKnots()) {
-    std::cout << "End of trajectory reached. State: \n" << state_ << std::endl;
-  }
 }
 
 void MpcMain::thrustToSpeed(const Eigen::Ref<const Eigen::VectorXd>& motors_thrust,

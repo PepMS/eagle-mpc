@@ -30,12 +30,15 @@ class CarrotMpc : public MpcAbstract {
 
   const bool existsTerminalWeight();
 
+  virtual void setNumberKnots(const std::size_t& n_knots) override;
+
   const crocoddyl::FramePlacement& getPoseRef() const;
   const crocoddyl::FrameMotion& getVelocityRef() const;
   const TrajectoryGeneratorParams& getParams() const;
   const Eigen::VectorXd& getControls(const std::size_t& idx = 0) const;
 
   using OcpAbstract::createProblem;
+
  protected:
   void createProblem(const SolverTypes::Type& solver_type, const IntegratorTypes::Type& integrator_type) override;
   void initializeDefaultParameters() override;

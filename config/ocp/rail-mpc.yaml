@@ -5,7 +5,7 @@ trajectory_generator:
   initial_guess: "SE3"
 ocp:
   dt: 4e-3
-  n_knots: 50
+  n_knots: 101
   cost_state_weight: 1
   cost_control_weight: 1
   $state_weights:

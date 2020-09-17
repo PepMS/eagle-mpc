@@ -1,5 +1,6 @@
 #include "multicopter_mpc/multicopter-base-params.hpp"
 
+#include "multicopter_mpc/utils/log.hpp"
 namespace multicopter_mpc {
 
 MultiCopterBaseParams::MultiCopterBaseParams() {}
@@ -13,7 +14,8 @@ MultiCopterBaseParams::MultiCopterBaseParams(double cf, double cm, Eigen::Matrix
       min_thrust_(min_th),
       base_link_name_(base_link) {}
 
-// MultiCopterBaseParams::MultiCopterBaseParams(double cf, double cm, Eigen::MatrixXd tau_f, double max_th, double min_th,
+// MultiCopterBaseParams::MultiCopterBaseParams(double cf, double cm, Eigen::MatrixXd tau_f, double max_th, double
+// min_th,
 //                                              Eigen::VectorXd max_torque, Eigen::VectorXd min_torque,
 //                                              const std::string& base_link)
 //     : cf_(cf),
@@ -57,16 +59,11 @@ void MultiCopterBaseParams::fill(const std::string& yaml_path) {
   }
   tau_f_ = S;
 
-  try
-  {
+  try {
     max_torque_ = server.getParam<Eigen::VectorXd>("arm/max_torque");
     min_torque_ = server.getParam<Eigen::VectorXd>("arm/min_torque");
+  } catch (const std::exception& e) {
+    MMPC_INFO << "Multicopter params: Multirotor detected, no arm.";
   }
-  catch(const std::exception& e)
-  {
-    std::cout << "Multicopter params: Multirotor detected, no arm." << '\n';
-  }
-  
-  
 }
 }  // namespace multicopter_mpc

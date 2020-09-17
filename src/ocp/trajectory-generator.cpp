@@ -1,5 +1,6 @@
 #include "multicopter_mpc/ocp/trajectory-generator.hpp"
 
+#include "multicopter_mpc/utils/log.hpp"
 namespace multicopter_mpc {
 
 TrajectoryGenerator::TrajectoryGenerator(const boost::shared_ptr<pinocchio::Model> model,
@@ -52,7 +53,7 @@ void TrajectoryGenerator::loadParameters(const std::string& yaml_path) {
   try {
     dt_ = server.getParam<double>("ocp/dt");
   } catch (const std::exception& e) {
-    std::cout << "TRAJECTORY GENERATOR PARAMS. dt not found, setting default: " << dt_ << '\n';
+    MMPC_WARN << "TRAJECTORY GENERATOR PARAMS. dt not found, setting default: " << dt_ << '\n';
   }
 }
 

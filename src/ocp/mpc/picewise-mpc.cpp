@@ -1,5 +1,7 @@
 #include "multicopter_mpc/ocp/mpc/picewise-mpc.hpp"
 
+#include "multicopter_mpc/utils/log.hpp"
+
 namespace multicopter_mpc {
 
 PiceWiseMpc::PiceWiseMpc(const boost::shared_ptr<pinocchio::Model>& model,
@@ -16,6 +18,7 @@ std::string PiceWiseMpc::getFactoryName() { return "PiceWiseMpc"; }
 boost::shared_ptr<MpcAbstract> PiceWiseMpc::createMpcController(
     const boost::shared_ptr<pinocchio::Model>& model, const boost::shared_ptr<MultiCopterBaseParams>& mc_params,
     const boost::shared_ptr<Mission>& mission) {
+  MMPC_INFO << "PieceWise MPC controller created";
   return boost::make_shared<PiceWiseMpc>(model, mc_params, mission);
 }
 
@@ -38,6 +41,8 @@ void PiceWiseMpc::initializeDefaultParameters() {
 }
 
 void PiceWiseMpc::loadParameters(const std::string& yaml_path) {
+  MpcAbstract::loadParameters(yaml_path);
+
   yaml_parser::ParserYAML yaml_params(yaml_path, "", true);
   yaml_parser::ParamsServer server(yaml_params.getParams());
 
@@ -56,6 +61,13 @@ void PiceWiseMpc::loadParameters(const std::string& yaml_path) {
   params_.w_vel_running = server.getParam<double>("ocp/cost_running_vel_weight");
   params_.w_pos_terminal = server.getParam<double>("ocp/cost_terminal_pos_weight");
   params_.w_vel_terminal = server.getParam<double>("ocp/cost_terminal_vel_weight");
+
+  try {
+    double dt = server.getParam<double>("ocp/dt");
+    setTimeStep(dt);
+  } catch (const std::exception& e) {
+    MMPC_WARN << "TRAJECTORY GENERATOR PARAMS. dt not found, setting default: " << dt_;
+  }
 }
 
 void PiceWiseMpc::generateMission() {
@@ -112,6 +124,8 @@ void PiceWiseMpc::createProblem(const SolverTypes::Type& solver_type, const Inte
 
   has_motion_ref_ = false;
   initializeTrajectoryGenerator();
+
+  // generateMission();
 
   assert(dt_ == trajectory_generator_->getTimeStep());
 

@@ -1,5 +1,7 @@
 #include "multicopter_mpc/ocp/ocp-base.hpp"
 
+#include "multicopter_mpc/utils/log.hpp"
+
 namespace multicopter_mpc {
 
 OcpAbstract::OcpAbstract(const boost::shared_ptr<pinocchio::Model>& model,
@@ -50,7 +52,7 @@ void OcpAbstract::setSolver(const SolverTypes::Type& solver_type) {
 
   switch (solver_type) {
     case SolverTypes::BoxFDDP: {
-      std::cout << "Solver set: BoxFDDP" << std::endl;
+      MMPC_INFO << "Solver set: BoxFDDP";
       solver_ = boost::make_shared<crocoddyl::SolverBoxFDDP>(problem_);
       break;
     }
@@ -58,7 +60,7 @@ void OcpAbstract::setSolver(const SolverTypes::Type& solver_type) {
       break;
     }
     default:
-      std::cout << "Solver set: BoxFDDP" << std::endl;
+      MMPC_INFO << "Solver set: BoxFDDP";
       solver_ = boost::make_shared<crocoddyl::SolverBoxFDDP>(problem_);
       break;
   }
@@ -143,7 +145,7 @@ const Eigen::VectorXd& OcpAbstract::getInitialState() const { return state_initi
 const int& OcpAbstract::getBaseLinkId() const { return frame_base_link_id_; }
 const std::size_t& OcpAbstract::getKnots() const {
   if (n_knots_ == 0) {
-    std::cout << "WARN: number of knots is 0" << std::endl;
+    MMPC_WARN << "number of knots is 0";
   }
   return n_knots_;
 }

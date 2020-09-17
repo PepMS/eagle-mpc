@@ -1,5 +1,7 @@
 #include "multicopter_mpc/ocp/mpc/mpc-base.hpp"
 
+#include "multicopter_mpc/utils/log.hpp"
+
 namespace multicopter_mpc {
 MpcAbstract::MpcAbstract(const boost::shared_ptr<pinocchio::Model>& model,
                          const boost::shared_ptr<MultiCopterBaseParams>& mc_params,
@@ -30,7 +32,7 @@ void MpcAbstract::loadParameters(const std::string& yaml_path) {
       trajectory_generator_specs_.solver = SolverTypes::NbSolverTypes;
     }
   } catch (const std::exception& e) {
-    std::cout << "TRAJECTORY GENERATOR PARAMS. Solver type not found. \n";
+    MMPC_WARN << "TRAJECTORY GENERATOR PARAMS. Solver type not found.";
   }
 
   try {
@@ -43,20 +45,21 @@ void MpcAbstract::loadParameters(const std::string& yaml_path) {
       trajectory_generator_specs_.integrator = IntegratorTypes::NbIntegratorTypes;
     }
   } catch (const std::exception& e) {
-    std::cout << "TRAJECTORY GENERATOR PARAMS. Integrator type not found. \n";
+    MMPC_WARN << "TRAJECTORY GENERATOR PARAMS. Integrator type not found.";
   }
 
   try {
     std::string path = server.getParam<std::string>("trajectory_generator/yaml_path");
     trajectory_generator_specs_.yaml_path = path;
   } catch (const std::exception& e) {
-    std::cout << "TRAJECTORY GENERATOR PARAMS. yaml_path not found. \n";
+    MMPC_WARN << "TRAJECTORY GENERATOR PARAMS. yaml_path not found.";
   }
 
   try {
-    n_knots_ = server.getParam<std::size_t>("ocp/n_knots");
+    n_knots_ = server.getParam<int>("ocp/n_knots");
+    MMPC_INFO << "MPC CONTROLLER PARAMS. n_knots set to: " << n_knots_;
   } catch (const std::exception& e) {
-    std::cout << "MPC CONTROLLER PARAMS. n_knots not found, set to default: " << n_knots_ << std::endl;
+    MMPC_WARN << "MPC CONTROLLER PARAMS. n_knots not found, set to default: " << n_knots_;
   }
 }
 
