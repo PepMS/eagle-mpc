@@ -9,8 +9,6 @@
 
 #include <string>
 
-// #include <Eigen/Core>
-
 #include "pinocchio/parsers/urdf.hpp"
 #include "pinocchio/multibody/model.hpp"
 
@@ -33,36 +31,50 @@ struct MultiCopterTypes {
 class MpcMain {
  public:
   MpcMain();
-  MpcMain(const MultiCopterTypes::Type& mc_type, const SolverTypes::Type& solver_type, const std::string& mission_name,
-          const std::string& mpc_type);
+  MpcMain(const MultiCopterTypes::Type& mc_type, const std::string& mission_name, const std::string& mpc_yaml_path);
   ~MpcMain();
 
-  const boost::shared_ptr<const MpcAbstract> getMpcController();
   void setCurrentState(const Eigen::Ref<Eigen::VectorXd>& current_state);
-  const Eigen::VectorXd& runMpcStep();
+  void runMpcStep();
+
+  void thrustToSpeed(const Eigen::Ref<const Eigen::VectorXd>& motors_thrust, Eigen::Ref<Eigen::VectorXd> motors_speed);
+
+  const boost::shared_ptr<const MpcAbstract> getMpcController();
+  const Eigen::VectorXd& getState();
+  const Eigen::VectorXd& getMotorsSpeed();
+  const Eigen::VectorXd& getMotorsThrust();
+  const Eigen::VectorXd& getFeedForwardGains();
+  const Eigen::MatrixXd& getFeedBackGains();
+  void getStateDiff(const Eigen::Ref<const Eigen::VectorXd>& state0, const Eigen::Ref<const Eigen::VectorXd>& state1,
+                    Eigen::Ref<Eigen::VectorXd> state_diff);
 
  private:
-  void computeSpeedControls();
+  void loadParameters(const std::string& yaml_path);
+  void initializeMpcController();
+  // void computeSpeedControls();
 
   MultiCopterTypes::Type mc_type_;
-  SolverTypes::Type solver_type_;
 
   boost::shared_ptr<pinocchio::Model> model_;
   boost::shared_ptr<MultiCopterBaseParams> mc_params_;
   boost::shared_ptr<Mission> mission_;
 
-  double dt_;
-
-  // boost::shared_ptr<LowLevelController> low_level_controller_;
   boost::shared_ptr<MpcAbstract> mpc_controller_;
-  std::size_t mpc_controller_knots_;
 
-  Eigen::VectorXd current_state_;
-  Eigen::VectorXd next_state_;
-  Eigen::VectorXd current_motor_thrust_;
-  Eigen::VectorXd current_motor_speed_;
-  Eigen::VectorXd next_control_;
+  Eigen::VectorXd state_;
+  Eigen::VectorXd motor_thrust_;
+  Eigen::VectorXd motor_speed_;
+  Eigen::VectorXd ff_gains_;
+  Eigen::MatrixXd fb_gains_;
   std::size_t trajectory_cursor_;
+
+  struct MpcControllerSpecs {
+    std::string type;
+    std::string yaml_path;
+    SolverTypes::Type solver;
+    IntegratorTypes::Type integrator;
+  } mpc_controller_specs_;
+
 };
 
 }  // namespace multicopter_mpc

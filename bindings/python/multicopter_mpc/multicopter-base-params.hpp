@@ -45,7 +45,15 @@ void exposeMultiCopterBaseParams() {
       .add_property(
           "base_link_name",
           bp::make_getter(&MultiCopterBaseParams::base_link_name_, bp::return_value_policy<bp::return_by_value>()),
-          bp::make_setter(&MultiCopterBaseParams::base_link_name_), "base link name");
+          bp::make_setter(&MultiCopterBaseParams::base_link_name_), "base link name")
+      .add_property(
+          "max_torque",
+          bp::make_getter(&MultiCopterBaseParams::max_torque_, bp::return_value_policy<bp::return_by_value>()),
+          bp::make_setter(&MultiCopterBaseParams::max_torque_), "max torque for arm joints")
+      .add_property(
+          "min_torque",
+          bp::make_getter(&MultiCopterBaseParams::min_torque_, bp::return_value_policy<bp::return_by_value>()),
+          bp::make_setter(&MultiCopterBaseParams::min_torque_), "min torque for arm joints");
   // .add_property(
   //     "max_torque",
   //     bp::make_getter(&MultiCopterBaseParams::max_torque_, bp::return_value_policy<bp::return_by_value>()),

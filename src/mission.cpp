@@ -7,7 +7,10 @@ Mission::Mission(const std::size_t& nx) {
 }
 Mission::~Mission() {}
 
-void Mission::fillWaypoints(const yaml_parser::ParamsServer& server) {
+void Mission::fillWaypoints(const std::string& yaml_path) {
+  yaml_parser::ParserYAML yaml_mission(yaml_path, "", true);
+  yaml_parser::ParamsServer server(yaml_mission.getParams());
+
   std::vector<std::string> waypts = server.getParam<std::vector<std::string>>("mission/waypoints");
 
   for (std::vector<std::string>::iterator it = waypts.begin(); it != waypts.end(); ++it) {
@@ -37,46 +40,7 @@ void Mission::fillWaypoints(const yaml_parser::ParamsServer& server) {
       waypoints_.push_back(wp);
     }
   }
-}
 
-void Mission::fillWaypointsKnots(const double& dt) {
-  assert(waypoints_.size() > 0);
-
-  for (std::vector<WayPoint>::iterator wp = waypoints_.begin(); wp != waypoints_.end(); ++wp) {
-    wp->knots = std::size_t(wp->time / dt) + 1;
-  }
-
-  countTotalKnots();
-}
-
-void Mission::fillWaypoints(const yaml_parser::ParamsServer& server, const double& dt) {
-  fillWaypoints(server);
-  fillWaypointsKnots(dt);
-}
-
-// This way of adding waypoints will probably be done in the controller side
-void Mission::fillWaypoints(const std::vector<Eigen::VectorXd>& state_trajectory, const std::size_t& llc_knots) {
-  std::size_t cursor = 0;
-  std::size_t num_wp = state_trajectory.size() / (llc_knots - 1);
-
-  for (std::size_t i = 0; i < num_wp; ++i) {
-    cursor += llc_knots - 1;
-
-    // To be removed: hardcoded indicies
-    Eigen::Vector3d pos = state_trajectory[cursor].head(3);
-    Eigen::Quaterniond quat(static_cast<Eigen::Vector4d>(state_trajectory[cursor].segment(3, 4)));
-    Eigen::Vector3d vel_lin = state_trajectory[cursor].segment(7, 3);
-    Eigen::Vector3d vel_rot = state_trajectory[cursor].segment(10, 3);
-
-    WayPoint wp(llc_knots, pos, quat, vel_lin, vel_rot);
-    waypoints_.push_back(wp);
-  }
-
-  countTotalKnots();
-  x0_ = state_trajectory[0];
-}
-
-void Mission::fillInitialState(const yaml_parser::ParamsServer& server) {
   std::vector<std::string> initial_state = server.getParam<std::vector<std::string>>("mission/initial_state");
 
   std::map<std::string, std::string> in_state =
@@ -95,6 +59,21 @@ void Mission::fillInitialState(const yaml_parser::ParamsServer& server) {
   x0_(6) = quater.w();
   x0_.segment(7, 3) = vel_lin;
   x0_.segment(10, 3) = vel_rot;
+}
+
+void Mission::fillKnots() {
+  assert(waypoints_.size() > 0);
+
+  for (std::vector<WayPoint>::iterator wp = waypoints_.begin(); wp != waypoints_.end(); ++wp) {
+    wp->knots = std::size_t(wp->time / dt_) + 1;
+  }
+
+  countTotalKnots();
+}
+
+void Mission::fillWaypoints(const std::string& yaml_path, const double& dt) {
+  fillWaypoints(yaml_path);
+  setTimeStep(dt);
 }
 
 void Mission::countTotalKnots() {
@@ -116,6 +95,89 @@ void Mission::countTotalKnots() {
   n_knots_ = knots;
 }
 
+std::vector<Eigen::VectorXd> Mission::interpolateTrajectory(const std::string& interpolation_type) {
+  if (interpolation_type == "SE3") {
+    return interpolateSE3();
+  } else if (interpolation_type == "R3SO3") {
+    return interpolateR3SO3();
+  } else {
+    std::vector<Eigen::VectorXd> state_trajectory(n_knots_, x0_);
+    return state_trajectory;
+  }
+}
+
+std::vector<Eigen::VectorXd> Mission::interpolateSE3() {
+  std::vector<Eigen::VectorXd> state_trajectory;
+  Eigen::Quaterniond quat(static_cast<Eigen::Vector4d>(x0_.segment(3, 7)));
+  Eigen::Vector3d pos(static_cast<Eigen::Vector3d>(x0_.head(3)));
+  pinocchio::SE3 pose_initial(quat, pos);
+  for (std::vector<WayPoint>::iterator wp = waypoints_.begin(); wp != waypoints_.end(); ++wp) {
+    std::size_t knots;
+    if (wp == waypoints_.begin()) {
+      knots = wp->knots;
+    } else {
+      knots = wp->knots - 1;
+    }
+    double alpha = 0;
+    double step = 1.0 / double(knots - 1);
+    for (std::size_t i = 0; i < knots; ++i) {
+      pinocchio::SE3 M = pinocchio::SE3::Interpolate(pose_initial, wp->pose, alpha);
+      Eigen::VectorXd state = Eigen::VectorXd::Zero(x0_.size());
+      state.head(3) = M.translation();
+      quat = Eigen::Quaterniond(M.rotation());
+      state(3) = quat.x();
+      state(4) = quat.y();
+      state(5) = quat.z();
+      state(6) = quat.w();
+      state_trajectory.push_back(state);
+      alpha += step;
+    }
+    pose_initial = wp->pose;
+  }
+
+  return state_trajectory;
+}
+
+std::vector<Eigen::VectorXd> Mission::interpolateR3SO3() {
+  std::vector<Eigen::VectorXd> state_trajectory;
+  Eigen::Quaterniond quat(static_cast<Eigen::Vector4d>(x0_.segment(3, 7)));
+  Eigen::Vector3d pos(static_cast<Eigen::Vector3d>(x0_.head(3)));
+  pinocchio::SE3 pose_initial(quat, pos);
+  for (std::vector<WayPoint>::iterator wp = waypoints_.begin(); wp != waypoints_.end(); ++wp) {
+    std::size_t knots;
+    if (wp == waypoints_.begin()) {
+      knots = wp->knots;
+    } else {
+      knots = wp->knots - 1;
+    }
+    double alpha = 0;
+    double step = 1.0 / double(knots - 1);
+    for (std::size_t i = 0; i < knots; ++i) {
+      pinocchio::SE3 M = pinocchio::SE3::Interpolate(pose_initial, wp->pose, alpha);
+      Eigen::VectorXd state = Eigen::VectorXd::Zero(x0_.size());
+      state.head(3) = pose_initial.translation() + alpha * (wp->pose.translation() - pose_initial.translation());
+      quat = Eigen::Quaterniond(M.rotation());
+      state(3) = quat.x();
+      state(4) = quat.y();
+      state(5) = quat.z();
+      state(6) = quat.w();
+      state_trajectory.push_back(state);
+      alpha += step;
+    }
+    pose_initial = wp->pose;
+  }
+
+  return state_trajectory;
+}
+
+void Mission::setTimeStep(const double& dt) {
+  dt_ = dt;
+
+  if (waypoints_.size() > 0) {
+    fillKnots();
+  }
+}
+
 void Mission::setInitialState(const Eigen::VectorXd& x0) {
   assert(x0_.size() == x0.size());
   x0_ = x0;
@@ -128,6 +190,7 @@ const std::vector<WayPoint>& Mission::getWaypoints() const { return waypoints_; 
 
 const std::size_t& Mission::getTotalKnots() const { return n_knots_; }
 const std::vector<std::size_t>& Mission::getWpTrajIdx() const { return wp_traj_idx_; }
+const double& Mission::getTimeStep() const { return dt_; }
 
 std::size_t Mission::getWpFromTrajIdx(const std::size_t& traj_idx) const {
   assert(n_knots_ > 0);

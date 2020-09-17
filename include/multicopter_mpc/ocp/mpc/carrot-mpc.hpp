@@ -15,35 +15,35 @@ namespace multicopter_mpc {
 class CarrotMpc : public MpcAbstract {
  public:
   CarrotMpc(const boost::shared_ptr<pinocchio::Model>& model,
-              const boost::shared_ptr<MultiCopterBaseParams>& mc_params, const double& dt,
-              const boost::shared_ptr<Mission>& mission, const std::size_t& n_knots);
-  ~CarrotMpc();
+            const boost::shared_ptr<MultiCopterBaseParams>& mc_params, const boost::shared_ptr<Mission>& mission);
+  virtual ~CarrotMpc();
 
   static std::string getFactoryName();
   static boost::shared_ptr<MpcAbstract> createMpcController(const boost::shared_ptr<pinocchio::Model>& model,
                                                             const boost::shared_ptr<MultiCopterBaseParams>& mc_params,
-                                                            const double& dt,
-                                                            const boost::shared_ptr<Mission>& mission,
-                                                            const std::size_t& n_knots);
+                                                            const boost::shared_ptr<Mission>& mission);
 
   void loadParameters(const std::string& yaml_path) override;
-  void createProblem(const SolverTypes::Type& solver_type) override;
-  void solve() override;
+  void setTimeStep(const double& dt) override;
 
-  void updateProblem(const std::size_t idx_trajectory);
+  void updateProblem(const std::size_t idx_trajectory) override;
 
-  const bool existsTerminalWeight(); 
+  const bool existsTerminalWeight();
+
+  virtual void setNumberKnots(const std::size_t& n_knots) override;
 
   const crocoddyl::FramePlacement& getPoseRef() const;
   const crocoddyl::FrameMotion& getVelocityRef() const;
   const TrajectoryGeneratorParams& getParams() const;
   const Eigen::VectorXd& getControls(const std::size_t& idx = 0) const;
 
+  using OcpAbstract::createProblem;
+
  protected:
+  void createProblem(const SolverTypes::Type& solver_type, const IntegratorTypes::Type& integrator_type) override;
   void initializeDefaultParameters() override;
-  void initializeTrajectoryGenerator(const SolverTypes::Type& solver_type) override;
   void initializeTerminalWeights();
-  
+
   boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> createDifferentialModel(
       const std::size_t& idx_knot);
   boost::shared_ptr<crocoddyl::CostModelAbstract> createCostStateRegularization();

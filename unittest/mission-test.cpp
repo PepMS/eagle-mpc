@@ -25,10 +25,7 @@ BOOST_AUTO_TEST_CASE(fill_waypoints_number_waypoints) {
   multicopter_mpc::Mission mission(nx);
 
   std::string mission_yaml_path = std::string(MULTICOPTER_MPC_ROOT_DIR) + "/unittest/config/mission/mission-test.yaml";
-
-  yaml_parser::ParserYAML yaml_mission(mission_yaml_path, "", true);
-  yaml_parser::ParamsServer server_mission(yaml_mission.getParams());
-  mission.fillWaypoints(server_mission);
+  mission.fillWaypoints(mission_yaml_path);
 
   BOOST_CHECK(mission.getWaypoints().size() == 3);
 }
@@ -39,9 +36,7 @@ BOOST_AUTO_TEST_CASE(fill_waypoints_waypoint_pose_motion) {
 
   std::string mission_yaml_path = std::string(MULTICOPTER_MPC_ROOT_DIR) + "/unittest/config/mission/mission-test.yaml";
 
-  yaml_parser::ParserYAML yaml_mission(mission_yaml_path, "", true);
-  yaml_parser::ParamsServer server_mission(yaml_mission.getParams());
-  mission.fillWaypoints(server_mission);
+  mission.fillWaypoints(mission_yaml_path);
 
   double time = 1.0;
   Eigen::Vector3d pos;
@@ -67,9 +62,7 @@ BOOST_AUTO_TEST_CASE(fill_waypoints_waypoint_pose) {
 
   std::string mission_yaml_path = std::string(MULTICOPTER_MPC_ROOT_DIR) + "/unittest/config/mission/mission-test.yaml";
 
-  yaml_parser::ParserYAML yaml_mission(mission_yaml_path, "", true);
-  yaml_parser::ParamsServer server_mission(yaml_mission.getParams());
-  mission.fillWaypoints(server_mission);
+  mission.fillWaypoints(mission_yaml_path);
 
   double time = 1.9;
   Eigen::Vector3d pos;
@@ -88,9 +81,7 @@ BOOST_AUTO_TEST_CASE(fill_initial_state) {
 
   std::string mission_yaml_path = std::string(MULTICOPTER_MPC_ROOT_DIR) + "/unittest/config/mission/mission-test.yaml";
 
-  yaml_parser::ParserYAML yaml_mission(mission_yaml_path, "", true);
-  yaml_parser::ParamsServer server_mission(yaml_mission.getParams());
-  mission.fillInitialState(server_mission);
+  mission.fillWaypoints(mission_yaml_path);
 
   Eigen::Vector3d pos;
   pos << 0.0, 2.0, 2.5;
@@ -101,7 +92,9 @@ BOOST_AUTO_TEST_CASE(fill_initial_state) {
   rate << 0.0, 0.0, 0.0;
   BOOST_CHECK(pos == mission.getInitialState().head(3));
   BOOST_CHECK(quaternion.toRotationMatrix() ==
-              Eigen::Quaterniond(mission.getInitialState()(6), mission.getInitialState()(3), mission.getInitialState()(4), mission.getInitialState()(5)).toRotationMatrix());
+              Eigen::Quaterniond(mission.getInitialState()(6), mission.getInitialState()(3),
+                                 mission.getInitialState()(4), mission.getInitialState()(5))
+                  .toRotationMatrix());
   BOOST_CHECK(vel == mission.getInitialState().segment(7, 3));
   BOOST_CHECK(rate == mission.getInitialState().segment(10, 3));
 }
@@ -112,12 +105,9 @@ BOOST_AUTO_TEST_CASE(count_total_knots) {
 
   std::string mission_yaml_path = std::string(MULTICOPTER_MPC_ROOT_DIR) + "/unittest/config/mission/mission-test.yaml";
 
-  yaml_parser::ParserYAML yaml_mission(mission_yaml_path, "", true);
-  yaml_parser::ParamsServer server_mission(yaml_mission.getParams());
-
   BOOST_CHECK(0 == mission.getTotalKnots());
   double dt = 0.01;
-  mission.fillWaypoints(server_mission, dt);
+  mission.fillWaypoints(mission_yaml_path, dt);
   BOOST_CHECK(491 == mission.getTotalKnots());
   BOOST_CHECK(mission.getWpTrajIdx()[0] == 100);
   BOOST_CHECK(mission.getWpTrajIdx()[1] == 290);
@@ -130,12 +120,9 @@ BOOST_AUTO_TEST_CASE(get_wp_from_traj_idx) {
 
   std::string mission_yaml_path = std::string(MULTICOPTER_MPC_ROOT_DIR) + "/unittest/config/mission/mission-test.yaml";
 
-  yaml_parser::ParserYAML yaml_mission(mission_yaml_path, "", true);
-  yaml_parser::ParamsServer server_mission(yaml_mission.getParams());
-
   BOOST_CHECK(0 == mission.getTotalKnots());
   double dt = 0.01;
-  mission.fillWaypoints(server_mission, dt);
+  mission.fillWaypoints(mission_yaml_path, dt);
   BOOST_CHECK(mission.getWpFromTrajIdx(0) == 0);
   BOOST_CHECK(mission.getWpFromTrajIdx(100) == 0);
   BOOST_CHECK(mission.getWpFromTrajIdx(101) == 1);
@@ -144,7 +131,6 @@ BOOST_AUTO_TEST_CASE(get_wp_from_traj_idx) {
   BOOST_CHECK(mission.getWpFromTrajIdx(490) == 2);
   BOOST_CHECK(mission.getWpFromTrajIdx(491) == 2);
   BOOST_CHECK(mission.getWpFromTrajIdx(900) == 2);
-
 }
 
 BOOST_AUTO_TEST_SUITE_END()

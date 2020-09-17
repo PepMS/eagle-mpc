@@ -1,0 +1,5 @@
+mpc_controller:
+  type: "PiceWiseMpc"
+  yaml_path: "/usr/local/share/multicopter_mpc/ocp/picewise-mpc.yaml"
+  solver: "BoxFDDP"
+  integrator: "Euler"

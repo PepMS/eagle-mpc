@@ -27,19 +27,17 @@ struct RailMpcParams {
 class RailMpc : public MpcAbstract {
  public:
   RailMpc(const boost::shared_ptr<pinocchio::Model>& model, const boost::shared_ptr<MultiCopterBaseParams>& mc_params,
-          const double& dt, const boost::shared_ptr<Mission>& mission, const std::size_t& n_knots);
+          const boost::shared_ptr<Mission>& mission);
   ~RailMpc();
 
   static std::string getFactoryName();
   static boost::shared_ptr<MpcAbstract> createMpcController(const boost::shared_ptr<pinocchio::Model>& model,
                                                             const boost::shared_ptr<MultiCopterBaseParams>& mc_params,
-                                                            const double& dt,
-                                                            const boost::shared_ptr<Mission>& mission,
-                                                            const std::size_t& n_knots);
+                                                            const boost::shared_ptr<Mission>& mission);
 
   void loadParameters(const std::string& yaml_path) override;
-  void createProblem(const SolverTypes::Type& solver_type);
-  void solve() override;
+  void createProblem(const SolverTypes::Type& solver_type, const IntegratorTypes::Type& integrator_type) override;
+  void setTimeStep(const double& dt) override;
 
   void updateProblem(const std::size_t idx_trajectory);
 
@@ -51,8 +49,9 @@ class RailMpc : public MpcAbstract {
 
   void printCosts();
 
+  using OcpAbstract::createProblem;
+
  protected:
-  void initializeTrajectoryGenerator(const SolverTypes::Type& solver_type) override;
   void initializeDefaultParameters() override;
 
   boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> createDifferentialModel(
