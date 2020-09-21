@@ -45,10 +45,10 @@ void TrajectoryGenerator::loadParameters(const std::string& yaml_path) {
 
   params_.w_state_running = server.getParam<double>("ocp/cost_running_state_weight");
   params_.w_control_running = server.getParam<double>("ocp/cost_running_control_weight");
-  params_.w_pos_running = server.getParam<double>("ocp/cost_running_pos_weight");
-  params_.w_vel_running = server.getParam<double>("ocp/cost_running_vel_weight");
   params_.w_pos_terminal = server.getParam<double>("ocp/cost_terminal_pos_weight");
   params_.w_vel_terminal = server.getParam<double>("ocp/cost_terminal_vel_weight");
+  params_.w_pos_running = server.getParam<double>("ocp/cost_running_pos_weight");
+  params_.w_vel_running = server.getParam<double>("ocp/cost_running_vel_weight");
 
   try {
     dt_ = server.getParam<double>("ocp/dt");
@@ -64,8 +64,8 @@ void TrajectoryGenerator::createProblem(const SolverTypes::Type& solver_type,
 
   for (std::vector<WayPoint>::const_iterator wp = mission_->getWaypoints().cbegin();
        wp != mission_->getWaypoints().cend(); ++wp) {
-    bool is_last_wp = std::next(wp) != mission_->getWaypoints().end();
-
+    bool is_last_wp = std::next(wp) == mission_->getWaypoints().end();
+    
     boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model_running =
         createRunningDifferentialModel(*wp);
     boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model_terminal =
@@ -73,24 +73,25 @@ void TrajectoryGenerator::createProblem(const SolverTypes::Type& solver_type,
 
     boost::shared_ptr<crocoddyl::ActionModelAbstract> int_model_running;
     boost::shared_ptr<crocoddyl::ActionModelAbstract> int_model_terminal;
+    double dt = is_last_wp ? 0.0 : dt_;
     switch (integrator_type_) {
       case IntegratorTypes::Euler:
         int_model_running = boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_model_running, dt_);
-        int_model_terminal = boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_model_terminal, dt_);
+        int_model_terminal = boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_model_terminal, dt);
         break;
       case IntegratorTypes::RK4:
         int_model_running = boost::make_shared<crocoddyl::IntegratedActionModelRK4>(diff_model_running, dt_);
-        int_model_terminal = boost::make_shared<crocoddyl::IntegratedActionModelRK4>(diff_model_terminal, dt_);
+        int_model_terminal = boost::make_shared<crocoddyl::IntegratedActionModelRK4>(diff_model_terminal, dt);
         break;
       default:
         int_model_running = boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_model_running, dt_);
-        int_model_terminal = boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_model_terminal, dt_);
+        int_model_terminal = boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_model_terminal, dt);
         break;
     }
 
     int n_run_knots = wp == mission_->getWaypoints().cbegin() ? wp->knots - 1 : wp->knots - 2;
 
-    if (std::next(wp) != mission_->getWaypoints().end()) {
+    if (!is_last_wp) {
       int_model_running->set_u_lb(tau_lb_);
       int_model_running->set_u_ub(tau_ub_);
       int_model_terminal->set_u_lb(tau_lb_);
@@ -148,29 +149,34 @@ TrajectoryGenerator::createRunningDifferentialModel(const WayPoint& waypoint) {
 
 boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics>
 TrajectoryGenerator::createTerminalDifferentialModel(const WayPoint& waypoint, const bool& is_last_wp) {
+  // Regularitzations
   boost::shared_ptr<crocoddyl::CostModelAbstract> cost_reg_state = createCostStateRegularization();
   boost::shared_ptr<crocoddyl::CostModelAbstract> cost_reg_control = createCostControlRegularization();
 
   boost::shared_ptr<crocoddyl::CostModelSum> cost_model_terminal =
       boost::make_shared<crocoddyl::CostModelSum>(state_, actuation_->get_nu());
 
-  // Regularitzations
+  double w_pos = params_.w_pos_terminal;
+  double w_vel = params_.w_vel_terminal;
+
   if (!is_last_wp) {
-    cost_model_terminal->addCost("state_reg", cost_reg_state, params_.w_state_running);        // 1e-6
-    cost_model_terminal->addCost("control_reg", cost_reg_control, params_.w_control_running);  // 1e-4
+    cost_model_terminal->addCost("state_reg", cost_reg_state, params_.w_state_running);
+    cost_model_terminal->addCost("control_reg", cost_reg_control, params_.w_control_running);
+    w_pos = params_.w_pos_terminal / dt_;
+    w_vel = params_.w_vel_terminal / dt_;
   }
 
   // Waypoint cost related
   crocoddyl::FramePlacement frame_ref = crocoddyl::FramePlacement(frame_base_link_id_, waypoint.pose);
   boost::shared_ptr<crocoddyl::CostModelAbstract> cost_goal =
       boost::make_shared<crocoddyl::CostModelFramePlacement>(state_, frame_ref, actuation_->get_nu());
-  cost_model_terminal->addCost("pos_desired", cost_goal, params_.w_pos_terminal);  // 100
+  cost_model_terminal->addCost("pos_desired", cost_goal, w_pos);
 
   if (waypoint.vel != boost::none) {
     crocoddyl::FrameMotion vel_ref(frame_base_link_id_, *(waypoint.vel));
     boost::shared_ptr<crocoddyl::CostModelAbstract> cost_goal_vel =
         boost::make_shared<crocoddyl::CostModelFrameVelocity>(state_, vel_ref, actuation_->get_nu());
-    cost_model_terminal->addCost("vel_desired", cost_goal_vel, params_.w_vel_terminal);  // 10
+    cost_model_terminal->addCost("vel_desired", cost_goal_vel, w_vel);
   }
 
   // Diff & Integrated models
@@ -183,10 +189,10 @@ TrajectoryGenerator::createTerminalDifferentialModel(const WayPoint& waypoint, c
 boost::shared_ptr<crocoddyl::CostModelAbstract> TrajectoryGenerator::createCostStateRegularization() {
   Eigen::VectorXd state_weights(state_->get_ndx());
 
-  state_weights.head(3) = params_.w_state_position;                         // Position 1.
-  state_weights.segment(3, 3) = params_.w_state_orientation;                // Orientation 1.
-  state_weights.segment(model_->nv, 3) = params_.w_state_velocity_lin;      // Linear velocity 1.
-  state_weights.segment(model_->nv + 3, 3) = params_.w_state_velocity_ang;  // Angular velocity 1000.
+  state_weights.head(3) = params_.w_state_position;                        
+  state_weights.segment(3, 3) = params_.w_state_orientation;               
+  state_weights.segment(model_->nv, 3) = params_.w_state_velocity_lin;     
+  state_weights.segment(model_->nv + 3, 3) = params_.w_state_velocity_ang; 
 
   boost::shared_ptr<crocoddyl::ActivationModelWeightedQuad> activation_state =
       boost::make_shared<crocoddyl::ActivationModelWeightedQuad>(state_weights);
