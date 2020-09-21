@@ -104,7 +104,7 @@ void CarrotMpc::createProblem(const SolverTypes::Type& solver_type, const Integr
     boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model =
         createDifferentialModel(n_knots_ - 1);
     boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> int_model =
-        boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_model, dt_);
+        boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_model, 0.0);
 
     diff_model_terminal_ = diff_model;
     int_model_terminal_ = int_model;
@@ -148,16 +148,24 @@ boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> CarrotMpc::
     setReference(idx_knot);
   }
 
+  double w_pos = params_.w_pos_terminal / dt_;
+  double w_vel = params_.w_vel_terminal / dt_;
+  if (idx_knot == n_knots_ - 1) {
+    w_pos = params_.w_pos_terminal;
+    w_vel = params_.w_vel_terminal;
+  }
+
   boost::shared_ptr<crocoddyl::CostModelAbstract> cost_pose =
       boost::make_shared<crocoddyl::CostModelFramePlacement>(state_, pose_ref_, actuation_->get_nu());
   boost::shared_ptr<crocoddyl::CostModelAbstract> cost_vel =
       boost::make_shared<crocoddyl::CostModelFrameVelocity>(state_, motion_ref_, actuation_->get_nu());
-  if (terminal_weights_idx_[idx_knot] || (idx_knot == n_knots_ - 1 && !existsTerminalWeight())) {
-    cost_model->addCost("pose_desired", cost_pose, params_.w_pos_terminal, true);
-    cost_model->addCost("vel_desired", cost_vel, params_.w_vel_terminal, true);
+  // if (terminal_weights_idx_[idx_knot] || (idx_knot == n_knots_ - 1 && !existsTerminalWeight())) {
+  if (terminal_weights_idx_[idx_knot] || (idx_knot == n_knots_ - 1)) {
+    cost_model->addCost("pose_desired", cost_pose, w_pos, true);
+    cost_model->addCost("vel_desired", cost_vel, w_vel, true);
   } else {
-    cost_model->addCost("pose_desired", cost_pose, params_.w_pos_terminal, false);
-    cost_model->addCost("vel_desired", cost_vel, params_.w_vel_terminal, false);
+    cost_model->addCost("pose_desired", cost_pose, w_pos, false);
+    cost_model->addCost("vel_desired", cost_vel, w_vel, false);
   }
 
   boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model =
@@ -212,13 +220,16 @@ void CarrotMpc::updateProblem(const std::size_t idx_trajectory) {
   cost_pose->set_reference<crocoddyl::FramePlacement>(pose_ref_);
   cost_vel->set_reference<crocoddyl::FrameMotion>(motion_ref_);
   // -- Weights
-  if (existsTerminalWeight()) {
-    (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->active = false;
-    (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->active = false;
-  } else {
-    (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->active = true;
-    (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->active = true;
-  }
+  // if (existsTerminalWeight()) {
+  //   (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->active = false;
+  //   (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->active = false;
+  // } else {
+  //   (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->active = true;
+  //   (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->active = true;
+  // }
+  (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->active = true;
+  (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->active = true;
+  
   --diff_model_iter_;
 
   // Treat the subsequent knots
