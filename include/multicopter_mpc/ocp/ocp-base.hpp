@@ -15,8 +15,9 @@
 #include "crocoddyl/core/optctrl/shooting.hpp"
 #include "crocoddyl/core/solver-base.hpp"
 #include "crocoddyl/core/solvers/fddp.hpp"
-#include "crocoddyl/core/utils/callbacks.hpp"
+#include "crocoddyl/core/solvers/box-ddp.hpp"
 #include "crocoddyl/core/solvers/box-fddp.hpp"
+#include "crocoddyl/core/utils/callbacks.hpp"
 #include "crocoddyl/multibody/actions/free-fwddyn.hpp"
 #include "crocoddyl/multibody/actuations/multicopter-base.hpp"
 #include "crocoddyl/multibody/costs/control.hpp"
@@ -31,11 +32,11 @@
 namespace multicopter_mpc {
 
 struct SolverTypes {
-  enum Type { BoxFDDP, SquashBoxFDDP, NbSolverTypes };
+  enum Type { BoxFDDP, BoxDDP, SquashBoxFDDP, NbSolverTypes };
 };
 
 struct IntegratorTypes {
-  enum Type { Euler, RK4, NbIntegratorTypes};
+  enum Type { Euler, RK4, NbIntegratorTypes };
 };
 
 class OcpAbstract {
@@ -83,7 +84,6 @@ class OcpAbstract {
   const int& getBaseLinkId() const;
   const std::size_t& getKnots() const;
   const IntegratorTypes::Type& getIntegratorType() const;
-
 
  protected:
   // Methods

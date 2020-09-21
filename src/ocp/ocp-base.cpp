@@ -56,6 +56,11 @@ void OcpAbstract::setSolver(const SolverTypes::Type& solver_type) {
       solver_ = boost::make_shared<crocoddyl::SolverBoxFDDP>(problem_);
       break;
     }
+    case SolverTypes::BoxDDP: {
+      MMPC_INFO << "Solver set: BoxDDP";
+      solver_ = boost::make_shared<crocoddyl::SolverBoxDDP>(problem_);
+      break;
+    }
     case SolverTypes::SquashBoxFDDP: {
       break;
     }

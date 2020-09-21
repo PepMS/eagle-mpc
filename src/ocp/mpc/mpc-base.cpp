@@ -28,6 +28,8 @@ void MpcAbstract::loadParameters(const std::string& yaml_path) {
     std::string solver = server.getParam<std::string>("trajectory_generator/solver");
     if (solver == "BoxFDDP") {
       trajectory_generator_specs_.solver = SolverTypes::BoxFDDP;
+    } else if (solver == "BoxDDP") {
+      trajectory_generator_specs_.solver = SolverTypes::BoxDDP;
     } else {
       trajectory_generator_specs_.solver = SolverTypes::NbSolverTypes;
     }

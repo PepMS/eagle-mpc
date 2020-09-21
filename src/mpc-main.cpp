@@ -63,7 +63,9 @@ void MpcMain::loadParameters(const std::string& yaml_path) {
   mpc_controller_specs_.type = server.getParam<std::string>("mpc_controller/type");
   mpc_controller_specs_.yaml_path = server.getParam<std::string>("mpc_controller/yaml_path");
   if (server.getParam<std::string>("mpc_controller/solver") == "BoxFDDP") {
-    mpc_controller_specs_.solver = SolverTypes::NbSolverTypes;
+    mpc_controller_specs_.solver = SolverTypes::BoxFDDP;
+  } else if (server.getParam<std::string>("mpc_controller/solver") == "BoxDDP") {
+    mpc_controller_specs_.solver = SolverTypes::BoxDDP;
   }
   if (server.getParam<std::string>("mpc_controller/integrator") == "Euler") {
     mpc_controller_specs_.integrator = IntegratorTypes::Euler;
