@@ -70,6 +70,19 @@ void MpcMain::loadParameters(const std::string& yaml_path) {
   } else if (server.getParam<std::string>("mpc_controller/integrator") == "RK4") {
     mpc_controller_specs_.integrator = IntegratorTypes::RK4;
   }
+  try {
+    mpc_controller_specs_.running_iters = server.getParam<int>("mpc_controller/running_iters");
+    MMPC_INFO << "MPC CONTROLLER PARAMS. running_iters set to: " << mpc_controller_specs_.running_iters;
+  } catch (const std::exception& e) {
+    mpc_controller_specs_.running_iters = 1;
+    MMPC_WARN << "MPC CONTROLLER PARAMS. running_iters not found, set to default: "
+              << mpc_controller_specs_.running_iters;
+  }
+  try {
+    mpc_controller_specs_.callback = server.getParam<bool>("mpc_controller/callback");
+  } catch (const std::exception& e) {
+    mpc_controller_specs_.callback = false;
+  }
 }
 
 void MpcMain::initializeMpcController() {
@@ -82,9 +95,11 @@ void MpcMain::initializeMpcController() {
                                  mpc_controller_->getTimeStep());
   mpc_controller_->setSolverCallbacks(true);
   mpc_controller_->setSolverIters(100);
-  mpc_controller_->solve();
-  mpc_controller_->setSolverIters(1);
-  mpc_controller_->setSolverCallbacks(false);
+  mpc_controller_->solve(
+      mpc_controller_->getTrajectoryGenerator()->getStateTrajectory(0, mpc_controller_->getKnots() - 1),
+      mpc_controller_->getTrajectoryGenerator()->getControlTrajectory(0, mpc_controller_->getKnots() - 2));
+  mpc_controller_->setSolverIters(mpc_controller_specs_.running_iters);
+  mpc_controller_->setSolverCallbacks(mpc_controller_specs_.callback);
 }
 
 void MpcMain::runMpcStep() {

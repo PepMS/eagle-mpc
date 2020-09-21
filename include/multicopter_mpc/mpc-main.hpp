@@ -73,6 +73,8 @@ class MpcMain {
     std::string yaml_path;
     SolverTypes::Type solver;
     IntegratorTypes::Type integrator;
+    std::size_t running_iters;
+    bool callback;
   } mpc_controller_specs_;
 
 };
