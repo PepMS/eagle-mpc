@@ -41,7 +41,6 @@ class MpcMain {
   void thrustToSpeed(const Eigen::Ref<const Eigen::VectorXd>& motors_thrust, Eigen::Ref<Eigen::VectorXd> motors_speed);
 
   const boost::shared_ptr<const MpcAbstract> getMpcController();
-  const Eigen::VectorXd& getState();
   const Eigen::VectorXd& getMotorsSpeed();
   const Eigen::VectorXd& getMotorsThrust();
   const Eigen::VectorXd& getFeedForwardGains();
