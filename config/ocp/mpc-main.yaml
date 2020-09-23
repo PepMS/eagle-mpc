@@ -1,5 +1,7 @@
 mpc_controller:
-  type: "PiceWiseMpc"
-  yaml_path: "/usr/local/share/multicopter_mpc/ocp/picewise-mpc.yaml"
+  type: "CarrotMpc"
+  yaml_path: "/usr/local/share/multicopter_mpc/ocp/carrot-mpc.yaml"
   solver: "BoxFDDP"
   integrator: "Euler"
+  running_iters: 1
+  callback: false
