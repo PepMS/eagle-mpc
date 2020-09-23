@@ -39,6 +39,8 @@ MpcMain::MpcMain(const MultiCopterTypes::Type& mc_type, const std::string& missi
 
   loadParameters(mpc_yaml_path);
   initializeMpcController();
+  state_trajectory_ = mpc_controller_->getSolver()->get_xs();
+  control_trajectory_ = mpc_controller_->getSolver()->get_us();
 
   motor_thrust_ = Eigen::VectorXd::Zero(mpc_controller_->getActuation()->get_nu());
   motor_speed_ = motor_thrust_;
@@ -105,17 +107,21 @@ void MpcMain::initializeMpcController() {
 }
 
 void MpcMain::runMpcStep() {
-  // 1. update the current state
   mpc_controller_->setInitialState(state_);
-  // 2. solve with the current state
-  mpc_controller_->solve(mpc_controller_->getSolver()->get_xs(), mpc_controller_->getSolver()->get_us());
-  // 3. update control variable
-  motor_thrust_ = mpc_controller_->getControls();
+  mpc_controller_->solve(state_trajectory_, control_trajectory_);
+
+  std::copy(mpc_controller_->getSolver()->get_xs().begin() + 1, mpc_controller_->getSolver()->get_xs().end(),
+            state_trajectory_.begin());
+  std::copy(mpc_controller_->getSolver()->get_us().begin() + 1, mpc_controller_->getSolver()->get_us().end(),
+            control_trajectory_.begin());
+  motor_thrust_ = mpc_controller_->getControls(1);
   thrustToSpeed(motor_thrust_, motor_speed_);
-  ff_gains_ = mpc_controller_->getFeedForwardGains();
-  fb_gains_ = mpc_controller_->getFeedBackGains();
-  // 4. update problem
+  ff_gains_ = mpc_controller_->getFeedForwardGains(1);
+  fb_gains_ = mpc_controller_->getFeedBackGains(1);
+
   ++trajectory_cursor_;
+  state_trajectory_.back() = mpc_controller_->getTrajectoryGenerator()->getState(trajectory_cursor_);
+  control_trajectory_.back() = *(control_trajectory_.end() - 2);
   mpc_controller_->updateProblem(trajectory_cursor_);
 }
 

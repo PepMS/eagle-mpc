@@ -8,6 +8,7 @@
 #define MOTOR_SPEED_MIN 0.0
 
 #include <string>
+#include <algorithm>
 
 #include "pinocchio/parsers/urdf.hpp"
 #include "pinocchio/multibody/model.hpp"
@@ -51,7 +52,6 @@ class MpcMain {
  private:
   void loadParameters(const std::string& yaml_path);
   void initializeMpcController();
-  // void computeSpeedControls();
 
   MultiCopterTypes::Type mc_type_;
 
@@ -67,6 +67,9 @@ class MpcMain {
   Eigen::VectorXd ff_gains_;
   Eigen::MatrixXd fb_gains_;
   std::size_t trajectory_cursor_;
+
+  std::vector<Eigen::VectorXd> state_trajectory_;
+  std::vector<Eigen::VectorXd> control_trajectory_;
 
   struct MpcControllerSpecs {
     std::string type;
