@@ -13,6 +13,8 @@
 #include "python/multicopter_mpc/mission.hpp"
 #include "python/multicopter_mpc/ocp/trajectory-generator.hpp"
 #include "python/multicopter_mpc/ocp-base.hpp"
+#include "python/multicopter_mpc/main-mpc.hpp"
+#include "python/multicopter_mpc/ocp/mpc-base.hpp"
 
 namespace multicopter_mpc {
 namespace python {
@@ -27,6 +29,8 @@ BOOST_PYTHON_MODULE(libmulticopter_mpc_pywrap) {
   exposeMission();
   exposeOcpAbstract();
   exposeTrajectoryGenerator();
+  exposeMpcMain();
+  exposeMpcAbstract();
 }
 
 }  // namespace python

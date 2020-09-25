@@ -18,7 +18,7 @@ class MpcAbstract : public OcpAbstract {
 
   virtual ~MpcAbstract();
 
-  virtual void updateProblem(const std::size_t idx_trajectory) = 0;
+  virtual void updateProblem(const std::size_t& idx_trajectory) = 0;
 
   virtual void loadParameters(const std::string& yaml_path) override;
 

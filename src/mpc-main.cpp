@@ -133,6 +133,7 @@ void MpcMain::thrustToSpeed(const Eigen::Ref<const Eigen::VectorXd>& motors_thru
 void MpcMain::setCurrentState(const Eigen::Ref<Eigen::VectorXd>& current_state) { state_ = current_state; }
 
 const boost::shared_ptr<const MpcAbstract> MpcMain::getMpcController() { return mpc_controller_; }
+const Eigen::VectorXd& MpcMain::getCurrentState() { return state_; }
 const Eigen::VectorXd& MpcMain::getMotorsSpeed() { return motor_speed_; }
 const Eigen::VectorXd& MpcMain::getMotorsThrust() { return motor_thrust_; }
 const Eigen::VectorXd& MpcMain::getFeedForwardGains() { return ff_gains_; }

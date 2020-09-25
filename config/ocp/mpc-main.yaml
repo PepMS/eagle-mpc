@@ -3,5 +3,5 @@ mpc_controller:
   yaml_path: "/usr/local/share/multicopter_mpc/ocp/carrot-mpc.yaml"
   solver: "BoxFDDP"
   integrator: "Euler"
-  running_iters: 1
+  running_iters: 70
   callback: false

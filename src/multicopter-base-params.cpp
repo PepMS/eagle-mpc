@@ -4,8 +4,8 @@
 namespace multicopter_mpc {
 
 MultiCopterBaseParams::MultiCopterBaseParams() {}
-MultiCopterBaseParams::MultiCopterBaseParams(double cf, double cm, Eigen::MatrixXd tau_f, double max_th, double min_th,
-                                             const std::string& base_link)
+MultiCopterBaseParams::MultiCopterBaseParams(const double& cf, const double& cm, const Eigen::MatrixXd& tau_f,
+                                             const double& max_th, const double& min_th, const std::string& base_link)
     : cf_(cf),
       cm_(cm),
       n_rotors_(tau_f.cols()),
