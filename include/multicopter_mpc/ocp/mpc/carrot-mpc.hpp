@@ -37,8 +37,10 @@ class CarrotMpc : public MpcAbstract {
   const TrajectoryGeneratorParams& getParams() const;
   const Eigen::VectorXd& getControls(const std::size_t& idx = 0) const;
 
-  using OcpAbstract::createProblem;
+  virtual void printInfo();
+  void printProblem();
 
+  using OcpAbstract::createProblem;
  protected:
   void createProblem(const SolverTypes::Type& solver_type, const IntegratorTypes::Type& integrator_type) override;
   void initializeDefaultParameters() override;

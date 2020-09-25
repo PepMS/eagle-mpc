@@ -49,6 +49,7 @@ class MpcMain {
   void getStateDiff(const Eigen::Ref<const Eigen::VectorXd>& state0, const Eigen::Ref<const Eigen::VectorXd>& state1,
                     Eigen::Ref<Eigen::VectorXd> state_diff);
 
+  void printInfo();
  private:
   void loadParameters(const std::string& yaml_path);
   void initializeMpcController();

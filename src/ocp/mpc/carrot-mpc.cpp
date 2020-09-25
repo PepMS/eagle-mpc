@@ -229,7 +229,7 @@ void CarrotMpc::updateProblem(const std::size_t idx_trajectory) {
   // }
   (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->active = true;
   (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->active = true;
-  
+
   --diff_model_iter_;
 
   // Treat the subsequent knots
@@ -304,4 +304,29 @@ void CarrotMpc::setReference(const std::size_t& idx_trajectory) {
                                          static_cast<Eigen::Vector3d>(state_ref_.segment(10, 3)));
 }
 
+void CarrotMpc::printInfo() { printProblem(); }
+
+void CarrotMpc::printProblem() {
+  MMPC_INFO << "-------- Carrot MPC: Active nodes --------";
+  for (std::size_t i = 0; i < n_knots_; ++i) {
+    MMPC_INFO << "Node " << i << ": " << terminal_weights_idx_[i];
+  }
+
+  MMPC_INFO << "-------- Carrot MPC: Pose & Vel weights --------";
+  for (std::size_t i = 0; i < n_knots_ - 1; ++i) {
+    MMPC_INFO << "Node " << i << ": ";
+    boost::shared_ptr<crocoddyl::CostModelFramePlacement> cost_pose =
+        boost::static_pointer_cast<crocoddyl::CostModelFramePlacement>(
+            diff_models_running_[i]->get_costs()->get_costs().find("pose_desired")->second->cost);
+    boost::shared_ptr<crocoddyl::CostModelFrameVelocity> cost_vel =
+        boost::static_pointer_cast<crocoddyl::CostModelFrameVelocity>(
+            diff_models_running_[i]->get_costs()->get_costs().find("vel_desired")->second->cost);
+    MMPC_INFO << "Cost reference pose: \n " << cost_pose->get_reference<crocoddyl::FramePlacement>();
+    MMPC_INFO << "Cost reference vel: \n " << cost_vel->get_reference<crocoddyl::FrameMotion>();
+    MMPC_INFO << "Cost weight pose: "
+              << diff_models_running_[i]->get_costs()->get_costs().find("pose_desired")->second->weight;
+    MMPC_INFO << "Cost weight vel: "
+              << diff_models_running_[i]->get_costs()->get_costs().find("vel_desired")->second->weight;
+  }
+}
 }  // namespace multicopter_mpc

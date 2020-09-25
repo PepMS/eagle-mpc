@@ -143,4 +143,8 @@ void MpcMain::getStateDiff(const Eigen::Ref<const Eigen::VectorXd>& state0,
   mpc_controller_->getStateMultibody()->diff(state0, state1, state_diff);
 }
 
+void MpcMain::printInfo() {
+  MMPC_INFO << "MPC Main: \t" << "Trajectory cursor: " << trajectory_cursor_;
+}
+
 }  // namespace multicopter_mpc
