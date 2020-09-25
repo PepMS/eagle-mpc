@@ -148,8 +148,10 @@ boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> CarrotMpc::
     setReference(idx_knot);
   }
 
-  double w_pos = params_.w_pos_terminal / dt_;
-  double w_vel = params_.w_vel_terminal / dt_;
+  // double w_pos = params_.w_pos_terminal / dt_;
+  // double w_vel = params_.w_vel_terminal / dt_;
+  double w_pos = params_.w_pos_running;
+  double w_vel = params_.w_vel_running;
   if (idx_knot == n_knots_ - 1) {
     w_pos = params_.w_pos_terminal;
     w_vel = params_.w_vel_terminal;
@@ -201,7 +203,7 @@ boost::shared_ptr<crocoddyl::CostModelAbstract> CarrotMpc::createCostControlRegu
   return cost_reg_control;
 }
 
-void CarrotMpc::updateProblem(const std::size_t idx_trajectory) {
+void CarrotMpc::updateProblem(const std::size_t& idx_trajectory) {
   // first update the terminal weight vector
   std::rotate(terminal_weights_idx_.begin(), terminal_weights_idx_.begin() + 1, terminal_weights_idx_.end());
   terminal_weights_idx_.back() = std::find(mission_->getWpTrajIdx().begin(), mission_->getWpTrajIdx().end(),
@@ -229,19 +231,25 @@ void CarrotMpc::updateProblem(const std::size_t idx_trajectory) {
   // }
   (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->active = true;
   (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->active = true;
-  
+
   --diff_model_iter_;
 
   // Treat the subsequent knots
-  bool first_terminal_found = false;
   for (std::size_t i = 0; i < n_knots_ - 1; ++i) {
     if (terminal_weights_idx_[n_knots_ - 2 - i]) {
+      // Do test for the last nodes when trajectory is over!
       setReference(idx_trajectory - i - 1);
       (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->active = true;
       (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->active = true;
     } else {
-      (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->active = false;
-      (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->active = false;
+      if (idx_trajectory - i - 1 > trajectory_generator_->getKnots() - 1) {
+        // When the mpc controller has reached the end, the tail of the trajectory has to be active
+        (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->active = true;
+        (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->active = true;
+      } else {
+        (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->active = false;
+        (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->active = false;
+      }
     }
 
     cost_pose = boost::static_pointer_cast<crocoddyl::CostModelFramePlacement>(

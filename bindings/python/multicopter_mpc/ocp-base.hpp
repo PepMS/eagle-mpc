@@ -1,5 +1,5 @@
-#ifndef BINDINGS_PYTHON_MULTICOPTER_MPC_ALGORITHMS_WAYPOINT_HPP_
-#define BINDINGS_PYTHON_MULTICOPTER_MPC_ALGORITHMS_WAYPOINT_HPP_
+#ifndef BINDINGS_PYTHON_MULTICOPTER_MPC_OCP_BASE_HPP_
+#define BINDINGS_PYTHON_MULTICOPTER_MPC_OCP_BASE_HPP_
 
 #include <boost/python.hpp>
 
@@ -29,35 +29,9 @@ class OcpAbstract_wrap : public OcpAbstract, public bp::wrapper<OcpAbstract> {
 
   void setTimeStep(const double& dt) { return bp::call<void>(this->get_override("setTimeStep").ptr(), dt); }
 
-  //   void solve(const std::vector<Eigen::VectorXd>& state_trajectory,
-  //              const std::vector<Eigen::VectorXd>& control_trajectory) {
-  //     // return bp::call<void>(this->get_override("solve").ptr(), state_trajectory, control_trajectory);
-  //     if (bp::override solve = )
-  //     return OcpAbstract::solve(state_trajectory, control_trajectory);
-  //   }
-
   void createProblem(const SolverTypes::Type& solver_type, const IntegratorTypes::Type& integrator_type) {
     return bp::call<void>(this->get_override("createProblem").ptr(), solver_type, integrator_type);
   }
-
-  // void createProblem(const SolverTypes::Type& solver_type, const IntegratorTypes::Type& integrator_type,
-  //                    const double& dt) {
-  //   if (bp::override createProblem = this->get_override("createProblem")) {
-  //     return createProblem(solver_type, integrator_type, dt);
-  //   }
-  //   return OcpAbstract::createProblem(solver_type, integrator_type, dt);
-  // }
-  //   void solve() {
-  //     if (bp::override solve = this->get_override("solve")) {
-  //       return bp::call<void>(solve.ptr());
-  //     }
-  //     std::cout << "Called solve void!" << std::endl;
-  //     return OcpAbstract::solve();
-  //   }
-  //   void default_solve() {
-  //     std::cout << "Called default solve void!" << std::endl;
-  //     return this->OcpAbstract::solve();
-  //   }
 
   void solve(const std::vector<Eigen::VectorXd>& state_trajectory,
              const std::vector<Eigen::VectorXd>& control_trajectory) {
@@ -83,13 +57,6 @@ void exposeOcpAbstract() {
       .value("IntegratorTypeEuler", IntegratorTypes::Euler)
       .value("IntegratorTypeRK4", IntegratorTypes::RK4);
 
-  // void (OcpAbstract::*solve_void)(void) = &OcpAbstract::solve;
-  // void (OcpAbstract::*solve_init)(const std::vector<Eigen::VectorXd>& state_trajectory,
-  //                                 const std::vector<Eigen::VectorXd>& control_trajectory) = &OcpAbstract::solve;
-
-  // void (OcpAbstract::*createProblem_pv)(const SolverTypes::Type&, const IntegratorTypes::Type&) =
-  //     &OcpAbstract::createProblem;
-
   void (OcpAbstract::*createProblem_base)(const SolverTypes::Type&, const IntegratorTypes::Type&, const double&) =
       &OcpAbstract::createProblem;
 
@@ -106,7 +73,8 @@ void exposeOcpAbstract() {
       .def("loadParameters", pure_virtual(&OcpAbstract_wrap::loadParameters), bp::args("self", "yaml_path"))
       .def("setSolverCallbacks", &OcpAbstract_wrap::setSolverCallbacks, bp::args("self", "activated"))
       // .def("solve", solve_void, &OcpAbstract_wrap::default_solve, bp::args("self"))
-      .def("solve", &OcpAbstract_wrap::solve, &OcpAbstract_wrap::default_solve, bp::args("self", "state_trajectory", "control_trajectory"))
+      .def("solve", &OcpAbstract_wrap::solve, &OcpAbstract_wrap::default_solve,
+           bp::args("self", "state_trajectory", "control_trajectory"))
       .def("setSolverIters", &OcpAbstract_wrap::setSolverIters, bp::args("self", "num_iters"))
       .def("setSolverStopTh", &OcpAbstract_wrap::setSolverStopTh, bp::args("self", "stop_th"))
       .add_property("model",
@@ -154,4 +122,4 @@ void exposeOcpAbstract() {
 }  // namespace python
 }  // namespace multicopter_mpc
 
-#endif  // BINDINGS_PYTHON_MULTICOPTER_MPC_ALGORITHMS_WAYPOINT_HPP_
+#endif

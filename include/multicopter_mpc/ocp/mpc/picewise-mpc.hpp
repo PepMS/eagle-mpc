@@ -23,7 +23,7 @@ class PiceWiseMpc : public MpcAbstract {
   void createProblem(const SolverTypes::Type& solver_type, const IntegratorTypes::Type& integrator_type) override;
   void setTimeStep(const double& dt) override;
 
-  void updateProblem(const std::size_t idx_trajectory);
+  void updateProblem(const std::size_t& idx_trajectory);
 
   const crocoddyl::FramePlacement& getPoseRef() const;
   const crocoddyl::FrameMotion& getVelocityRef() const;

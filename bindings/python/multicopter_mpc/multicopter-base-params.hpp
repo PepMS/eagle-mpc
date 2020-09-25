@@ -16,9 +16,10 @@ void exposeMultiCopterBaseParams() {
   bp::register_ptr_to_python<boost::shared_ptr<MultiCopterBaseParams> >();
 
   bp::class_<MultiCopterBaseParams>(
-      "MultiCopterBaseParams", bp::init<double, double, Eigen::MatrixXd, double, double, std::string>(
-                                   bp::args("self", "cf", "cm", "torque_force", "max_th", "min_th", "base_link_name"),
-                                   "Initialize multicopter params"))
+      "MultiCopterBaseParams",
+      bp::init<const double&, const double&, const Eigen::MatrixXd&, const double&, const double&, const std::string&>(
+          bp::args("self", "cf", "cm", "torque_force", "max_th", "min_th", "base_link_name"),
+          "Initialize multicopter params"))
       // .def(bp::init<double, double, Eigen::MatrixXd, double, double, Eigen::VectorXd, Eigen::VectorXd>(
       //     bp::args("cf", "cm", "torque_force", "max_th", "min_th", "max torque", "min torque"),
       //     "Initialize multicopter params"))

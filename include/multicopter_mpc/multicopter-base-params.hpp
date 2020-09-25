@@ -12,8 +12,8 @@ namespace multicopter_mpc {
 class MultiCopterBaseParams {
  public:
   MultiCopterBaseParams();
-  MultiCopterBaseParams(double cf, double cm, Eigen::MatrixXd tau_f, double max_th, double min_th,
-                        const std::string& base_link);
+  MultiCopterBaseParams(const double& cf, const double& cm, const Eigen::MatrixXd& tau_f, const double& max_th,
+                        const double& min_th, const std::string& base_link);
   // MultiCopterBaseParams(double cf, double cm, Eigen::MatrixXd tau_f, double max_th, double min_th,
   //                       Eigen::VectorXd max_torque, Eigen::VectorXd min_torque, const std::string& base_link);
   ~MultiCopterBaseParams();
