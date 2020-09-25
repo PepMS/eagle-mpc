@@ -34,7 +34,10 @@ void exposeMpcMain() {
       .add_property("ff_gains",
                     bp::make_function(&MpcMain::getFeedForwardGains, bp::return_value_policy<bp::return_by_value>()))
       .add_property("fb_gains",
-                    bp::make_function(&MpcMain::getFeedBackGains, bp::return_value_policy<bp::return_by_value>()));
+                    bp::make_function(&MpcMain::getFeedBackGains, bp::return_value_policy<bp::return_by_value>()))
+      .add_property("current_state",
+                    bp::make_function(&MpcMain::getCurrentState, bp::return_value_policy<bp::return_by_value>()),
+                    "current_state");
 }
 }  // namespace python
 }  // namespace multicopter_mpc

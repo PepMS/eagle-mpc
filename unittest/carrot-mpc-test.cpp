@@ -432,7 +432,7 @@ BOOST_AUTO_TEST_CASE(create_problem_test, *boost::unit_test::tolerance(1e-7)) {
       BOOST_CHECK(cost_vel->get_reference<crocoddyl::FrameMotion>().motion.linear() == vel_lin_ref);
       BOOST_CHECK(cost_vel->get_reference<crocoddyl::FrameMotion>().motion.angular() == vel_ang_ref);
       // Weights
-      bool active = i == knot_idx && i != carrot_mpc_test.carrot_mpc_->getKnots() - 1;
+      bool active = (i == knot_idx || i == carrot_mpc_test.carrot_mpc_->getKnots() - 1);
       BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()[i]
                       ->get_costs()
                       ->get_costs()
@@ -590,7 +590,7 @@ BOOST_AUTO_TEST_CASE(update_problem_references_test, *boost::unit_test::toleranc
     BOOST_CHECK(cost_vel->get_reference<crocoddyl::FrameMotion>().motion.linear() == vel_lin_ref);
     BOOST_CHECK(cost_vel->get_reference<crocoddyl::FrameMotion>().motion.angular() == vel_ang_ref);
     // Weights
-    bool active = i == knot_idx - 1 && i != carrot_mpc_test.carrot_mpc_->getKnots() - 1;
+    bool active = (i == knot_idx - 1 || i == carrot_mpc_test.carrot_mpc_->getKnots() - 1);
     BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()[i]
                     ->get_costs()
                     ->get_costs()

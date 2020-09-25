@@ -26,7 +26,7 @@ class CarrotMpc : public MpcAbstract {
   void loadParameters(const std::string& yaml_path) override;
   void setTimeStep(const double& dt) override;
 
-  void updateProblem(const std::size_t idx_trajectory) override;
+  void updateProblem(const std::size_t& idx_trajectory) override;
 
   const bool existsTerminalWeight();
 

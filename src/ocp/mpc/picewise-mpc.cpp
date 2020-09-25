@@ -243,7 +243,7 @@ boost::shared_ptr<crocoddyl::CostModelAbstract> PiceWiseMpc::createCostControlRe
   return cost_reg_control;
 }
 
-void PiceWiseMpc::updateProblem(const std::size_t idx_trajectory) {
+void PiceWiseMpc::updateProblem(const std::size_t& idx_trajectory) {
   (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->weight = params_.w_pos_running;
   if (has_motion_ref_) {
     (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->weight = params_.w_vel_running;

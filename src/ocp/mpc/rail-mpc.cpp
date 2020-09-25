@@ -134,7 +134,7 @@ boost::shared_ptr<crocoddyl::CostModelAbstract> RailMpc::createCostControl(const
   return cost_control;
 }
 
-void RailMpc::updateProblem(const std::size_t idx_trajectory) {
+void RailMpc::updateProblem(const std::size_t& idx_trajectory) {
   for (std::size_t t = 0; t < n_knots_ - 1; ++t) {
     state_ref_[t] = state_ref_[t + 1];
 
