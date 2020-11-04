@@ -41,6 +41,14 @@ class MpcAbstract_wrap : public MpcAbstract, public bp::wrapper<MpcAbstract> {
     return this->MpcAbstract::setNumberKnots(n_knots);
   }
   void default_setNumberKnots(const std::size_t& n_knots) { return this->MpcAbstract::setNumberKnots(n_knots); }
+
+  void printInfo() {
+    if (bp::override print_info = this->get_override("printInfo")) {
+      return bp::call<void>(print_info.ptr());
+    }
+    return this->MpcAbstract::printInfo();
+  }
+  void default_printInfo() { return this->MpcAbstract::printInfo(); }
 };
 
 void exposeMpcAbstract() {
@@ -56,6 +64,7 @@ void exposeMpcAbstract() {
            bp::args("self", "yaml_path"))
       .def("setNumberKnots", &MpcAbstract_wrap::setNumberKnots, &MpcAbstract_wrap::default_setNumberKnots,
            bp::args("self", "n_knots"))
+      .def("printInfo", &MpcAbstract_wrap::printInfo, &MpcAbstract_wrap::default_printInfo, bp::args("self"))
       .def("getControls", &MpcAbstract_wrap::getControls, bp::args("self", "idx"), bp::return_internal_reference<>())
       .add_property("mission",
                     bp::make_function(&MpcAbstract_wrap::getMission, bp::return_value_policy<bp::return_by_value>()))

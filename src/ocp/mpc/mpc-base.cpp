@@ -111,6 +111,8 @@ const boost::shared_ptr<TrajectoryGenerator> MpcAbstract::getTrajectoryGenerator
 }
 const boost::shared_ptr<Mission> MpcAbstract::getMission() const { return mission_; }
 
+void MpcAbstract::printInfo() {}
+
 FactoryMpc::FactoryMpc() {}
 FactoryMpc::~FactoryMpc() {}
 

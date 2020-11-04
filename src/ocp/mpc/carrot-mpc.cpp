@@ -210,7 +210,18 @@ void CarrotMpc::updateProblem(const std::size_t& idx_trajectory) {
                                            idx_trajectory) != mission_->getWpTrajIdx().end();
 
   // Treat the incoming knot
-  setReference(idx_trajectory);
+  if (terminal_weights_idx_.back()) {
+    std::size_t wp_idx = std::find(mission_->getWpTrajIdx().begin(), mission_->getWpTrajIdx().end(), idx_trajectory) -
+                         mission_->getWpTrajIdx().begin();
+
+    pose_ref_.id = frame_base_link_id_;
+    pose_ref_.placement = mission_->getWaypoints()[wp_idx].pose;
+    motion_ref_.id = frame_base_link_id_;
+    motion_ref_.motion = *(mission_->getWaypoints()[wp_idx].vel);
+    MMPC_WARN << "Found waypoint: " << pose_ref_.placement;
+  } else {
+    setReference(idx_trajectory);
+  }
   diff_model_iter_ = diff_models_running_.end() - 1;
   // -- References
   boost::shared_ptr<crocoddyl::CostModelFramePlacement> cost_pose =
@@ -238,7 +249,16 @@ void CarrotMpc::updateProblem(const std::size_t& idx_trajectory) {
   for (std::size_t i = 0; i < n_knots_ - 1; ++i) {
     if (terminal_weights_idx_[n_knots_ - 2 - i]) {
       // Do test for the last nodes when trajectory is over!
-      setReference(idx_trajectory - i - 1);
+      // setReference(idx_trajectory - i - 1);
+      std::size_t wp_idx =
+          std::find(mission_->getWpTrajIdx().begin(), mission_->getWpTrajIdx().end(), idx_trajectory - i - 1) -
+          mission_->getWpTrajIdx().begin();
+
+      pose_ref_.id = frame_base_link_id_;
+      pose_ref_.placement = mission_->getWaypoints()[wp_idx].pose;
+      motion_ref_.id = frame_base_link_id_;
+      motion_ref_.motion = *(mission_->getWaypoints()[wp_idx].vel);
+
       (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->active = true;
       (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->active = true;
     } else {
@@ -312,4 +332,49 @@ void CarrotMpc::setReference(const std::size_t& idx_trajectory) {
                                          static_cast<Eigen::Vector3d>(state_ref_.segment(10, 3)));
 }
 
+void CarrotMpc::printInfo() { printProblem(); }
+
+void CarrotMpc::printProblem() {
+  for (std::size_t i = 0; i < n_knots_ - 1; ++i) {
+    boost::shared_ptr<crocoddyl::CostModelFramePlacement> cost_pose =
+        boost::static_pointer_cast<crocoddyl::CostModelFramePlacement>(
+            diff_models_running_[i]->get_costs()->get_costs().find("pose_desired")->second->cost);
+    boost::shared_ptr<crocoddyl::CostModelFrameVelocity> cost_vel =
+        boost::static_pointer_cast<crocoddyl::CostModelFrameVelocity>(
+            diff_models_running_[i]->get_costs()->get_costs().find("vel_desired")->second->cost);
+    MMPC_INFO << "--------- Node " << i << " ---------";
+    MMPC_INFO << "Waypoint node " << i << ": " << terminal_weights_idx_[i];
+    MMPC_INFO << "Active pos cost " << i << ": "
+              << diff_models_running_[i]->get_costs()->get_costs().find("pose_desired")->second->active;
+    MMPC_INFO << "Active pvel cost" << i << ": "
+              << diff_models_running_[i]->get_costs()->get_costs().find("vel_desired")->second->active;
+    MMPC_INFO << "Position reference: \n "
+              << cost_pose->get_reference<crocoddyl::FramePlacement>().placement.translation();
+    MMPC_INFO << "Angular velocity reference: \n "
+              << cost_vel->get_reference<crocoddyl::FrameMotion>().motion.angular();
+    MMPC_INFO << "Weight pose: "
+              << diff_models_running_[i]->get_costs()->get_costs().find("pose_desired")->second->weight;
+    MMPC_INFO << "Weight Vel: "
+              << diff_models_running_[i]->get_costs()->get_costs().find("vel_desired")->second->weight;
+  }
+
+  std::size_t i = n_knots_ - 1;
+  boost::shared_ptr<crocoddyl::CostModelFramePlacement> cost_pose =
+      boost::static_pointer_cast<crocoddyl::CostModelFramePlacement>(
+          diff_model_terminal_->get_costs()->get_costs().find("pose_desired")->second->cost);
+  boost::shared_ptr<crocoddyl::CostModelFrameVelocity> cost_vel =
+      boost::static_pointer_cast<crocoddyl::CostModelFrameVelocity>(
+          diff_model_terminal_->get_costs()->get_costs().find("vel_desired")->second->cost);
+  MMPC_INFO << "--------- Node " << i << " ---------";
+  MMPC_INFO << "Waypoint node " << i << ": " << terminal_weights_idx_[i];
+  MMPC_INFO << "Active pos cost " << i << ": "
+            << diff_model_terminal_->get_costs()->get_costs().find("pose_desired")->second->active;
+  MMPC_INFO << "Active vel cost " << i << ": "
+            << diff_model_terminal_->get_costs()->get_costs().find("vel_desired")->second->active;
+  MMPC_INFO << "Position reference: \n "
+            << cost_pose->get_reference<crocoddyl::FramePlacement>().placement.translation();
+  MMPC_INFO << "Angular velocity reference: \n " << cost_vel->get_reference<crocoddyl::FrameMotion>().motion.angular();
+  MMPC_INFO << "Weight pose: " << diff_model_terminal_->get_costs()->get_costs().find("pose_desired")->second->weight;
+  MMPC_INFO << "Weight Vel: " << diff_model_terminal_->get_costs()->get_costs().find("vel_desired")->second->weight;
+}
 }  // namespace multicopter_mpc

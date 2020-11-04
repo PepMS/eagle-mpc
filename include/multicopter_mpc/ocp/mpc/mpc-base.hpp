@@ -32,6 +32,7 @@ class MpcAbstract : public OcpAbstract {
 
   using OcpAbstract::createProblem;
 
+  virtual void printInfo();
  protected:
   void initializeTrajectoryGenerator();
   virtual void generateMission();

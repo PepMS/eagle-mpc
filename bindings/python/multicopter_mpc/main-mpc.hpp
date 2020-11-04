@@ -25,6 +25,7 @@ void exposeMpcMain() {
       .def("setCurrentState", &MpcMain::setCurrentState, bp::args("self", "state"))
       .def("runMpcStep", &MpcMain::runMpcStep, bp::args("self"))
       .def("thrustToSpeed", &MpcMain::thrustToSpeed, bp::args("self", "motor_thrust", "motor_speed"))
+      .def("printInfo", &MpcMain::printInfo, bp::args("self"))
       .add_property("mpc_controller",
                     bp::make_function(&MpcMain::getMpcController, bp::return_value_policy<bp::return_by_value>()))
       .add_property("motor_speed",
