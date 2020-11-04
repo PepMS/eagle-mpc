@@ -7,11 +7,11 @@ ocp:
   dt: 4e-3
   n_knots: 100  
   cost_running_state_weight: 1e-5
-  cost_running_control_weight: 8e-2
-  cost_running_pos_weight: 12000.0
-  cost_running_vel_weight: 12000.0
-  cost_terminal_pos_weight: 50.0
-  cost_terminal_vel_weight: 50.0
+  cost_running_control_weight: 1e-2
+  cost_running_pos_weight: 20000.0
+  cost_running_vel_weight: 20000.0
+  cost_terminal_pos_weight: 10.0
+  cost_terminal_vel_weight: 10.0
   $state_weights:
     - position: [1.0, 1.0, 1.0]
       orientation: [1.0, 1.0, 1.0]
