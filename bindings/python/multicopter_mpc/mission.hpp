@@ -16,6 +16,7 @@ namespace bp = boost::python;
 void exposeMission() {
   bp::to_python_converter<std::vector<WayPoint, std::allocator<WayPoint>>, vector_to_list<WayPoint, true>>();
   list_to_vector().from_python<std::vector<WayPoint, std::allocator<WayPoint>>>();
+  // list_to_vector().from_python<std::vector<std::size_t, std::allocator<WayPoint>>>();
 
   bp::register_ptr_to_python<boost::shared_ptr<Mission>>();
 
@@ -26,6 +27,9 @@ void exposeMission() {
       .def("fillWaypoints", fillWP_yaml, bp::args("self", "yaml_path"))
       .def("fillWaypoints", fillWP_yaml_dt, bp::args("self", "yaml_path", "dt"))
       .def("interpolateTrajectory", &Mission::interpolateTrajectory, bp::args("self", "inter_type"))
+      .add_property("wp_knot_idx",
+                    make_function(&Mission::getWpTrajIdx, bp::return_value_policy<bp::copy_const_reference>()),
+                    "wp_knot_idx")
       .add_property("x0", bp::make_function(&Mission::getInitialState, bp::return_value_policy<bp::return_by_value>()),
                     bp::make_function(&Mission::setInitialState), "Initial state")
       .add_property("waypoints",
