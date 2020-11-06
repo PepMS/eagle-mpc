@@ -116,17 +116,15 @@ class TrajectoryGeneratorDerived(multicopter_mpc.OcpAbstract):
 
 
 class CarrotMpc():
-    def __init__(self, mission, state_reference, control_reference, dt):
-        self.robot = example_robot_data.loadIris()
-        self.robot_model = self.robot.model
-        self.robot_state = crocoddyl.StateMultibody(self.robot_model)
-        self.mc_params = multicopter_mpc.MultiCopterBaseParams()
+    def __init__(self, robot_model, robot_state, actuation_model, mc_params, mission, state_reference, control_reference, dt):
+        self.robot_model = robot_model
+        self.robot_state = robot_state
+        self.mc_params = mc_params
         self.mc_params.fill(MULTICOPTER_MPC_MULTIROTOR_DIR + "/iris.yaml")
         self.tau_lb = self.mc_params.min_thrust * np.ones(self.mc_params.n_rotors)
         self.tau_ub = self.mc_params.max_thrust * np.ones(self.mc_params.n_rotors)
 
-        self.actuation_model = crocoddyl.ActuationModelMultiCopterBase(
-            self.robot_state, self.mc_params.n_rotors, self.mc_params.tau_f)
+        self.actuation_model = actuation_model
 
         self.dt = dt
         self.diff_models_running = []
@@ -156,7 +154,7 @@ class CarrotMpc():
         self.w_pos_terminal = 10
         self.w_vel_terminal = 10
 
-        self.solver_iters = 5
+        self.solver_iters = 70
 
     def initializeTerminalWeights(self):
         wp_idxs = self.mission.wp_knot_idx
@@ -183,7 +181,7 @@ class CarrotMpc():
 
         self.problem = crocoddyl.ShootingProblem(self.state_initial, self.int_models_running, self.int_model_terminal)
         self.solver = crocoddyl.SolverBoxFDDP(self.problem)
-        self.solver.setCallbacks([crocoddyl.CallbackVerbose()])
+        # self.solver.setCallbacks([crocoddyl.CallbackVerbose()])
 
         # to implement:
         # -> append the terminal model into the running models
@@ -251,11 +249,12 @@ class CarrotMpc():
         if self.terminal_weights[-1]:
             wp_idx = wp_idxs.index(idx_traj)
             self.pose_ref.id = self.frame_base_link_id
-            self.pose_ref = self.mission.waypoints[wp_idx].pose
+            self.pose_ref.placement = self.mission.waypoints[wp_idx].pose
             self.motion_ref.id = self.frame_base_link_id
-            self.motion_ref.motion = self.mission.waypoints[wp_idx].vel
+            self.motion_ref.motion = self.mission.waypoints[wp_idx].velocity
         else:
             self.setReference(idx_traj)
+
 
         self.diff_model_terminal.costs.costs['pose_desired'].cost.reference = self.pose_ref
         self.diff_model_terminal.costs.costs['vel_desired'].cost.reference = self.motion_ref
@@ -263,18 +262,25 @@ class CarrotMpc():
         self.diff_model_terminal.costs.costs['pose_desired'].active = True
         self.diff_model_terminal.costs.costs['vel_desired'].active = True
 
+        # if True in self.terminal_weights and self.terminal_weights[-1] == False:
+        #     self.diff_model_terminal.costs.costs['pose_desired'].active = False
+        #     self.diff_model_terminal.costs.costs['vel_desired'].active = False
+        # else:
+        #     self.diff_model_terminal.costs.costs['pose_desired'].active = True
+        #     self.diff_model_terminal.costs.costs['vel_desired'].active = True
+
         idx_traj -= 1
         for idx, model in rev_enumerate(self.diff_models_running):
             if self.terminal_weights[idx]:
                 wp_idx = wp_idxs.index(idx_traj)
                 self.pose_ref.id = self.frame_base_link_id
-                self.pose_ref = self.mission.waypoints[wp_idx].pose
+                self.pose_ref.placement = self.mission.waypoints[wp_idx].pose
                 self.motion_ref.id = self.frame_base_link_id
-                self.motion_ref.motion = self.mission.waypoints[wp_idx].vel
+                self.motion_ref.motion = self.mission.waypoints[wp_idx].velocity
                 model.costs.costs['pose_desired'].active = True
                 model.costs.costs['vel_desired'].active = True
             else:
-                if idx_trajectory > len(self.state_reference) - 1:
+                if idx_traj > len(self.state_reference) - 1:
                     model.costs.costs['pose_desired'].active = True
                     model.costs.costs['vel_desired'].active = True
                 else:
@@ -287,7 +293,10 @@ class CarrotMpc():
             idx_traj -= 1
 
     def setReference(self, idx_trajectory):
-        state_ref = self.state_reference[idx_trajectory]
+        if idx_trajectory >= len(self.state_reference):
+            state_ref = self.state_reference[-1]
+        else:
+            state_ref = self.state_reference[idx_trajectory]
         self.pose_ref.id = self.frame_base_link_id
         self.pose_ref.placement = pinocchio.XYZQUATToSE3(state_ref[:7])
         self.motion_ref.id = self.frame_base_link_id
@@ -301,9 +310,39 @@ class CarrotMpc():
 
 
 class MpcMain():
-    def __init__(self, controller):
-        self.controller = controller
-        self.state = self.controller.robot_state.zero()
+    def __init__(self):
+        self.robot = example_robot_data.loadIris()
+        self.robot_model = self.robot.model
+        self.robot_state = crocoddyl.StateMultibody(self.robot_model)
+        self.mc_params = multicopter_mpc.MultiCopterBaseParams()
+        self.mc_params.fill(MULTICOPTER_MPC_MULTIROTOR_DIR + "/iris.yaml")
+        self.actuation_model = crocoddyl.ActuationModelMultiCopterBase(
+            self.robot_state, self.mc_params.n_rotors, self.mc_params.tau_f)
+
+        self.mission = multicopter_mpc.Mission(self.robot.nq + self.robot.nv)
+        self.mission.fillWaypoints(MULTICOPTER_MPC_MISSION_DIR + "/takeoff.yaml")
+
+        self.dt = 4e-3
+        self.trajectory = multicopter_mpc.TrajectoryGenerator(self.robot_model, self.mc_params, self.mission)
+        self.trajectory.loadParameters(MULTICOPTER_MPC_OCP_DIR + "/trajectory-generator.yaml")
+        self.trajectory.createProblem(multicopter_mpc.SolverType.SolverTypeBoxFDDP,
+                                      multicopter_mpc.IntegratorType.IntegratorTypeEuler, self.dt)
+        self.trajectory.setSolverCallbacks(True)
+        state_guess = self.mission.interpolateTrajectory("cold")
+        control = pinocchio.utils.zero(4)
+        control_guess = [control for _ in range(0, len(state_guess) - 1)]
+        self.trajectory.solve(state_guess, control_guess)
+
+        self.controller = CarrotMpc(self.robot_model,
+                                    self.robot_state,
+                                    self.actuation_model,
+                                    self.mc_params,
+                                    self.mission,
+                                    self.trajectory.getStateTrajectory(0, self.trajectory.n_knots - 1),
+                                    self.trajectory.getControlTrajectory(0, self.trajectory.n_knots - 2),
+                                    self.dt)
+
+        self.state = self.robot_state.zero()
         self.controller.setStateInitial(self.state)
         self.controller.createProblem()
         self.controller.solve(self.controller.state_reference[:self.controller.n_knots],
@@ -314,12 +353,15 @@ class MpcMain():
         self.trajectory_cursor = self.controller.n_knots - 1
 
     def runMpcStep(self):
-        self.controller.state_initial
+        self.controller.setStateInitial(self.state)
         self.controller.solve(self.state_trajectory, self.control_trajectory)
         self.state_trajectory[:-1] = self.controller.solver.xs[1:]
         self.control_trajectory[:-1] = self.controller.solver.us[1:]
         self.trajectory_cursor += 1
-        self.state_trajectory[-1] = self.controller.state_reference[self.trajectory_cursor]
+        if self.trajectory_cursor >= len(self.controller.state_reference):
+            self.state_trajectory[-1] = self.controller.state_reference[-1]
+        else:
+            self.state_trajectory[-1] = self.controller.state_reference[self.trajectory_cursor]
         self.control_trajectory[-1] = self.control_trajectory[-2]
 
         self.controller.updateProblem(self.trajectory_cursor)
