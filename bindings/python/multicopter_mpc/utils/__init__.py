@@ -310,7 +310,7 @@ class CarrotMpc():
 
 
 class MpcMain():
-    def __init__(self):
+    def __init__(self, mission_name):
         self.robot = example_robot_data.loadIris()
         self.robot_model = self.robot.model
         self.robot_state = crocoddyl.StateMultibody(self.robot_model)
@@ -320,7 +320,7 @@ class MpcMain():
             self.robot_state, self.mc_params.n_rotors, self.mc_params.tau_f)
 
         self.mission = multicopter_mpc.Mission(self.robot.nq + self.robot.nv)
-        self.mission.fillWaypoints(MULTICOPTER_MPC_MISSION_DIR + "/takeoff.yaml")
+        self.mission.fillWaypoints(MULTICOPTER_MPC_MISSION_DIR + "/" + mission_name)
 
         self.dt = 4e-3
         self.trajectory = multicopter_mpc.TrajectoryGenerator(self.robot_model, self.mc_params, self.mission)
