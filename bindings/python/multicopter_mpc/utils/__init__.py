@@ -337,7 +337,14 @@ class MpcMain():
             self.control_trajectory[:-1] = self.controller.solver.us[1:]
             self.trajectory_cursor += 1
             if self.trajectory_cursor >= len(self.controller.state_reference):
-                self.state_trajectory[-1] = self.controller.state_reference[-1]
+                state_hover = self.robot_state.zero()
+                state_hover[:3] = self.controller.state_reference[-1][:3]
+                quat_hover = pinocchio.Quaternion(self.controller.state_reference[-1][6], 0., 0.,
+                                                  self.controller.state_reference[-1][5])
+                quat_hover.normalize()
+                state_hover[5] = quat_hover.z
+                state_hover[6] = quat_hover.w
+                self.state_trajectory[-1] = state_hover
             else:
                 self.state_trajectory[-1] = self.controller.state_reference[self.trajectory_cursor]
             self.control_trajectory[-1] = self.control_trajectory[-2]

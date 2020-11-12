@@ -51,7 +51,7 @@ class CarrotMpc():
         self.w_pos_terminal = 10
         self.w_vel_terminal = 10
 
-        self.solver_iters = 5
+        self.solver_iters = 70
 
     def initializeTerminalWeights(self):
         wp_idxs = self.mission.wp_knot_idx
@@ -78,7 +78,7 @@ class CarrotMpc():
 
         self.problem = crocoddyl.ShootingProblem(self.state_initial, self.int_models_running, self.int_model_terminal)
         self.solver = crocoddyl.SolverBoxFDDP(self.problem)
-        # self.solver.setCallbacks([crocoddyl.CallbackVerbose()])
+        self.solver.setCallbacks([crocoddyl.CallbackVerbose()])
 
     def createDifferentialModel(self, idx_knot):
         cost_model = crocoddyl.CostModelSum(self.robot_state, self.actuation_model.nu)
@@ -145,8 +145,10 @@ class CarrotMpc():
         idx_traj = idx_trajectory
         self.terminal_weights = self.terminal_weights[1:] + [idx_traj in wp_idxs]
 
-        if self.terminal_weights[-1]:
-            wp_idx = wp_idxs.index(idx_traj)
+        if self.terminal_weights[-1] or idx_traj > len(self.state_reference) - 1:
+            wp_idx = len(self.mission.waypoints) - 1
+            if idx_traj <= self.mission.total_knots - 1:
+                wp_idx = wp_idxs.index(idx_traj)
             self.pose_ref.id = self.frame_base_link_id
             self.pose_ref.placement = self.mission.waypoints[wp_idx].pose
             self.motion_ref.id = self.frame_base_link_id

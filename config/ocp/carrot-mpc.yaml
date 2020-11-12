@@ -2,14 +2,14 @@ trajectory_generator:
   solver: "BoxFDDP"
   integrator: "Euler"
   yaml_path: "/usr/local/share/multicopter_mpc/ocp/trajectory-generator.yaml"
-  initial_guess: "SE3"
+  initial_guess: "none"
 ocp:
   dt: 4e-3
   n_knots: 100  
   cost_running_state_weight: 1e-5
-  cost_running_control_weight: 1e-2
-  cost_running_pos_weight: 2500.0
-  cost_running_vel_weight: 2500.0
+  cost_running_control_weight: 5e-2
+  cost_running_pos_weight: 8000.0
+  cost_running_vel_weight: 5000.0
   cost_terminal_pos_weight: 10.0
   cost_terminal_vel_weight: 10.0
   $state_weights:

@@ -210,15 +210,18 @@ void CarrotMpc::updateProblem(const std::size_t& idx_trajectory) {
                                            idx_trajectory) != mission_->getWpTrajIdx().end();
 
   // Treat the incoming knot
-  if (terminal_weights_idx_.back()) {
-    std::size_t wp_idx = std::find(mission_->getWpTrajIdx().begin(), mission_->getWpTrajIdx().end(), idx_trajectory) -
-                         mission_->getWpTrajIdx().begin();
+  if (terminal_weights_idx_.back() || idx_trajectory > trajectory_generator_->getKnots() - 1) {
+    std::size_t wp_idx = mission_->getWaypoints().size() - 1;
+    if (idx_trajectory <= trajectory_generator_->getKnots() - 1) {
+      wp_idx = std::find(mission_->getWpTrajIdx().begin(), mission_->getWpTrajIdx().end(), idx_trajectory) -
+               mission_->getWpTrajIdx().begin();
+    }
 
     pose_ref_.id = frame_base_link_id_;
     pose_ref_.placement = mission_->getWaypoints()[wp_idx].pose;
     motion_ref_.id = frame_base_link_id_;
     motion_ref_.motion = *(mission_->getWaypoints()[wp_idx].vel);
-    MMPC_WARN << "Found waypoint: " << pose_ref_.placement;
+    // MMPC_WARN << "Found waypoint: " << pose_ref_.placement;
   } else {
     setReference(idx_trajectory);
   }
