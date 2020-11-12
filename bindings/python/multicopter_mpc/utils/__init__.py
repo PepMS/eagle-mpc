@@ -4,6 +4,7 @@ import multicopter_mpc
 import example_robot_data
 
 import numpy as np
+import math
 from multicopter_mpc.utils.path import MULTICOPTER_MPC_MULTIROTOR_DIR, MULTICOPTER_MPC_MISSION_DIR, MULTICOPTER_MPC_OCP_DIR
 
 
@@ -116,7 +117,8 @@ class TrajectoryGeneratorDerived(multicopter_mpc.OcpAbstract):
 
 
 class CarrotMpc():
-    def __init__(self, robot_model, robot_state, actuation_model, mc_params, mission, state_reference, control_reference, dt):
+    def __init__(self, robot_model, robot_state, actuation_model, mc_params, mission, state_reference,
+                 control_reference, dt):
         self.robot_model = robot_model
         self.robot_state = robot_state
         self.mc_params = mc_params
@@ -138,6 +140,7 @@ class CarrotMpc():
         self.state_reference = state_reference
         self.control_reference = control_reference
         self.state_initial = self.state_reference[0]
+        # self.n_knots = mission.total_knots - 1
         self.n_knots = 100
 
         self.terminal_weights = [False] * self.n_knots
@@ -166,6 +169,13 @@ class CarrotMpc():
 
         if last_wp_idx >= len(wp_idxs.tolist()):
             self.terminal_weights[wp_idxs[last_wp_idx - 1]:] = True
+        
+        self.weight_distribution = [0]*self.mission.total_knots
+        std_dev = 1
+        for idx in wp_idxs:
+            self.weight_distribution = [self.weight_distribution[i] + 1/std_dev*math.sqrt(1/(2*math.pi))*math.exp(-1/2*((i - idx)/std_dev)**2) for i in range(self.mission.total_knots)]
+        
+        print()
 
     def createProblem(self):
         self.initializeTerminalWeights()
@@ -215,8 +225,8 @@ class CarrotMpc():
             cost_model.addCost("pose_desired", cost_pose, w_pos, False)
             cost_model.addCost("vel_desired", cost_vel, w_vel, False)
 
-        diff_model = crocoddyl.DifferentialActionModelFreeFwdDynamics(
-            self.robot_state, self.actuation_model, cost_model)
+        diff_model = crocoddyl.DifferentialActionModelFreeFwdDynamics(self.robot_state, self.actuation_model,
+                                                                      cost_model)
 
         diff_model.u_lb = self.tau_lb
         diff_model.u_ub = self.tau_ub
@@ -224,12 +234,12 @@ class CarrotMpc():
         return diff_model
 
     def createCostStateRegularization(self):
-        state_weights = np.hstack((self.w_state_position, self.w_state_orientation,
-                                   self.w_state_velocity_lin, self.w_state_velocity_ang))
+        state_weights = np.hstack(
+            (self.w_state_position, self.w_state_orientation, self.w_state_velocity_lin, self.w_state_velocity_ang))
 
         activation_state = crocoddyl.ActivationModelWeightedQuad(state_weights)
-        cost_reg_state = crocoddyl.CostModelState(
-            self.robot_state, activation_state, self.robot_state.zero(), self.actuation_model.nu)
+        cost_reg_state = crocoddyl.CostModelState(self.robot_state, activation_state, self.robot_state.zero(),
+                                                  self.actuation_model.nu)
 
         return cost_reg_state
 
@@ -246,6 +256,19 @@ class CarrotMpc():
         idx_traj = idx_trajectory
         self.terminal_weights = self.terminal_weights[1:] + [idx_traj in wp_idxs]
 
+        n_wp_knots = sum(1 for i in self.terminal_weights[:-2] if i==1) # the last one is always a high gain knot
+        
+        if n_wp_knots > 0:
+            # w_pos = self.w_pos_terminal / (n_wp_knots + 1)
+            # w_vel = self.w_vel_terminal / (n_wp_knots + 1)
+            # w_pos = self.w_pos_terminal / 10
+            # w_vel = self.w_vel_terminal / 10
+            w_control = self.w_control_running * 100
+        else:
+            w_control = self.w_control_running
+            # w_pos = self.w_pos_terminal / (n_wp_knots + 1)
+            # w_vel = self.w_vel_terminal / (n_wp_knots + 1)
+
         if self.terminal_weights[-1]:
             wp_idx = wp_idxs.index(idx_traj)
             self.pose_ref.id = self.frame_base_link_id
@@ -255,12 +278,14 @@ class CarrotMpc():
         else:
             self.setReference(idx_traj)
 
-
         self.diff_model_terminal.costs.costs['pose_desired'].cost.reference = self.pose_ref
         self.diff_model_terminal.costs.costs['vel_desired'].cost.reference = self.motion_ref
 
         self.diff_model_terminal.costs.costs['pose_desired'].active = True
         self.diff_model_terminal.costs.costs['vel_desired'].active = True
+
+        # self.diff_model_terminal.costs.costs['pose_desired'].weight = w_pos
+        # self.diff_model_terminal.costs.costs['vel_desired'].weight = w_vel
 
         # if True in self.terminal_weights and self.terminal_weights[-1] == False:
         #     self.diff_model_terminal.costs.costs['pose_desired'].active = False
@@ -279,6 +304,8 @@ class CarrotMpc():
                 self.motion_ref.motion = self.mission.waypoints[wp_idx].velocity
                 model.costs.costs['pose_desired'].active = True
                 model.costs.costs['vel_desired'].active = True
+                # model.costs.costs['pose_desired'].weight = w_pos / self.dt
+                # model.costs.costs['vel_desired'].weight = w_vel / self.dt
             else:
                 if idx_traj > len(self.state_reference) - 1:
                     model.costs.costs['pose_desired'].active = True
@@ -289,7 +316,7 @@ class CarrotMpc():
 
             model.costs.costs['pose_desired'].cost.reference = self.pose_ref
             model.costs.costs['vel_desired'].cost.reference = self.motion_ref
-
+            model.costs.costs["control_reg"].cost.weight = w_control
             idx_traj -= 1
 
     def setReference(self, idx_trajectory):
@@ -309,39 +336,178 @@ class CarrotMpc():
             self.problem.x0 = self.state_initial
 
 
+class RecedingMPC():
+    def __init__(self, robot_model, robot_state, actuation_model, mc_params, mission, state_reference,
+                 control_reference, dt):
+        self.robot_model = robot_model
+        self.robot_state = robot_state
+        self.mc_params = mc_params
+        self.mc_params.fill(MULTICOPTER_MPC_MULTIROTOR_DIR + "/iris.yaml")
+        self.tau_lb = self.mc_params.min_thrust * np.ones(self.mc_params.n_rotors)
+        self.tau_ub = self.mc_params.max_thrust * np.ones(self.mc_params.n_rotors)
+
+        self.actuation_model = actuation_model
+
+        self.dt = dt
+        self.diff_models_running = []
+        self.int_models_running = []
+
+        self.frame_base_link_id = self.robot_model.getFrameId(self.mc_params.base_link_name)
+        self.pose_ref = crocoddyl.FramePlacement()
+        self.motion_ref = crocoddyl.FrameMotion()
+
+        self.mission = mission
+        self.state_reference = state_reference
+        self.control_reference = control_reference
+        self.state_initial = self.state_reference[0]
+        self.n_knots = self.mission.total_knots
+
+        # Weights for the costs
+        self.w_state_position = np.ones(3)
+        self.w_state_orientation = np.ones(3)
+        self.w_state_velocity_lin = np.ones(3)
+        self.w_state_velocity_ang = np.ones(3)
+        self.w_state_running = 1e-5
+        self.w_control_running = 1e-2
+        self.w_pos_running = 2500.
+        self.w_vel_running = 2500.
+        self.w_pos_terminal = 10
+        self.w_vel_terminal = 10
+
+        self.solver_iters = 70
+
+        self.counter = 1
+
+    def createProblem(self):
+        cost_reg_state = self.createCostStateRegularization()
+        cost_reg_control = self.createCostControlRegularization()
+
+        for idx_wp, wp in enumerate(self.mission.waypoints):
+            cost_model_running = crocoddyl.CostModelSum(self.robot_state, self.actuation_model.nu)
+            cost_model_terminal = crocoddyl.CostModelSum(self.robot_state, self.actuation_model.nu)
+
+            cost_model_running.addCost("x_reg", cost_reg_state, self.w_state_running)
+            cost_model_running.addCost("u_ref", cost_reg_control, self.w_control_running)
+
+            w_pos = self.w_pos_terminal
+            w_vel = self.w_vel_terminal
+            if idx_wp < len(self.mission.waypoints) - 1:
+                cost_model_terminal.addCost("x_reg", cost_reg_state, self.w_state_running)
+                cost_model_terminal.addCost("u_ref", cost_reg_control, self.w_control_running)
+                w_pos = self.w_pos_terminal / self.dt
+                w_vel = self.w_vel_terminal / self.dt
+
+            frame_ref = crocoddyl.FramePlacement(self.frame_base_link_id, wp.pose)
+            cost_goal = crocoddyl.CostModelFramePlacement(self.robot_state, frame_ref, self.actuation_model.nu)
+            cost_model_terminal.addCost("pos_desired", cost_goal, w_pos)
+
+            if wp.velocity is not None:
+                vel_ref = crocoddyl.FrameMotion(self.frame_base_link_id, wp.velocity)
+                cost_goal_vel = crocoddyl.CostModelFrameVelocity(self.robot_state, vel_ref, self.actuation_model.nu)
+                cost_model_terminal.addCost("goal_vel_cost", cost_goal_vel, w_vel)
+
+            diff_model_running = crocoddyl.DifferentialActionModelFreeFwdDynamics(self.robot_state, self.actuation_model,
+                                                                                  cost_model_running)
+            diff_model_terminal = crocoddyl.DifferentialActionModelFreeFwdDynamics(self.robot_state, self.actuation_model,
+                                                                                   cost_model_terminal)
+            int_model_running = crocoddyl.IntegratedActionModelEuler(diff_model_running, self.dt)
+            
+            n_run_knots = 0
+            if idx_wp == 0:
+                n_run_knots = wp.knots - 1
+            else:
+                n_run_knots = wp.knots - 2
+
+            if idx_wp < len(self.mission.waypoints) - 1:
+                int_model_running.u_lb = self.tau_lb
+                int_model_running.u_ub = self.tau_ub
+
+                diff_models_running = [diff_model_running for i in range(n_run_knots)]
+                diff_models_running.append(diff_model_terminal)
+                self.diff_models_running.extend(diff_models_running)
+
+                int_models_running = [int_model_running for i in range(n_run_knots)]
+                int_model_terminal = crocoddyl.IntegratedActionModelEuler(diff_model_terminal, self.dt)
+                int_model_terminal.u_lb = self.tau_lb
+                int_model_terminal.u_ub = self.tau_ub
+
+                int_models_running.append(int_model_terminal)
+                self.int_models_running.extend(int_models_running)
+            else:
+                int_model_running.u_lb = self.tau_lb
+                int_model_running.u_ub = self.tau_ub
+
+                diff_models_running = [diff_model_running for i in range(n_run_knots)]
+                self.diff_models_running.extend(diff_models_running)
+                self.diff_model_terminal = diff_model_terminal
+
+                int_models_running = [int_model_running for i in range(n_run_knots)]
+                self.int_models_running.extend(int_models_running)
+                int_model_terminal = crocoddyl.IntegratedActionModelEuler(diff_model_terminal, 0.)
+                self.int_model_terminal = int_model_terminal
+
+        self.problem = crocoddyl.ShootingProblem(self.mission.x0, self.int_models_running, self.int_model_terminal)
+        self.solver = crocoddyl.SolverBoxFDDP(self.problem)
+        # self.solver.setCallbacks([crocoddyl.CallbackVerbose()])
+
+    def createCostStateRegularization(self):
+        state_weights = np.hstack(
+            (self.w_state_position, self.w_state_orientation, self.w_state_velocity_lin, self.w_state_velocity_ang))
+
+        activation_state = crocoddyl.ActivationModelWeightedQuad(state_weights)
+        cost_reg_state = crocoddyl.CostModelState(self.robot_state, activation_state, self.robot_state.zero(),
+                                                  self.actuation_model.nu)
+
+        return cost_reg_state
+
+    def createCostControlRegularization(self):
+        cost_reg_control = crocoddyl.CostModelControl(self.robot_state, self.actuation_model.nu)
+
+        return cost_reg_control
+
+    def solve(self, state_trajectory, control_trajectory):
+        self.solver.solve(state_trajectory, control_trajectory, self.solver_iters)
+
+    def updateProblem(self, idx_trajectory):
+        self.problem = crocoddyl.ShootingProblem(self.state_initial, self.int_models_running[self.counter:], self.int_model_terminal)
+        # self.problem.runningModels = self.problem.runningModels[1:]
+        self.solver = crocoddyl.SolverBoxFDDP(self.problem)
+        # self.solver.setCallbacks([crocoddyl.CallbackVerbose()])
+
+        self.counter += 1
+
+    def setStateInitial(self, state):
+        self.state_initial = state
+
+        if hasattr(self, 'problem'):
+            self.problem.x0 = self.state_initial
+
+
 class MpcMain():
-    def __init__(self, mission_name):
+    def __init__(self, mission_name, controller_type):
         self.robot = example_robot_data.loadIris()
         self.robot_model = self.robot.model
         self.robot_state = crocoddyl.StateMultibody(self.robot_model)
         self.mc_params = multicopter_mpc.MultiCopterBaseParams()
         self.mc_params.fill(MULTICOPTER_MPC_MULTIROTOR_DIR + "/iris.yaml")
-        self.actuation_model = crocoddyl.ActuationModelMultiCopterBase(
-            self.robot_state, self.mc_params.n_rotors, self.mc_params.tau_f)
-
+        self.actuation_model = crocoddyl.ActuationModelMultiCopterBase(self.robot_state, self.mc_params.n_rotors,
+                                                                       self.mc_params.tau_f)
+        self.mission_name = mission_name
         self.mission = multicopter_mpc.Mission(self.robot.nq + self.robot.nv)
         self.mission.fillWaypoints(MULTICOPTER_MPC_MISSION_DIR + "/" + mission_name)
 
         self.dt = 4e-3
-        self.trajectory = multicopter_mpc.TrajectoryGenerator(self.robot_model, self.mc_params, self.mission)
-        self.trajectory.loadParameters(MULTICOPTER_MPC_OCP_DIR + "/trajectory-generator.yaml")
-        self.trajectory.createProblem(multicopter_mpc.SolverType.SolverTypeBoxFDDP,
-                                      multicopter_mpc.IntegratorType.IntegratorTypeEuler, self.dt)
-        self.trajectory.setSolverCallbacks(True)
-        state_guess = self.mission.interpolateTrajectory("cold")
-        control = pinocchio.utils.zero(4)
-        control_guess = [control for _ in range(0, len(state_guess) - 1)]
-        self.trajectory.solve(state_guess, control_guess)
-
-        self.controller = CarrotMpc(self.robot_model,
-                                    self.robot_state,
-                                    self.actuation_model,
-                                    self.mc_params,
-                                    self.mission,
-                                    self.trajectory.getStateTrajectory(0, self.trajectory.n_knots - 1),
-                                    self.trajectory.getControlTrajectory(0, self.trajectory.n_knots - 2),
-                                    self.dt)
-
+        self.initializeTrajectoryGenerator()
+        self.controller_type = controller_type
+        if controller_type == "carrot":
+            self.controller = CarrotMpc(self.robot_model, self.robot_state, self.actuation_model, self.mc_params,
+                                        self.mission, self.trajectory.getStateTrajectory(0, self.trajectory.n_knots - 1),
+                                        self.trajectory.getControlTrajectory(0, self.trajectory.n_knots - 2), self.dt)
+        elif controller_type == "receding":
+            self.controller = RecedingMPC(self.robot_model, self.robot_state, self.actuation_model, self.mc_params,
+                                        self.mission, self.trajectory.getStateTrajectory(0, self.trajectory.n_knots - 1),
+                                        self.trajectory.getControlTrajectory(0, self.trajectory.n_knots - 2), self.dt)
+        
         self.state = self.robot_state.zero()
         self.controller.setStateInitial(self.state)
         self.controller.createProblem()
@@ -352,16 +518,39 @@ class MpcMain():
 
         self.trajectory_cursor = self.controller.n_knots - 1
 
+    def initializeTrajectoryGenerator(self):
+        self.trajectory = multicopter_mpc.TrajectoryGenerator(self.robot_model, self.mc_params, self.mission)
+        self.trajectory.loadParameters(MULTICOPTER_MPC_OCP_DIR + "/trajectory-generator.yaml")
+        self.trajectory.createProblem(multicopter_mpc.SolverType.SolverTypeBoxFDDP,
+                                      multicopter_mpc.IntegratorType.IntegratorTypeEuler, self.dt)
+        self.trajectory.setSolverCallbacks(True)
+        state_guess = self.mission.interpolateTrajectory("cold")
+        control = pinocchio.utils.zero(4)
+        control_guess = [control for _ in range(0, len(state_guess) - 1)]
+        self.trajectory.solve(state_guess, control_guess)
+
     def runMpcStep(self):
         self.controller.setStateInitial(self.state)
-        self.controller.solve(self.state_trajectory, self.control_trajectory)
-        self.state_trajectory[:-1] = self.controller.solver.xs[1:]
-        self.control_trajectory[:-1] = self.controller.solver.us[1:]
-        self.trajectory_cursor += 1
-        if self.trajectory_cursor >= len(self.controller.state_reference):
-            self.state_trajectory[-1] = self.controller.state_reference[-1]
+        if self.controller_type == "receding":
+            self.controller.solve(self.state_trajectory, self.control_trajectory)
+            control = self.controller.solver.us[0]
+            # self.state_trajectory = []
+            self.state_trajectory = self.controller.solver.xs[1:]
+            # self.control_trajectory = []
+            self.control_trajectory = self.controller.solver.us[1:]
+            self.trajectory_cursor += 1
         else:
-            self.state_trajectory[-1] = self.controller.state_reference[self.trajectory_cursor]
-        self.control_trajectory[-1] = self.control_trajectory[-2]
-
+            self.controller.solve(self.state_trajectory, self.control_trajectory)
+            self.state_trajectory[:-1] = self.controller.solver.xs[1:]
+            self.control_trajectory[:-1] = self.controller.solver.us[1:]
+            self.trajectory_cursor += 1
+            if self.trajectory_cursor >= len(self.controller.state_reference):
+                self.state_trajectory[-1] = self.controller.state_reference[-1]
+            else:
+                self.state_trajectory[-1] = self.controller.state_reference[self.trajectory_cursor]
+            self.control_trajectory[-1] = self.control_trajectory[-2]
+        
+        control = np.copy(self.controller.solver.us[0])
         self.controller.updateProblem(self.trajectory_cursor)
+
+        return control
