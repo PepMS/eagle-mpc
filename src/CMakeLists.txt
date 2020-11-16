@@ -28,6 +28,7 @@ install(TARGETS multicopter_mpc
         EXPORT multicopter_mpc DESTINATION ${LIBRARY_DESTINATION})
 install(FILES ${multicopter_mpc_SOURCE_DIR}/cmake/multicopter_mpc-config.cmake DESTINATION ${LIBRARY_DESTINATION}/cmake/multicopter_mpc)
 install(EXPORT multicopter_mpc DESTINATION ${LIBRARY_DESTINATION}/cmake/multicopter_mpc)
+install(EXPORT multicopter_mpc CONFIGURATIONS Release DESTINATION ${LIBRARY_DESTINATION}/cmake/multicopter_mpc/Release)
 install(DIRECTORY ../include/multicopter_mpc DESTINATION ${INCLUDE_DESTINATION})
 install(FILES ${multicopter_mpc_SOURCE_DIR}/config/other/path.h DESTINATION ${INCLUDE_DESTINATION}/multicopter_mpc)
 install(DIRECTORY ../config/mission DESTINATION ${SHARE_DESTINATION})

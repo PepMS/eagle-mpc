@@ -16,10 +16,10 @@ set(SHARE_DESTINATION "share/multicopter_mpc")
 
 enable_testing()
 
-option(WITH_BINDINGS "Compile bindings" OFF)
+option(WITH_BINDINGS "Compile bindings" ON)
 option(WITH_EXAMPLES "Compile examples" OFF)
 option(WITH_BENCHMARK "Compile benchmarks" OFF)
-option(WITH_UNITTEST "Compile unittest" ON)
+option(WITH_UNITTEST "Compile unittest" OFF)
 
 # Testing purposes
 set(MULTICOPTER_MPC_CONFIG_DIR ${PROJECT_BINARY_DIR}/other/multicopter_mpc)
@@ -39,10 +39,10 @@ find_package(eigenpy REQUIRED)
 find_package(pinocchio REQUIRED)
 find_package(crocoddyl REQUIRED)
 find_package(YamlCpp REQUIRED)
-find_package(Boost COMPONENTS python3 filesystem unit_test_framework REQUIRED)
-set(Python_ADDITIONAL_VERSIONS "3.6")
-find_package(PythonInterp)
-find_package(PythonLibs REQUIRED)
+set(Python_ADDITIONAL_VERSIONS 3.6 3.7 3.8)
+find_package(Python3 REQUIRED Development Interpreter)
+set(WHICH_PYTHON3 "python3${Python3_VERSION_MINOR}")
+find_package(Boost COMPONENTS ${WHICH_PYTHON3} filesystem unit_test_framework REQUIRED)
 
 SET(YAML_PARSER_LIB /usr/local/lib/libyaml_parser.so)
 SET(YAML_PARSER_INCLUDE_DIRS /usr/local/include/yaml_parser/)
