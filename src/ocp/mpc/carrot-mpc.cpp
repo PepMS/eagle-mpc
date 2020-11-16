@@ -235,14 +235,22 @@ void CarrotMpc::updateProblem(const std::size_t& idx_trajectory) {
           (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->cost);
   cost_pose->set_reference<crocoddyl::FramePlacement>(pose_ref_);
   cost_vel->set_reference<crocoddyl::FrameMotion>(motion_ref_);
+
+  // In case it is a steady state node, reduce the weight
+  if (idx_trajectory > trajectory_generator_->getKnots() - 1) {
+    (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->weight /= 20.0;
+    (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->weight /= 20.0;
+  }
+
   // -- Weights
-  // if (existsTerminalWeight()) {
-  //   (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->active = false;
-  //   (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->active = false;
-  // } else {
-  //   (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->active = true;
-  //   (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->active = true;
-  // }
+  if (existsTerminalWeight()) {
+    (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->active = false;
+    (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->active = false;
+  } else {
+    (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->active = true;
+    (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->active = true;
+  }
+
   (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->active = true;
   (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->active = true;
 

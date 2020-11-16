@@ -1,7 +1,7 @@
 ocp:
   dt: 4e-3
   cost_running_state_weight: 1e-5
-  cost_running_control_weight: 1e-2
+  cost_running_control_weight: 5e-2
   cost_running_pos_weight: 1e-2
   cost_running_vel_weight: 1e-2
   cost_terminal_pos_weight: 10
