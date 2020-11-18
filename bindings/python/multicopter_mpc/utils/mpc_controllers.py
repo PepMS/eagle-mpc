@@ -48,8 +48,6 @@ class CarrotMpc():
         self.w_control_running = 5e-2
         self.w_pos_running = 2500.
         self.w_vel_running = 2500.
-        # self.w_pos_running = 0.
-        # self.w_vel_running = 0.
         self.w_pos_terminal = 10
         self.w_vel_terminal = 10
 
@@ -82,7 +80,7 @@ class CarrotMpc():
 
         self.problem = crocoddyl.ShootingProblem(self.state_initial, self.int_models_running, self.int_model_terminal)
         self.solver = crocoddyl.SolverBoxFDDP(self.problem)
-        # self.solver.setCallbacks([crocoddyl.CallbackVerbose()])
+        self.solver.setCallbacks([crocoddyl.CallbackVerbose()])
 
     def createDifferentialModel(self, idx_knot):
         cost_model = crocoddyl.CostModelSum(self.robot_state, self.actuation_model.nu)
@@ -137,8 +135,8 @@ class CarrotMpc():
         else:
             control_ref = self.control_reference[idx_knot]
 
-        # cost_reg_control = crocoddyl.CostModelControl(self.robot_state, self.actuation_model.nu)
-        cost_reg_control = crocoddyl.CostModelControl(self.robot_state, control_ref)
+        cost_reg_control = crocoddyl.CostModelControl(self.robot_state, self.actuation_model.nu)
+        # cost_reg_control = crocoddyl.CostModelControl(self.robot_state, control_ref)
         return cost_reg_control
 
     def solve(self, state_trajectory, control_trajectory):
@@ -149,8 +147,7 @@ class CarrotMpc():
         idx_traj = idx_trajectory
         self.terminal_weights = self.terminal_weights[1:] + [idx_traj in wp_idxs]
 
-        # Terminal node reference assignment
-
+        # Terminal node reference assignment (WP or reference trajectory)
         # if self.terminal_weights[-1] or idx_traj > len(self.state_reference) - 1:
         #     wp_idx = len(self.mission.waypoints) - 1
         #     if idx_traj <= self.mission.total_knots - 1:
@@ -166,55 +163,54 @@ class CarrotMpc():
         self.diff_model_terminal.costs.costs['pose_desired'].cost.reference = self.pose_ref
         self.diff_model_terminal.costs.costs['vel_desired'].cost.reference = self.motion_ref
 
+        # Activate or deactivate terminal node
+        # if True in self.terminal_weights[1:] and not self.terminal_weights[-1]:
+        #     self.diff_model_terminal.costs.costs['pose_desired'].active = False
+        #     self.diff_model_terminal.costs.costs['vel_desired'].active = False
+        # else:
+        #     self.diff_model_terminal.costs.costs['pose_desired'].active = True
+        #     self.diff_model_terminal.costs.costs['vel_desired'].active = True
+
         self.diff_model_terminal.costs.costs['pose_desired'].active = True
         self.diff_model_terminal.costs.costs['vel_desired'].active = True
 
-        # if idx_traj > len(self.state_reference) - 1:
-        #     self.diff_model_terminal.costs.costs['pose_desired'].weight /= 20
-        #     self.diff_model_terminal.costs.costs['vel_desired'].weight /= 20
-
-        if True in self.terminal_weights and not self.terminal_weights[-1]:
-            # self.diff_model_terminal.costs.costs['pose_desired'].active = False
-            # self.diff_model_terminal.costs.costs['vel_desired'].active = False
-            self.diff_model_terminal.costs.costs['pose_desired'].weight = self.w_pos_terminal * self.terminal_ramp
-            self.diff_model_terminal.costs.costs['vel_desired'].weight  = self.w_vel_terminal * self.terminal_ramp
-            # self.terminal_ramp = max(1, self.terminal_ramp + 1/25) 
-            # print("reduce weight")
-        else:
-            self.diff_model_terminal.costs.costs['pose_desired'].weight = self.w_pos_terminal
-            self.diff_model_terminal.costs.costs['vel_desired'].weight = self.w_vel_terminal
-            # self.terminal_ramp = 0
-            # self.diff_model_terminal.costs.costs['pose_desired'].active = True
-            # self.diff_model_terminal.costs.costs['vel_desired'].active = True
-
         idx_traj -= 1
         for idx, model in rev_enumerate(self.diff_models_running):
-            if self.terminal_weights[idx]:
-                # wp_idx = wp_idxs.index(idx_traj)
-                # self.pose_ref.id = self.frame_base_link_id
-                # self.pose_ref.placement = self.mission.waypoints[wp_idx].pose
-                # self.motion_ref.id = self.frame_base_link_id
-                # self.motion_ref.motion = self.mission.waypoints[wp_idx].velocity
-                self.setReference(idx_traj)
-                model.costs.costs['pose_desired'].active = True
-                model.costs.costs['vel_desired'].active = True
+            if idx == 0:
+                pass
             else:
-                if idx_traj > len(self.state_reference) - 1:
+                if self.terminal_weights[idx]:
+                    # wp_idx = wp_idxs.index(idx_traj)
+                    # self.pose_ref.id = self.frame_base_link_id
+                    # self.pose_ref.placement = self.mission.waypoints[wp_idx].pose
+                    # self.motion_ref.id = self.frame_base_link_id
+                    # self.motion_ref.motion = self.mission.waypoints[wp_idx].velocity
+                    self.setReference(idx_traj)
                     model.costs.costs['pose_desired'].active = True
                     model.costs.costs['vel_desired'].active = True
-                    # model.costs.costs['pose_desired'].weight /= 20
-                    # model.costs.costs['vel_desired'].weight /= 20
                 else:
-                    model.costs.costs['pose_desired'].active = False
-                    model.costs.costs['vel_desired'].active = False
+                    if idx_traj > len(self.state_reference) - 1:
+                        model.costs.costs['pose_desired'].active = True
+                        model.costs.costs['vel_desired'].active = True
+                        # model.costs.costs['pose_desired'].weight /= 20
+                        # model.costs.costs['vel_desired'].weight /= 20
+                    else:
+                        model.costs.costs['pose_desired'].active = False
+                        model.costs.costs['vel_desired'].active = False
 
-            model.costs.costs['pose_desired'].cost.reference = self.pose_ref
-            model.costs.costs['vel_desired'].cost.reference = self.motion_ref
+                model.costs.costs['pose_desired'].cost.reference = self.pose_ref
+                model.costs.costs['vel_desired'].cost.reference = self.motion_ref
             idx_traj -= 1
 
     def setReference(self, idx_trajectory):
         if idx_trajectory >= len(self.state_reference):
-            state_ref = self.state_reference[-1]
+            state_ref = self.robot_state.zero()
+            state_ref[:3] = self.state_reference[-1][:3]
+            quat_hover = pinocchio.Quaternion(self.state_reference[-1][6], 0., 0.,
+                                              self.state_reference[-1][5])
+            quat_hover.normalize()
+            state_ref[5] = quat_hover.z
+            state_ref[6] = quat_hover.w
         else:
             state_ref = self.state_reference[idx_trajectory]
         self.pose_ref.id = self.frame_base_link_id

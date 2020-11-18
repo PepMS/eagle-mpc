@@ -12,6 +12,14 @@
 
 namespace multicopter_mpc {
 
+struct CarrotMpcParams {
+  TrajectoryGeneratorParams weights;
+
+  bool terminal_cost_with_wp_enabled;
+  bool use_wp_for_reference;
+  bool control_reg_trajectory;
+};
+
 class CarrotMpc : public MpcAbstract {
  public:
   CarrotMpc(const boost::shared_ptr<pinocchio::Model>& model,
@@ -34,13 +42,14 @@ class CarrotMpc : public MpcAbstract {
 
   const crocoddyl::FramePlacement& getPoseRef() const;
   const crocoddyl::FrameMotion& getVelocityRef() const;
-  const TrajectoryGeneratorParams& getParams() const;
+  const CarrotMpcParams& getParams() const;
   const Eigen::VectorXd& getControls(const std::size_t& idx = 0) const;
 
   virtual void printInfo();
   void printProblem();
 
   using OcpAbstract::createProblem;
+
  protected:
   void createProblem(const SolverTypes::Type& solver_type, const IntegratorTypes::Type& integrator_type) override;
   void initializeDefaultParameters() override;
@@ -50,6 +59,7 @@ class CarrotMpc : public MpcAbstract {
       const std::size_t& idx_knot);
   boost::shared_ptr<crocoddyl::CostModelAbstract> createCostStateRegularization();
   boost::shared_ptr<crocoddyl::CostModelAbstract> createCostControlRegularization();
+  boost::shared_ptr<crocoddyl::CostModelAbstract> createCostControlRegularization(const std::size_t& idx_traj);
 
   void setReference(const std::size_t& idx_trajectory);
 
@@ -61,7 +71,7 @@ class CarrotMpc : public MpcAbstract {
   std::vector<boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics>>::iterator diff_model_iter_;
 
   std::vector<bool> terminal_weights_idx_;
-  TrajectoryGeneratorParams params_;
+  CarrotMpcParams params_;
 
  private:
   static bool registered_;

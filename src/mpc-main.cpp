@@ -114,10 +114,10 @@ void MpcMain::runMpcStep() {
             state_trajectory_.begin());
   std::copy(mpc_controller_->getSolver()->get_us().begin() + 1, mpc_controller_->getSolver()->get_us().end(),
             control_trajectory_.begin());
-  motor_thrust_ = mpc_controller_->getControls(1);
+  motor_thrust_ = mpc_controller_->getControls(0);
   thrustToSpeed(motor_thrust_, motor_speed_);
-  ff_gains_ = mpc_controller_->getFeedForwardGains(1);
-  fb_gains_ = mpc_controller_->getFeedBackGains(1);
+  ff_gains_ = mpc_controller_->getFeedForwardGains(0);
+  fb_gains_ = mpc_controller_->getFeedBackGains(0);
 
   ++trajectory_cursor_;
   state_trajectory_.back() = mpc_controller_->getTrajectoryGenerator()->getState(trajectory_cursor_);
