@@ -20,7 +20,6 @@ target_link_libraries(${PROJECT_NAME}_pywrap ${Boost_LIBRARIES}
 
 target_compile_options(${PROJECT_NAME}_pywrap PRIVATE "-Wno-conversion")
 
-install(TARGETS ${PROJECT_NAME}_pywrap
-        LIBRARY DESTINATION lib/python3/dist-packages/yaml_parser)
-install(DIRECTORY python/yaml_parser/utils DESTINATION lib/python3/dist-packages/yaml_parser FILES_MATCHING PATTERN "*.py")
-install(FILES python/yaml_parser/__init__.py DESTINATION lib/python3/dist-packages/yaml_parser)
+install(TARGETS ${PROJECT_NAME}_pywrap LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/python3/dist-packages/yaml_parser)
+install(DIRECTORY python/yaml_parser/utils DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/python3/dist-packages/yaml_parser FILES_MATCHING PATTERN "*.py")
+install(FILES python/yaml_parser/__init__.py DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/python3/dist-packages/yaml_parser)

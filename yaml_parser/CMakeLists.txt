@@ -47,8 +47,8 @@ target_link_libraries(yaml_parser PUBLIC ${LIBS})
 
 # Install
 install(TARGETS yaml_parser
-        LIBRARY DESTINATION lib)
-install(DIRECTORY include/yaml_parser DESTINATION include)
+        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+install(DIRECTORY include/yaml_parser DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 # install(FILES "cmake/FindYamlCpp.cmake" DESTINATION "lib/cmake/YamlCpp")
 # install(FILES "cmake/FindYamlParser.cmake" DESTINATION "lib/cmake/${PROJECT_NAME}")
 
