@@ -52,6 +52,8 @@ MpcMain::MpcMain(const MultiCopterTypes::Type& mc_type, const std::string& missi
   // Do check to ensure that the guess of the solver is right
   trajectory_cursor_ = mpc_controller_->getKnots() - 1;
   MMPC_INFO << "MULTICOPTER MPC: MPC Main initialization complete";
+
+  first_time_ = false;
 }
 
 MpcMain::MpcMain() {}
@@ -109,7 +111,6 @@ void MpcMain::initializeMpcController() {
 void MpcMain::runMpcStep() {
   mpc_controller_->setInitialState(state_);
   mpc_controller_->solve(state_trajectory_, control_trajectory_);
-
   std::copy(mpc_controller_->getSolver()->get_xs().begin() + 1, mpc_controller_->getSolver()->get_xs().end(),
             state_trajectory_.begin());
   std::copy(mpc_controller_->getSolver()->get_us().begin() + 1, mpc_controller_->getSolver()->get_us().end(),
@@ -144,8 +145,11 @@ void MpcMain::getStateDiff(const Eigen::Ref<const Eigen::VectorXd>& state0,
   mpc_controller_->getStateMultibody()->diff(state0, state1, state_diff);
 }
 
+const std::size_t& MpcMain::getCursor() { return trajectory_cursor_; };
+
 void MpcMain::printInfo() {
-  MMPC_INFO << "MPC Main: \t" << "Trajectory cursor: " << trajectory_cursor_;
+  MMPC_INFO << "MPC Main: \t"
+            << "Trajectory cursor: " << trajectory_cursor_;
   mpc_controller_->printInfo();
 }
 

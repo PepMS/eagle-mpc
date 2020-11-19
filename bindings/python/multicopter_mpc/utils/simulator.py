@@ -20,7 +20,7 @@ class AerialSimulator():
         self.actuation_model = crocoddyl.ActuationModelMultiCopterBase(
             self.robot_state, self.mc_params.n_rotors, self.mc_params.tau_f)
         self.dif_action_model = crocoddyl.DifferentialActionModelFreeFwdDynamics(self.robot_state, self.actuation_model, crocoddyl.CostModelSum(self.robot_state, self.actuation_model.nu))
-        self.int_action_model = crocoddyl.IntegratedActionModelEuler(self.dif_action_model, self.dt)
+        self.int_action_model = crocoddyl.IntegratedActionModelRK4(self.dif_action_model, self.dt)
         self.int_action_data = self.int_action_model.createData()
 
         self.state_initial = x0

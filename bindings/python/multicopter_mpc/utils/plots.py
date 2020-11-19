@@ -9,11 +9,11 @@ from multicopter_mpc.utils.tools import wayPointListToStateArray
 colors = ['tab:blue', 'tab:orange', 'tab:red', 'tab:green']
 
 
-def PlotStates(xs, dt, wp_list=None):
-    PlotPosition(xs, dt, wp_list)
-    PlotAttitude(xs, dt, wp_list)
-    PlotVelocityLin(xs, dt, wp_list)
-    PlotVelocityAng(xs, dt, wp_list)
+def PlotStates(xs, dt, wp_list=None, legend=None):
+    PlotPosition(xs, dt, wp_list, legend=legend)
+    PlotAttitude(xs, dt, wp_list, legend=legend)
+    PlotVelocityLin(xs, dt, wp_list, legend=legend)
+    PlotVelocityAng(xs, dt, wp_list, legend=legend)
 
 
 def Plot3DTrajectory(xs, wp_list=None, subplot_axis=0, elev=None, azim=None):

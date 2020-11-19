@@ -164,15 +164,15 @@ class CarrotMpc():
         self.diff_model_terminal.costs.costs['vel_desired'].cost.reference = self.motion_ref
 
         # Activate or deactivate terminal node
-        # if True in self.terminal_weights[1:] and not self.terminal_weights[-1]:
-        #     self.diff_model_terminal.costs.costs['pose_desired'].active = False
-        #     self.diff_model_terminal.costs.costs['vel_desired'].active = False
-        # else:
-        #     self.diff_model_terminal.costs.costs['pose_desired'].active = True
-        #     self.diff_model_terminal.costs.costs['vel_desired'].active = True
+        if True in self.terminal_weights[1:] and not self.terminal_weights[-1]:
+            self.diff_model_terminal.costs.costs['pose_desired'].active = False
+            self.diff_model_terminal.costs.costs['vel_desired'].active = False
+        else:
+            self.diff_model_terminal.costs.costs['pose_desired'].active = True
+            self.diff_model_terminal.costs.costs['vel_desired'].active = True
 
-        self.diff_model_terminal.costs.costs['pose_desired'].active = True
-        self.diff_model_terminal.costs.costs['vel_desired'].active = True
+        # self.diff_model_terminal.costs.costs['pose_desired'].active = True
+        # self.diff_model_terminal.costs.costs['vel_desired'].active = True
 
         idx_traj -= 1
         for idx, model in rev_enumerate(self.diff_models_running):

@@ -48,6 +48,7 @@ class MpcMain {
   const Eigen::MatrixXd& getFeedBackGains();
   void getStateDiff(const Eigen::Ref<const Eigen::VectorXd>& state0, const Eigen::Ref<const Eigen::VectorXd>& state1,
                     Eigen::Ref<Eigen::VectorXd> state_diff);
+  const std::size_t& getCursor();
 
   void printInfo();
  private:
@@ -81,6 +82,7 @@ class MpcMain {
     bool callback;
   } mpc_controller_specs_;
 
+  bool first_time_;
 };
 
 }  // namespace multicopter_mpc
