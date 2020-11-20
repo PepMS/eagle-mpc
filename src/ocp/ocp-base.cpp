@@ -45,7 +45,6 @@ void OcpAbstract::createProblem(const SolverTypes::Type& solver_type, const Inte
 void OcpAbstract::solve(const std::vector<Eigen::VectorXd>& state_trajectory,
                         const std::vector<Eigen::VectorXd>& control_trajectory) {
   solver_->solve(state_trajectory, control_trajectory, solver_iters_, false);
-  std::cout << "Solve!" << std::endl;
 }
 
 void OcpAbstract::setSolver(const SolverTypes::Type& solver_type) {
