@@ -9,11 +9,11 @@ from multicopter_mpc.utils.tools import wayPointListToStateArray
 colors = ['tab:blue', 'tab:orange', 'tab:red', 'tab:green']
 
 
-def PlotStates(xs, dt, wp_list=None):
-    PlotPosition(xs, dt, wp_list)
-    PlotAttitude(xs, dt, wp_list)
-    PlotVelocityLin(xs, dt, wp_list)
-    PlotVelocityAng(xs, dt, wp_list)
+def PlotStates(xs, dt, wp_list=None, legend=None):
+    PlotPosition(xs, dt, wp_list, legend=legend)
+    PlotAttitude(xs, dt, wp_list, legend=legend)
+    PlotVelocityLin(xs, dt, wp_list, legend=legend)
+    PlotVelocityAng(xs, dt, wp_list, legend=legend)
 
 
 def Plot3DTrajectory(xs, wp_list=None, subplot_axis=0, elev=None, azim=None):
@@ -125,6 +125,7 @@ def plotTrajectory(data, dt, axs, row_init, row_end, names=None, wp_list=None, l
                 # Inneficient search for min
                 y_min = min([np.amin(arr[row_init + i, :]) for arr in data])
                 y_max = max([np.amax(arr[row_init + i, :]) for arr in data])
+                # axs[i].plot(t, d[row_init + i, :], color=colors[idx], marker='v')
                 axs[i].plot(t, d[row_init + i, :], color=colors[idx])
                 if names is not None:
                     axs[i].set_title(names[i])
@@ -132,7 +133,7 @@ def plotTrajectory(data, dt, axs, row_init, row_end, names=None, wp_list=None, l
                     wp_array, time_array = wayPointListToStateArray(wp_list)
                     axs[i].plot(time_array, wp_array[row_init + i, :], 'r+', label='_nolegend_')
                 axs[i].grid(linestyle='--', linewidth=0.5)
-                axs[i].margins(x=0, y=0, z=0)
+                axs[i].margins(x=0, y=0)
                 axs[i].set_ylim(y_min - 0.1, y_max + 0.1)
         if legend is not None:
             axs[0].legend(legend)
@@ -140,7 +141,7 @@ def plotTrajectory(data, dt, axs, row_init, row_end, names=None, wp_list=None, l
         knots = np.size(data, 1)
         t = np.arange(0, round(knots * dt, 4), dt)
         if row_end - row_init == 1:
-            axs.plot(t, data[0, :])
+            axs.plot(t, data[0, :], 'v')
             if names is not None:
                 axs.set_title(names[0])
         else:

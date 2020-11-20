@@ -1,13 +1,13 @@
 ocp:
   dt: 4e-3
   cost_running_state_weight: 1e-5
-  cost_running_control_weight: 1e-2
+  cost_running_control_weight: 1e-1
   cost_running_pos_weight: 1e-2
   cost_running_vel_weight: 1e-2
-  cost_terminal_pos_weight: 10
-  cost_terminal_vel_weight: 10
+  cost_terminal_pos_weight: 20
+  cost_terminal_vel_weight: 20
   $state_weights:
     - position: [1.0, 1.0, 1.0]
       orientation: [1.0, 1.0, 1.0]
       velocity_lin: [1.0, 1.0, 1.0]
-      velocity_ang: [1000.0, 1000.0, 1000.0]
+      velocity_ang: [1.0, 1.0, 1.0]

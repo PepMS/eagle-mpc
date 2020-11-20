@@ -568,11 +568,15 @@ BOOST_AUTO_TEST_CASE(update_problem_references_test, *boost::unit_test::toleranc
     Eigen::Quaterniond quat_ref;
     Eigen::Vector3d vel_lin_ref;
     Eigen::Vector3d vel_ang_ref;
+
     int knot_idx;
+    int wp_idx;
     if (i <= carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()->getMission()->getWpTrajIdx()[0] - 1) {
       knot_idx = carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()->getMission()->getWpTrajIdx()[0];
+      wp_idx = 0;
     } else if (i <= carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()->getMission()->getWpTrajIdx()[1] - 1) {
       knot_idx = carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()->getMission()->getWpTrajIdx()[1];
+      wp_idx = 1;
     } else {
       knot_idx = carrot_mpc_test.carrot_mpc_->getKnots();
     }
@@ -584,11 +588,20 @@ BOOST_AUTO_TEST_CASE(update_problem_references_test, *boost::unit_test::toleranc
         carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()->getState(knot_idx).segment(7, 10));
     vel_ang_ref = static_cast<Eigen::Vector3d>(
         carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()->getState(knot_idx).segment(10, 13));
-    BOOST_CHECK(cost_pose->get_reference<crocoddyl::FramePlacement>().placement.translation() == pos_ref);
-    BOOST_CHECK(cost_pose->get_reference<crocoddyl::FramePlacement>().placement.rotation() ==
-                quat_ref.toRotationMatrix());
-    BOOST_CHECK(cost_vel->get_reference<crocoddyl::FrameMotion>().motion.linear() == vel_lin_ref);
-    BOOST_CHECK(cost_vel->get_reference<crocoddyl::FrameMotion>().motion.angular() == vel_ang_ref);
+
+    if (knot_idx == carrot_mpc_test.carrot_mpc_->getKnots()) {
+      BOOST_CHECK(cost_pose->get_reference<crocoddyl::FramePlacement>().placement.translation() == pos_ref);
+      BOOST_CHECK(cost_pose->get_reference<crocoddyl::FramePlacement>().placement.rotation() ==
+                  quat_ref.toRotationMatrix());
+      BOOST_CHECK(cost_vel->get_reference<crocoddyl::FrameMotion>().motion.linear() == vel_lin_ref);
+      BOOST_CHECK(cost_vel->get_reference<crocoddyl::FrameMotion>().motion.angular() == vel_ang_ref);
+    } else {
+      BOOST_CHECK(cost_pose->get_reference<crocoddyl::FramePlacement>().placement.translation() == carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()->getMission()->getWaypoints()[wp_idx].pose.translation());
+      BOOST_CHECK(cost_pose->get_reference<crocoddyl::FramePlacement>().placement.rotation() == carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()->getMission()->getWaypoints()[wp_idx].pose.rotation());
+      pinocchio::Motion vel = *carrot_mpc_test.carrot_mpc_->getTrajectoryGenerator()->getMission()->getWaypoints()[wp_idx].vel;
+      BOOST_CHECK(cost_vel->get_reference<crocoddyl::FrameMotion>().motion.linear() == vel.linear());
+      BOOST_CHECK(cost_vel->get_reference<crocoddyl::FrameMotion>().motion.linear() == vel.angular());
+    }
     // Weights
     bool active = (i == knot_idx - 1 || i == carrot_mpc_test.carrot_mpc_->getKnots() - 1);
     BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels()[i]

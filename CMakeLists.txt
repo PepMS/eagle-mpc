@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1)
-
+SET(CMAKE_CONFIGURATION_TYPES ${CMAKE_BUILD_TYPE} CACHE STRING "" FORCE)
 PROJECT(multicopter_mpc VERSION 0.0
                         DESCRIPTION "Model predictive Control & Optimal control library for MultiCopter-based robots"
                         LANGUAGES CXX)
@@ -39,6 +39,7 @@ find_package(eigenpy REQUIRED)
 find_package(pinocchio REQUIRED)
 find_package(crocoddyl REQUIRED)
 find_package(YamlCpp REQUIRED)
+
 set(Python_ADDITIONAL_VERSIONS 3.6 3.7 3.8)
 find_package(Python3 REQUIRED Development Interpreter)
 set(WHICH_PYTHON3 "python3${Python3_VERSION_MINOR}")

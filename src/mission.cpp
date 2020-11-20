@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include "multicopter_mpc/mission.hpp"
 
 namespace multicopter_mpc {
@@ -65,7 +67,7 @@ void Mission::fillKnots() {
   assert(waypoints_.size() > 0);
 
   for (std::vector<WayPoint>::iterator wp = waypoints_.begin(); wp != waypoints_.end(); ++wp) {
-    wp->knots = std::size_t(wp->time / dt_) + 1;
+    wp->knots = std::size_t(ceil(wp->time / dt_)) + 1;
   }
 
   countTotalKnots();

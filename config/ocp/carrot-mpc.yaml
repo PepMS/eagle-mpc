@@ -2,14 +2,14 @@ trajectory_generator:
   solver: "BoxFDDP"
   integrator: "Euler"
   yaml_path: "/usr/local/share/multicopter_mpc/ocp/trajectory-generator.yaml"
-  initial_guess: "SE3"
+  initial_guess: "none"
 ocp:
   dt: 4e-3
   n_knots: 100  
   cost_running_state_weight: 1e-5
-  cost_running_control_weight: 1e-2
-  cost_running_pos_weight: 20000.0
-  cost_running_vel_weight: 20000.0
+  cost_running_control_weight: 1e-1
+  cost_running_pos_weight: 2500.0
+  cost_running_vel_weight: 2500.0
   cost_terminal_pos_weight: 10.0
   cost_terminal_vel_weight: 10.0
   $state_weights:
@@ -17,3 +17,6 @@ ocp:
       orientation: [1.0, 1.0, 1.0]
       velocity_lin: [1.0, 1.0, 1.0]
       velocity_ang: [1.0, 1.0, 1.0]
+  terminal_cost_with_wp_enabled: false # if true, when a WP is in the horizon the terminal cost is activated
+  use_wp_for_reference: false # true -> the reference for cost and vel in a wp knot is the wp pose and vel. Otherwise the reference trajectory
+  control_reg_trajectory: false # control regularization around the trajectory

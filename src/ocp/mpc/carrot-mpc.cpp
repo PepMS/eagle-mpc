@@ -26,18 +26,22 @@ bool CarrotMpc::registered_ =
     FactoryMpc::get().registerMpcController(CarrotMpc::getFactoryName(), CarrotMpc::createMpcController);
 
 void CarrotMpc::initializeDefaultParameters() {
-  params_.w_state_position.fill(1.);
-  params_.w_state_orientation.fill(1.);
-  params_.w_state_velocity_lin.fill(1.);
-  params_.w_state_velocity_ang.fill(1000.);
+  params_.weights.w_state_position.fill(1.);
+  params_.weights.w_state_orientation.fill(1.);
+  params_.weights.w_state_velocity_lin.fill(1.);
+  params_.weights.w_state_velocity_ang.fill(1000.);
 
-  params_.w_state_running = 1e-6;
-  params_.w_control_running = 1e-4;
-  params_.w_pos_running = 1e-2;
-  params_.w_vel_running = 1e-2;
+  params_.weights.w_state_running = 1e-6;
+  params_.weights.w_control_running = 1e-4;
+  params_.weights.w_pos_running = 1e-2;
+  params_.weights.w_vel_running = 1e-2;
 
-  params_.w_pos_terminal = 100;
-  params_.w_vel_terminal = 10;
+  params_.weights.w_pos_terminal = 100;
+  params_.weights.w_vel_terminal = 10;
+
+  params_.terminal_cost_with_wp_enabled = false;
+  params_.use_wp_for_reference = false;
+  params_.control_reg_trajectory = false;
 }
 
 void CarrotMpc::loadParameters(const std::string& yaml_path) {
@@ -50,17 +54,23 @@ void CarrotMpc::loadParameters(const std::string& yaml_path) {
   std::map<std::string, std::string> current_state =
       yaml_parser::converter<std::map<std::string, std::string>>::convert(state_weights[0]);
 
-  params_.w_state_position = yaml_parser::converter<Eigen::Vector3d>::convert(current_state["position"]);
-  params_.w_state_orientation = yaml_parser::converter<Eigen::VectorXd>::convert(current_state["orientation"]);
-  params_.w_state_velocity_lin = yaml_parser::converter<Eigen::VectorXd>::convert(current_state["velocity_lin"]);
-  params_.w_state_velocity_ang = yaml_parser::converter<Eigen::VectorXd>::convert(current_state["velocity_ang"]);
+  params_.weights.w_state_position = yaml_parser::converter<Eigen::Vector3d>::convert(current_state["position"]);
+  params_.weights.w_state_orientation = yaml_parser::converter<Eigen::VectorXd>::convert(current_state["orientation"]);
+  params_.weights.w_state_velocity_lin =
+      yaml_parser::converter<Eigen::VectorXd>::convert(current_state["velocity_lin"]);
+  params_.weights.w_state_velocity_ang =
+      yaml_parser::converter<Eigen::VectorXd>::convert(current_state["velocity_ang"]);
 
-  params_.w_state_running = server.getParam<double>("ocp/cost_running_state_weight");
-  params_.w_control_running = server.getParam<double>("ocp/cost_running_control_weight");
-  params_.w_pos_running = server.getParam<double>("ocp/cost_running_pos_weight");
-  params_.w_vel_running = server.getParam<double>("ocp/cost_running_vel_weight");
-  params_.w_pos_terminal = server.getParam<double>("ocp/cost_terminal_pos_weight");
-  params_.w_vel_terminal = server.getParam<double>("ocp/cost_terminal_vel_weight");
+  params_.weights.w_state_running = server.getParam<double>("ocp/cost_running_state_weight");
+  params_.weights.w_control_running = server.getParam<double>("ocp/cost_running_control_weight");
+  params_.weights.w_pos_running = server.getParam<double>("ocp/cost_running_pos_weight");
+  params_.weights.w_vel_running = server.getParam<double>("ocp/cost_running_vel_weight");
+  params_.weights.w_pos_terminal = server.getParam<double>("ocp/cost_terminal_pos_weight");
+  params_.weights.w_vel_terminal = server.getParam<double>("ocp/cost_terminal_vel_weight");
+
+  params_.terminal_cost_with_wp_enabled = server.getParam<bool>("ocp/terminal_cost_with_wp_enabled");
+  params_.use_wp_for_reference = server.getParam<bool>("ocp/use_wp_for_reference");
+  params_.control_reg_trajectory = server.getParam<bool>("ocp/control_reg_trajectory");
 
   try {
     double dt = server.getParam<double>("ocp/dt");
@@ -87,7 +97,7 @@ void CarrotMpc::initializeTerminalWeights() {
 }
 
 const bool CarrotMpc::existsTerminalWeight() {
-  return std::find(terminal_weights_idx_.begin(), terminal_weights_idx_.end(), 1) != terminal_weights_idx_.end();
+  return std::find(terminal_weights_idx_.begin() + 1, terminal_weights_idx_.end(), 1) != terminal_weights_idx_.end();
 }
 
 void CarrotMpc::createProblem(const SolverTypes::Type& solver_type, const IntegratorTypes::Type& integrator_type) {
@@ -137,32 +147,37 @@ boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> CarrotMpc::
       boost::make_shared<crocoddyl::CostModelSum>(state_, actuation_->get_nu());
 
   boost::shared_ptr<crocoddyl::CostModelAbstract> cost_reg_state = createCostStateRegularization();
-  boost::shared_ptr<crocoddyl::CostModelAbstract> cost_reg_control = createCostControlRegularization();
+
+  boost::shared_ptr<crocoddyl::CostModelAbstract> cost_reg_control;
+  if (params_.control_reg_trajectory) {
+    cost_reg_control = createCostControlRegularization(idx_knot);
+  } else {
+    cost_reg_control = createCostControlRegularization();
+  }
 
   // Regularitzations
-  cost_model->addCost("state_reg", cost_reg_state, params_.w_state_running);
-  cost_model->addCost("control_reg", cost_reg_control, params_.w_control_running);
+  cost_model->addCost("state_reg", cost_reg_state, params_.weights.w_state_running);
+  cost_model->addCost("control_reg", cost_reg_control, params_.weights.w_control_running);
 
   // Set reference if it is the last node or a WayPoint node
   if (idx_knot == n_knots_ - 1 || terminal_weights_idx_[idx_knot]) {
     setReference(idx_knot);
   }
 
-  // double w_pos = params_.w_pos_terminal / dt_;
-  // double w_vel = params_.w_vel_terminal / dt_;
-  double w_pos = params_.w_pos_running;
-  double w_vel = params_.w_vel_running;
+  double w_pos = params_.weights.w_pos_running;
+  double w_vel = params_.weights.w_vel_running;
   if (idx_knot == n_knots_ - 1) {
-    w_pos = params_.w_pos_terminal;
-    w_vel = params_.w_vel_terminal;
+    w_pos = params_.weights.w_pos_terminal;
+    w_vel = params_.weights.w_vel_terminal;
   }
 
   boost::shared_ptr<crocoddyl::CostModelAbstract> cost_pose =
       boost::make_shared<crocoddyl::CostModelFramePlacement>(state_, pose_ref_, actuation_->get_nu());
   boost::shared_ptr<crocoddyl::CostModelAbstract> cost_vel =
       boost::make_shared<crocoddyl::CostModelFrameVelocity>(state_, motion_ref_, actuation_->get_nu());
-  // if (terminal_weights_idx_[idx_knot] || (idx_knot == n_knots_ - 1 && !existsTerminalWeight())) {
-  if (terminal_weights_idx_[idx_knot] || (idx_knot == n_knots_ - 1)) {
+
+  if (terminal_weights_idx_[idx_knot] || (idx_knot == n_knots_ - 1 && !existsTerminalWeight()) ||
+      (idx_knot == n_knots_ - 1 && existsTerminalWeight() && params_.terminal_cost_with_wp_enabled)) {
     cost_model->addCost("pose_desired", cost_pose, w_pos, true);
     cost_model->addCost("vel_desired", cost_vel, w_vel, true);
   } else {
@@ -182,10 +197,10 @@ boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> CarrotMpc::
 boost::shared_ptr<crocoddyl::CostModelAbstract> CarrotMpc::createCostStateRegularization() {
   Eigen::VectorXd state_weights(state_->get_ndx());
 
-  state_weights.head(3) = params_.w_state_position;
-  state_weights.segment(3, 3) = params_.w_state_orientation;
-  state_weights.segment(model_->nv, 3) = params_.w_state_velocity_lin;
-  state_weights.segment(model_->nv + 3, 3) = params_.w_state_velocity_ang;
+  state_weights.head(3) = params_.weights.w_state_position;
+  state_weights.segment(3, 3) = params_.weights.w_state_orientation;
+  state_weights.segment(model_->nv, 3) = params_.weights.w_state_velocity_lin;
+  state_weights.segment(model_->nv + 3, 3) = params_.weights.w_state_velocity_ang;
 
   boost::shared_ptr<crocoddyl::ActivationModelWeightedQuad> activation_state =
       boost::make_shared<crocoddyl::ActivationModelWeightedQuad>(state_weights);
@@ -203,26 +218,41 @@ boost::shared_ptr<crocoddyl::CostModelAbstract> CarrotMpc::createCostControlRegu
   return cost_reg_control;
 }
 
+boost::shared_ptr<crocoddyl::CostModelAbstract> CarrotMpc::createCostControlRegularization(
+    const std::size_t& idx_traj) {
+  boost::shared_ptr<crocoddyl::CostModelAbstract> cost_reg_control =
+      boost::make_shared<crocoddyl::CostModelControl>(state_, trajectory_generator_->getControl(idx_traj));
+
+  return cost_reg_control;
+}
+
 void CarrotMpc::updateProblem(const std::size_t& idx_trajectory) {
   // first update the terminal weight vector
   std::rotate(terminal_weights_idx_.begin(), terminal_weights_idx_.begin() + 1, terminal_weights_idx_.end());
   terminal_weights_idx_.back() = std::find(mission_->getWpTrajIdx().begin(), mission_->getWpTrajIdx().end(),
                                            idx_trajectory) != mission_->getWpTrajIdx().end();
 
-  // Treat the incoming knot
-  if (terminal_weights_idx_.back()) {
-    std::size_t wp_idx = std::find(mission_->getWpTrajIdx().begin(), mission_->getWpTrajIdx().end(), idx_trajectory) -
-                         mission_->getWpTrajIdx().begin();
+  // --> Terminal knot reference assignment <--
+  if (params_.use_wp_for_reference) {
+    if (terminal_weights_idx_.back() || idx_trajectory > trajectory_generator_->getKnots() - 1) {
+      std::size_t wp_idx = mission_->getWaypoints().size() - 1;
+      if (idx_trajectory <= trajectory_generator_->getKnots() - 1) {
+        wp_idx = std::find(mission_->getWpTrajIdx().begin(), mission_->getWpTrajIdx().end(), idx_trajectory) -
+                 mission_->getWpTrajIdx().begin();
+      }
 
-    pose_ref_.id = frame_base_link_id_;
-    pose_ref_.placement = mission_->getWaypoints()[wp_idx].pose;
-    motion_ref_.id = frame_base_link_id_;
-    motion_ref_.motion = *(mission_->getWaypoints()[wp_idx].vel);
-    MMPC_WARN << "Found waypoint: " << pose_ref_.placement;
+      pose_ref_.id = frame_base_link_id_;
+      pose_ref_.placement = mission_->getWaypoints()[wp_idx].pose;
+      motion_ref_.id = frame_base_link_id_;
+      motion_ref_.motion = *(mission_->getWaypoints()[wp_idx].vel);
+    } else {
+      setReference(idx_trajectory);
+    }
   } else {
     setReference(idx_trajectory);
   }
-  diff_model_iter_ = diff_models_running_.end() - 1;
+
+  diff_model_iter_ = diff_models_running_.end() - 1;  // This is a pointer to the terminal DAM
   // -- References
   boost::shared_ptr<crocoddyl::CostModelFramePlacement> cost_pose =
       boost::static_pointer_cast<crocoddyl::CostModelFramePlacement>(
@@ -232,54 +262,57 @@ void CarrotMpc::updateProblem(const std::size_t& idx_trajectory) {
           (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->cost);
   cost_pose->set_reference<crocoddyl::FramePlacement>(pose_ref_);
   cost_vel->set_reference<crocoddyl::FrameMotion>(motion_ref_);
-  // -- Weights
-  // if (existsTerminalWeight()) {
-  //   (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->active = false;
-  //   (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->active = false;
-  // } else {
-  //   (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->active = true;
-  //   (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->active = true;
-  // }
+
+  //  Activate or deactivate depending on the existence of a wp in the horizon
   (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->active = true;
   (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->active = true;
+  if (existsTerminalWeight() && terminal_weights_idx_.back() == false && !params_.terminal_cost_with_wp_enabled) {
+    (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->active = false;
+    (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->active = false;
+  }
 
   --diff_model_iter_;
 
   // Treat the subsequent knots
   for (std::size_t i = 0; i < n_knots_ - 1; ++i) {
-    if (terminal_weights_idx_[n_knots_ - 2 - i]) {
-      // Do test for the last nodes when trajectory is over!
-      // setReference(idx_trajectory - i - 1);
-      std::size_t wp_idx =
-          std::find(mission_->getWpTrajIdx().begin(), mission_->getWpTrajIdx().end(), idx_trajectory - i - 1) -
-          mission_->getWpTrajIdx().begin();
-
-      pose_ref_.id = frame_base_link_id_;
-      pose_ref_.placement = mission_->getWaypoints()[wp_idx].pose;
-      motion_ref_.id = frame_base_link_id_;
-      motion_ref_.motion = *(mission_->getWaypoints()[wp_idx].vel);
-
-      (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->active = true;
-      (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->active = true;
+    if (i == n_knots_ - 2) {
+      // The knot 0 of the horizon does no need to have an active cost
     } else {
-      if (idx_trajectory - i - 1 > trajectory_generator_->getKnots() - 1) {
-        // When the mpc controller has reached the end, the tail of the trajectory has to be active
+      if (terminal_weights_idx_[n_knots_ - 2 - i]) {
+        // Do test for the last nodes when trajectory is over!
+        if (params_.use_wp_for_reference) {
+          std::size_t wp_idx =
+              std::find(mission_->getWpTrajIdx().begin(), mission_->getWpTrajIdx().end(), idx_trajectory - i - 1) -
+              mission_->getWpTrajIdx().begin();
+
+          pose_ref_.id = frame_base_link_id_;
+          pose_ref_.placement = mission_->getWaypoints()[wp_idx].pose;
+          motion_ref_.id = frame_base_link_id_;
+          motion_ref_.motion = *(mission_->getWaypoints()[wp_idx].vel);
+        } else {
+          setReference(idx_trajectory - i - 1);
+        }
         (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->active = true;
         (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->active = true;
       } else {
-        (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->active = false;
-        (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->active = false;
+        if (idx_trajectory - i - 1 > trajectory_generator_->getKnots() - 1) {
+          // When the mpc controller has reached the end, the tail of the trajectory has to be active
+          (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->active = true;
+          (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->active = true;
+        } else {
+          (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->active = false;
+          (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->active = false;
+        }
+        cost_pose = boost::static_pointer_cast<crocoddyl::CostModelFramePlacement>(
+            (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->cost);
+        cost_vel = boost::static_pointer_cast<crocoddyl::CostModelFrameVelocity>(
+            (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->cost);
+        cost_pose->set_reference<crocoddyl::FramePlacement>(pose_ref_);
+        cost_vel->set_reference<crocoddyl::FrameMotion>(motion_ref_);
       }
+
+      --diff_model_iter_;
     }
-
-    cost_pose = boost::static_pointer_cast<crocoddyl::CostModelFramePlacement>(
-        (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->cost);
-    cost_vel = boost::static_pointer_cast<crocoddyl::CostModelFrameVelocity>(
-        (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->cost);
-    cost_pose->set_reference<crocoddyl::FramePlacement>(pose_ref_);
-    cost_vel->set_reference<crocoddyl::FrameMotion>(motion_ref_);
-
-    --diff_model_iter_;
   }
   // Increase the weight for the next node
 }
@@ -319,7 +352,7 @@ void CarrotMpc::setNumberKnots(const std::size_t& n_knots) {
 
 const crocoddyl::FramePlacement& CarrotMpc::getPoseRef() const { return pose_ref_; }
 const crocoddyl::FrameMotion& CarrotMpc::getVelocityRef() const { return motion_ref_; }
-const TrajectoryGeneratorParams& CarrotMpc::getParams() const { return params_; };
+const CarrotMpcParams& CarrotMpc::getParams() const { return params_; };
 
 void CarrotMpc::setReference(const std::size_t& idx_trajectory) {
   state_ref_ = trajectory_generator_->getState(idx_trajectory);

@@ -6,7 +6,6 @@ import multicopter_mpc
 import pinocchio
 import crocoddyl
 import example_robot_data
-import yaml_parser
 
 from multicopter_mpc.utils.path import MULTICOPTER_MPC_MULTIROTOR_DIR, MULTICOPTER_MPC_MISSION_DIR, MULTICOPTER_MPC_OCP_DIR
 

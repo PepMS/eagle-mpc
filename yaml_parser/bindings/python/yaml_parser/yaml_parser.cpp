@@ -1,6 +1,7 @@
 #ifndef PYTHON_BINDINGS
 #define PYTHON_BINDINGS
 
+// #include "pinocchio/fwd.hpp"
 #include <Eigen/Dense>
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/map_indexing_suite.hpp>
