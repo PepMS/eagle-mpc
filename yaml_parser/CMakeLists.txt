@@ -12,10 +12,10 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 
 find_package(YamlCpp REQUIRED)
 find_package(Eigen3 3.3 REQUIRED)
-find_package(Boost COMPONENTS python38)
-set(Python_ADDITIONAL_VERSIONS "3.6" "3.8")
-find_package(PythonInterp)
-find_package(PythonLibs REQUIRED)
+set(Python_ADDITIONAL_VERSIONS 3.6 3.7 3.8)
+find_package(Python3 REQUIRED Development Interpreter)
+set(WHICH_PYTHON3 "python3${Python3_VERSION_MINOR}")
+find_package(Boost COMPONENTS ${WHICH_PYTHON3} filesystem unit_test_framework REQUIRED)
 message(STATUS "Eigen library:" ${EIGEN3_INCLUDE_DIRS})
 
 set(SOURCES
@@ -47,8 +47,8 @@ target_link_libraries(yaml_parser PUBLIC ${LIBS})
 
 # Install
 install(TARGETS yaml_parser
-        LIBRARY DESTINATION lib)
-install(DIRECTORY include/yaml_parser DESTINATION include)
+        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+install(DIRECTORY include/yaml_parser DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 # install(FILES "cmake/FindYamlCpp.cmake" DESTINATION "lib/cmake/YamlCpp")
 # install(FILES "cmake/FindYamlParser.cmake" DESTINATION "lib/cmake/${PROJECT_NAME}")
 

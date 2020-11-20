@@ -6,7 +6,6 @@
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/map_indexing_suite.hpp>
 #include <boost/python/enum.hpp>
-// #include <eigenpy/eigenpy.hpp>
 
 #include "python/yaml_parser/params_server.hpp"
 #include "python/yaml_parser/parser_yaml.hpp"
