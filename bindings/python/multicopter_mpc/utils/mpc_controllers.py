@@ -45,7 +45,7 @@ class CarrotMpc():
         self.w_state_velocity_lin = np.ones(3)
         self.w_state_velocity_ang = np.ones(3)
         self.w_state_running = 1e-5
-        self.w_control_running = 5e-2
+        self.w_control_running = 1e-1
         self.w_pos_running = 2500.
         self.w_vel_running = 2500.
         self.w_pos_terminal = 10
@@ -192,8 +192,8 @@ class CarrotMpc():
                     if idx_traj > len(self.state_reference) - 1:
                         model.costs.costs['pose_desired'].active = True
                         model.costs.costs['vel_desired'].active = True
-                        # model.costs.costs['pose_desired'].weight /= 20
-                        # model.costs.costs['vel_desired'].weight /= 20
+                        model.costs.costs['pose_desired'].weight /= 10
+                        model.costs.costs['vel_desired'].weight /= 10
                     else:
                         model.costs.costs['pose_desired'].active = False
                         model.costs.costs['vel_desired'].active = False

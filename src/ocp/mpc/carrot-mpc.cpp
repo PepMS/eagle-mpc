@@ -299,6 +299,8 @@ void CarrotMpc::updateProblem(const std::size_t& idx_trajectory) {
           // When the mpc controller has reached the end, the tail of the trajectory has to be active
           (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->active = true;
           (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->active = true;
+          (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->weight /= 10.;
+          (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->weight /= 10.;
         } else {
           (*diff_model_iter_)->get_costs()->get_costs().find("pose_desired")->second->active = false;
           (*diff_model_iter_)->get_costs()->get_costs().find("vel_desired")->second->active = false;
