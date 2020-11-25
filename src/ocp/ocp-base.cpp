@@ -135,7 +135,7 @@ void OcpAbstract::setIntegratorType(const IntegratorTypes::Type& integrator_type
   }
 }
 
-const boost::shared_ptr<pinocchio::Model> OcpAbstract::getModel() const { return model_; }
+boost::shared_ptr<pinocchio::Model> OcpAbstract::getModel() const { return model_; }
 const boost::shared_ptr<MultiCopterBaseParams> OcpAbstract::getMcParams() const { return mc_params_; }
 const boost::shared_ptr<crocoddyl::StateMultibody> OcpAbstract::getStateMultibody() const { return state_; }
 const boost::shared_ptr<crocoddyl::ActuationModelMultiCopterBase> OcpAbstract::getActuation() const {

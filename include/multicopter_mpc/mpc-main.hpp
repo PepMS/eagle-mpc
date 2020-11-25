@@ -49,6 +49,7 @@ class MpcMain {
   void getStateDiff(const Eigen::Ref<const Eigen::VectorXd>& state0, const Eigen::Ref<const Eigen::VectorXd>& state1,
                     Eigen::Ref<Eigen::VectorXd> state_diff);
   const std::size_t& getCursor();
+  boost::shared_ptr<pinocchio::Model> getModel() const;
 
   void printInfo();
  private:

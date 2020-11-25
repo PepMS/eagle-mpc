@@ -78,6 +78,7 @@ void MpcAbstract::initializeTrajectoryGenerator() {
                                          : integrator_type_;
   trajectory_generator_->createProblem(solver, integrator, dt_);
   trajectory_generator_->setSolverIters(300);
+  trajectory_generator_->setSolverCallbacks(true);
   std::vector<Eigen::VectorXd> state_trajectory =
       trajectory_generator_->getMission()->interpolateTrajectory(trajectory_generator_specs_.initial_guess);
   std::vector<Eigen::VectorXd> control_trajectory(trajectory_generator_->getKnots() - 1,

@@ -4,8 +4,8 @@ ocp:
   cost_running_control_weight: 1e-1
   cost_running_pos_weight: 1e-2
   cost_running_vel_weight: 1e-2
-  cost_terminal_pos_weight: 20
-  cost_terminal_vel_weight: 20
+  cost_terminal_pos_weight: 10
+  cost_terminal_vel_weight: 10
   $state_weights:
     - position: [1.0, 1.0, 1.0]
       orientation: [1.0, 1.0, 1.0]

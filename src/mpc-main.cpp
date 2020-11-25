@@ -145,6 +145,8 @@ void MpcMain::getStateDiff(const Eigen::Ref<const Eigen::VectorXd>& state0,
   mpc_controller_->getStateMultibody()->diff(state0, state1, state_diff);
 }
 
+boost::shared_ptr<pinocchio::Model> MpcMain::getModel() const { return model_; }
+
 const std::size_t& MpcMain::getCursor() { return trajectory_cursor_; };
 
 void MpcMain::printInfo() {
