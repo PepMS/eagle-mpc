@@ -62,6 +62,8 @@ void OcpAbstract::setSolver(const SolverTypes::Type& solver_type) {
       break;
     }
     case SolverTypes::SquashBoxFDDP: {
+      MMPC_INFO << "Solver set: FDDP";
+      solver_ = boost::make_shared<crocoddyl::SolverFDDP>(problem_);
       break;
     }
     default:
