@@ -11,7 +11,7 @@
 int main(int argc, char* argv[]) {
   crocoddyl::Timer timer;
 
-  std::string mission_type = "passthrough.yaml";
+  std::string mission_type = MULTICOPTER_MPC_MISSION_DIR "/passthrough.yaml";
   std::string mpc_main_yaml_path = MULTICOPTER_MPC_OCP_DIR "/mpc-main.yaml";
 
   multicopter_mpc::MpcMain mpc_main(multicopter_mpc::MultiCopterTypes::Iris, mission_type, mpc_main_yaml_path);
@@ -50,6 +50,8 @@ int main(int argc, char* argv[]) {
 
   std::cout << "Avg.time per iteration: \t\t" << AVG(duration_iteration) << " us\t" << STDDEV(duration_iteration) << " us\t"
             << duration_iteration.maxCoeff() << " us\t" << duration_iteration.minCoeff() << " us" << std::endl;
-
+  
+  std::cout << "Avg. number of iterations: \t\t" << AVG(iterations) << " \t" << STDDEV(iterations) << " \t"
+            << iterations.maxCoeff() << " \t" << iterations.minCoeff() << " " << std::endl;
   std::cout << "This is the final state: \n" << state << std::endl;
 }
