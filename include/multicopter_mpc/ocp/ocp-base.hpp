@@ -10,6 +10,8 @@
 
 #include "crocoddyl/core/action-base.hpp"
 #include "crocoddyl/core/activations/weighted-quadratic.hpp"
+#include "crocoddyl/core/actuation/actuation-squashing.hpp"
+#include "crocoddyl/core/actuation/squashing/smooth-sat.hpp"
 #include "crocoddyl/core/integrator/euler.hpp"
 #include "crocoddyl/core/integrator/rk4.hpp"
 #include "crocoddyl/core/optctrl/shooting.hpp"
@@ -28,6 +30,7 @@
 #include "crocoddyl/multibody/states/multibody.hpp"
 
 #include "multicopter_mpc/multicopter-base-params.hpp"
+#include "multicopter_mpc/sbfddp.hpp"
 
 namespace multicopter_mpc {
 
@@ -84,6 +87,8 @@ class OcpAbstract {
   const int& getBaseLinkId() const;
   const std::size_t& getKnots() const;
   const IntegratorTypes::Type& getIntegratorType() const;
+  const std::vector<Eigen::VectorXd>& getStates() const;
+  const std::vector<Eigen::VectorXd>& getControls() const;
 
  protected:
   // Methods
@@ -98,6 +103,8 @@ class OcpAbstract {
   boost::shared_ptr<pinocchio::Model> model_;
   boost::shared_ptr<crocoddyl::StateMultibody> state_;
   boost::shared_ptr<crocoddyl::ActuationModelMultiCopterBase> actuation_;
+  boost::shared_ptr<crocoddyl::ActuationSquashingModel> actuation_squashed_;
+  boost::shared_ptr<crocoddyl::SquashingModelSmoothSat> squashing_model_;
   std::vector<boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics>> diff_models_running_;
   std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> int_models_running_;
   boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model_terminal_;
@@ -117,6 +124,8 @@ class OcpAbstract {
   Eigen::VectorXd tau_lb_;
 
   Eigen::VectorXd state_initial_;
+  std::vector<Eigen::VectorXd> states_;
+  std::vector<Eigen::VectorXd> controls_;
 };
 
 }  // namespace multicopter_mpc
