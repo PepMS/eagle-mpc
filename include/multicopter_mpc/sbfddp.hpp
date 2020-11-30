@@ -20,36 +20,49 @@
 #include "multicopter_mpc/utils/log.hpp"
 
 namespace multicopter_mpc {
-class SolverSbFDDP {
+class SolverSbFDDP : public crocoddyl::SolverFDDP {
  public:
-  SolverSbFDDP(boost::shared_ptr<crocoddyl::ShootingProblem> problem,
-               boost::shared_ptr<crocoddyl::SquashingModelSmoothSat> squashing_model);
-  ~SolverSbFDDP();
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  bool solve(const std::vector<Eigen::VectorXd>& init_xs = crocoddyl::DEFAULT_VECTOR,
-             const std::vector<Eigen::VectorXd>& init_us = crocoddyl::DEFAULT_VECTOR,
-             const std::size_t& maxiter = 100);
+  explicit SolverSbFDDP(boost::shared_ptr<crocoddyl::ShootingProblem> problem,
+                        boost::shared_ptr<crocoddyl::SquashingModelSmoothSat> squashing_model);
+  virtual ~SolverSbFDDP();
 
-  void setCallbacks(const std::vector<boost::shared_ptr<crocoddyl::CallbackAbstract> >& callbacks);
+  virtual bool solve(const std::vector<Eigen::VectorXd>& init_xs = crocoddyl::DEFAULT_VECTOR,
+                     const std::vector<Eigen::VectorXd>& init_us = crocoddyl::DEFAULT_VECTOR,
+                     const std::size_t& maxiter = 100, const bool& is_feasible = false, const double& regInit = 1e-9);
+
+  const std::vector<Eigen::VectorXd>& getSquashControls() const;
 
  private:
   void barrierInit();
   void squashingUpdate();
   void barrierUpdate();
 
-  boost::shared_ptr<crocoddyl::ShootingProblem> problem_;
   boost::shared_ptr<crocoddyl::SquashingModelSmoothSat> squashing_model_;
   boost::shared_ptr<crocoddyl::ActuationSquashingModel> actuation_;
-  boost::shared_ptr<crocoddyl::SolverDDP> ddp_;
-  boost::shared_ptr<crocoddyl::SolverFDDP> fddp_;
   boost::shared_ptr<crocoddyl::ActivationBounds> barrier_act_bounds_;
   boost::shared_ptr<crocoddyl::ActivationModelWeightedQuadraticBarrier> barrier_activation_;
   boost::shared_ptr<crocoddyl::CostModelControl> squash_barr_cost_;
+  boost::shared_ptr<crocoddyl::SolverDDP> ddp_;
+
+  // Variables for downcasting
+  // models
+  boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> euler_;
+  boost::shared_ptr<crocoddyl::IntegratedActionModelRK4> rk4_;
+  boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> differential_;
+  // datas
+  boost::shared_ptr<crocoddyl::IntegratedActionDataEuler> euler_d_;
+  boost::shared_ptr<crocoddyl::IntegratedActionDataRK4> rk4_d_;
+  boost::shared_ptr<crocoddyl::DifferentialActionDataFreeFwdDynamics> differential_d_;
+  boost::shared_ptr<crocoddyl::ActuationSquashingData> actuation_squashing_d_;
+
   double smooth_;
   double smooth_init_;
   double smooth_mult_;
 
   Eigen::VectorXd barrier_quad_weights_;
+  Eigen::VectorXd barrier_quad_weights_aux_;
   double barrier_weight_;
 
   double convergence_;
@@ -59,9 +72,9 @@ class SolverSbFDDP {
 
   std::size_t max_iters_;
   double reg_init_;
+  std::size_t total_iters_;
 
-  std::vector<Eigen::VectorXd> xs_;
-  std::vector<Eigen::VectorXd> us_;
+  std::vector<Eigen::VectorXd> us_squash_;  //!< Control trajectory
 };
 }  // namespace multicopter_mpc
 
