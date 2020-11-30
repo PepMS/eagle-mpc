@@ -117,9 +117,8 @@ void MpcMain::runMpcStep(const std::size_t& idx_control) {
             state_trajectory_.begin());
   std::copy(mpc_controller_->getSolver()->get_us().begin() + 1, mpc_controller_->getSolver()->get_us().end(),
             control_trajectory_.begin());
-  motor_thrust_ = mpc_controller_->getControls(idx_control);
+  motor_thrust_ = mpc_controller_->getControls()[idx_control];
   thrustToSpeed(motor_thrust_, motor_speed_);
-  ff_gains_ = mpc_controller_->getFeedForwardGains(idx_control);
   fb_gains_ = mpc_controller_->getFeedBackGains(idx_control);
 
   ++trajectory_cursor_;

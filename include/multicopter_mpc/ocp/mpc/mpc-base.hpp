@@ -24,8 +24,6 @@ class MpcAbstract : public OcpAbstract {
 
   virtual void setNumberKnots(const std::size_t& n_knots);
 
-  const Eigen::VectorXd& getControls(const std::size_t& idx = 0) const;
-  const Eigen::VectorXd& getFeedForwardGains(const std::size_t& idx = 0) const;
   const Eigen::MatrixXd& getFeedBackGains(const std::size_t& idx = 0) const;
   const boost::shared_ptr<TrajectoryGenerator> getTrajectoryGenerator() const;
   const boost::shared_ptr<Mission> getMission() const;

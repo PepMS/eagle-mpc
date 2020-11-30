@@ -4,4 +4,4 @@ mpc_controller:
   solver: "BoxFDDP"
   integrator: "Euler"
   running_iters: 70
-  callback: false
+  callback: true

@@ -55,6 +55,8 @@ void OcpAbstract::createProblem(const SolverTypes::Type& solver_type, const Inte
 void OcpAbstract::solve(const std::vector<Eigen::VectorXd>& state_trajectory,
                         const std::vector<Eigen::VectorXd>& control_trajectory) {
   solver_->solve(state_trajectory, control_trajectory, solver_iters_, false);
+  std::copy(solver_->get_xs().begin(), solver_->get_xs().end(), states_.begin());
+  std::copy(solver_->get_us().begin(), solver_->get_us().end(), controls_.begin());
 }
 
 void OcpAbstract::setSolver(const SolverTypes::Type& solver_type) {
@@ -174,7 +176,7 @@ const std::size_t& OcpAbstract::getKnots() const {
   return n_knots_;
 }
 const IntegratorTypes::Type& OcpAbstract::getIntegratorType() const { return integrator_type_; }
-const std::vector<Eigen::VectorXd>& OcpAbstract::getStates() const {return solver_->get_xs();};
+const std::vector<Eigen::VectorXd>& OcpAbstract::getStates() const { return solver_->get_xs(); };
 const std::vector<Eigen::VectorXd>& OcpAbstract::getControls() const {
   if (solver_type_ == SolverTypes::SquashBoxFDDP) {
     return boost::static_pointer_cast<SolverSbFDDP>(solver_)->getSquashControls();

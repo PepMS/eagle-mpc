@@ -11,16 +11,6 @@ TrajectoryGenerator::TrajectoryGenerator(const boost::shared_ptr<pinocchio::Mode
 
   // To be changed!!!!!
   control_hover_ = Eigen::VectorXd::Ones(mc_params_->n_rotors_) * 3.78;
-
-  barrier_weight_ = 1e-3;
-  barrier_quad_weights_aux_ = 0.1 * (squashing_model_->get_s_ub().array() - squashing_model_->get_s_lb().array());
-  barrier_quad_weights_ = 1. / barrier_quad_weights_aux_.array().pow(2);
-  barrier_act_bounds_ =
-      boost::make_shared<crocoddyl::ActivationBounds>(squashing_model_->get_s_lb(), squashing_model_->get_s_ub(), 1.0);
-  barrier_activation_ = boost::make_shared<crocoddyl::ActivationModelWeightedQuadraticBarrier>(*(barrier_act_bounds_),
-                                                                                               barrier_quad_weights_);
-  squash_barr_cost_ =
-      boost::make_shared<crocoddyl::CostModelControl>(state_, barrier_activation_, squashing_model_->get_ns());
 }
 
 TrajectoryGenerator::~TrajectoryGenerator() {}
@@ -158,9 +148,6 @@ TrajectoryGenerator::createRunningDifferentialModel(const WayPoint& waypoint, co
   // Regularitzations
   cost_model_running->addCost("state_reg", cost_reg_state, params_.w_state_running);
   cost_model_running->addCost("control_reg", cost_reg_control, params_.w_control_running);
-  if (squash) {
-    cost_model_running->addCost("barrier", squash_barr_cost_, barrier_weight_);
-  }
 
   // Diff & Integrated models
   boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model_running =
@@ -192,10 +179,6 @@ TrajectoryGenerator::createTerminalDifferentialModel(const WayPoint& waypoint, c
   if (!is_last_wp) {
     cost_model_terminal->addCost("state_reg", cost_reg_state, params_.w_state_running);
     cost_model_terminal->addCost("control_reg", cost_reg_control, params_.w_control_running);
-    if (squash) {
-      cost_model_terminal->addCost("barrier", squash_barr_cost_, barrier_weight_);
-    }
-
     w_pos = params_.w_pos_terminal / dt_;
     w_vel = params_.w_vel_terminal / dt_;
   }
@@ -294,8 +277,8 @@ std::vector<Eigen::VectorXd> TrajectoryGenerator::getStateTrajectory(const std::
 std::vector<Eigen::VectorXd> TrajectoryGenerator::getControlTrajectory(const std::size_t& idx_init,
                                                                        const std::size_t& idx_end) const {
   assert(idx_init < idx_end);
-  std::vector<Eigen::VectorXd>::const_iterator first = controls_.begin() + idx_init;
-  std::vector<Eigen::VectorXd>::const_iterator last = controls_.begin() + idx_end + 1;
+  std::vector<Eigen::VectorXd>::const_iterator first = solver_->get_us().begin() + idx_init;
+  std::vector<Eigen::VectorXd>::const_iterator last = solver_->get_us().begin() + idx_end + 1;
   return std::vector<Eigen::VectorXd>(first, last);
 }
 

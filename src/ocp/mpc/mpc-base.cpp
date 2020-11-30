@@ -106,8 +106,6 @@ void MpcAbstract::setNumberKnots(const std::size_t& n_knots) {
   }
 }
 
-const Eigen::VectorXd& MpcAbstract::getControls(const std::size_t& idx) const { return solver_->get_us()[idx]; }
-const Eigen::VectorXd& MpcAbstract::getFeedForwardGains(const std::size_t& idx) const { return solver_->get_k()[idx]; }
 const Eigen::MatrixXd& MpcAbstract::getFeedBackGains(const std::size_t& idx) const { return solver_->get_K()[idx]; };
 const boost::shared_ptr<TrajectoryGenerator> MpcAbstract::getTrajectoryGenerator() const {
   return trajectory_generator_;

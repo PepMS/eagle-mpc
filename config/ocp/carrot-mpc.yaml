@@ -16,7 +16,7 @@ ocp:
     - position: [1.0, 1.0, 1.0]
       orientation: [1.0, 1.0, 1.0]
       velocity_lin: [1.0, 1.0, 1.0]
-      velocity_ang: [1000.0, 1000.0, 1000.0]
+      velocity_ang: [1.0, 1.0, 1.0]
   terminal_cost_with_wp_enabled: true # if true, when a WP is in the horizon the terminal cost is activated
   use_wp_for_reference: false # true -> the reference for cost and vel in a wp knot is the wp pose and vel. Otherwise the reference trajectory
   control_reg_trajectory: false # control regularization around the trajectory

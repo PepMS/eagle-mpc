@@ -60,11 +60,12 @@ void SolverSbFDDP::barrierInit() {
     if (differential_ == nullptr) {
       MMPC_ERROR << "Differential is nullptr inside Squashing solver!";
     }
-    // auto cost = differential_->get_costs()->get_costs().find("barrier");
-    // if (cost != differential_->get_costs()->get_costs().end()) {
-    // differential_->get_costs()->addCost("barrier", squash_barr_cost_, barrier_weight_);
-    // problem_->updateModel(i, problem_->get_runningModels()[i]);
-    // }
+    auto cost = differential_->get_costs()->get_costs().find("barrier");
+    if (cost == differential_->get_costs()->get_costs().end()) {
+      MMPC_INFO << "Added control barrier cost!";
+      differential_->get_costs()->addCost("barrier", squash_barr_cost_, barrier_weight_);
+    }
+    problem_->updateModel(i, problem_->get_runningModels()[i]);
   }
 }
 
@@ -99,9 +100,10 @@ bool SolverSbFDDP::solve(const std::vector<Eigen::VectorXd>& init_xs, const std:
     total_iters_ += ddp_->get_iter() + 1;
   }
 
+  convergence_ = th_stop_;
+
   iter_ = total_iters_ - 1;
   for (std::size_t i = 0; i < problem_->get_T(); ++i) {
-    // trajectory.problem.runningDatas[-1].differential.multibody.actuation.squashing
     euler_d_ = boost::dynamic_pointer_cast<crocoddyl::IntegratedActionDataEuler>(problem_->get_runningDatas()[i]);
     if (euler_d_ != nullptr) {
       differential_d_ =
@@ -157,6 +159,5 @@ void SolverSbFDDP::barrierUpdate() {
 }
 
 const std::vector<Eigen::VectorXd>& SolverSbFDDP::getSquashControls() const { return us_squash_; }
-
 
 }  // namespace multicopter_mpc

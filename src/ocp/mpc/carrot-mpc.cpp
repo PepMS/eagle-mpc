@@ -104,6 +104,8 @@ void CarrotMpc::createProblem(const SolverTypes::Type& solver_type, const Integr
   assert(dt_ > 0.0);
   assert(n_knots_ > 0);
 
+  bool squash = solver_type == SolverTypes::SquashBoxFDDP;
+
   has_motion_ref_ = false;
   initializeTrajectoryGenerator();
   initializeTerminalWeights();
@@ -112,7 +114,7 @@ void CarrotMpc::createProblem(const SolverTypes::Type& solver_type, const Integr
 
   {
     boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model =
-        createDifferentialModel(n_knots_ - 1);
+        createDifferentialModel(n_knots_ - 1, squash);
     boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> int_model =
         boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_model, 0.0);
 
@@ -121,7 +123,8 @@ void CarrotMpc::createProblem(const SolverTypes::Type& solver_type, const Integr
   }
 
   for (int i = n_knots_ - 2; i >= 0; --i) {
-    boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model = createDifferentialModel(i);
+    boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model =
+        createDifferentialModel(i, squash);
     boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> int_model =
         boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_model, dt_);
     diff_models_running_.insert(diff_models_running_.begin(), diff_model);
@@ -142,7 +145,14 @@ void CarrotMpc::createProblem(const SolverTypes::Type& solver_type, const Integr
 }
 
 boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> CarrotMpc::createDifferentialModel(
-    const std::size_t& idx_knot) {
+    const std::size_t& idx_knot, const bool& squash) {
+  boost::shared_ptr<crocoddyl::ActuationModelAbstract> actuation;
+  if (squash) {
+    actuation = actuation_squashed_;
+  } else {
+    actuation = actuation_;
+  }
+
   boost::shared_ptr<crocoddyl::CostModelSum> cost_model =
       boost::make_shared<crocoddyl::CostModelSum>(state_, actuation_->get_nu());
 
@@ -186,7 +196,7 @@ boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> CarrotMpc::
   }
 
   boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model =
-      boost::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(state_, actuation_, cost_model);
+      boost::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(state_, actuation, cost_model);
 
   diff_model->set_u_lb(tau_lb_);
   diff_model->set_u_ub(tau_ub_);

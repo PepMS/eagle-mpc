@@ -48,8 +48,8 @@ class TrajectoryGenerator : public OcpAbstract {
              const std::vector<Eigen::VectorXd>& control_trajectory = crocoddyl::DEFAULT_VECTOR) override;
 
   const boost::shared_ptr<Mission> getMission() const;
-  const std::vector<Eigen::VectorXd>& getStateTrajectory(const std::size_t& idx_init, const std::size_t& idx_end) const;
-  const std::vector<Eigen::VectorXd>& getControlTrajectory(const std::size_t& idx_init, const std::size_t& idx_end) const;
+  std::vector<Eigen::VectorXd> getStateTrajectory(const std::size_t& idx_init, const std::size_t& idx_end) const;
+  std::vector<Eigen::VectorXd> getControlTrajectory(const std::size_t& idx_init, const std::size_t& idx_end) const;
   const Eigen::VectorXd& getState(const std::size_t& cursor) const;
   const Eigen::VectorXd& getControl(const std::size_t& cursor) const;
   const TrajectoryGeneratorParams& getParams() const;

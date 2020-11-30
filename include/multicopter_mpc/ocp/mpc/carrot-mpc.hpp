@@ -56,7 +56,7 @@ class CarrotMpc : public MpcAbstract {
   void initializeTerminalWeights();
 
   boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> createDifferentialModel(
-      const std::size_t& idx_knot);
+      const std::size_t& idx_knot, const bool& squash);
   boost::shared_ptr<crocoddyl::CostModelAbstract> createCostStateRegularization();
   boost::shared_ptr<crocoddyl::CostModelAbstract> createCostControlRegularization();
   boost::shared_ptr<crocoddyl::CostModelAbstract> createCostControlRegularization(const std::size_t& idx_traj);
