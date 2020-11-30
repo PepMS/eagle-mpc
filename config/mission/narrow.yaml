@@ -1,0 +1,19 @@
+mission:
+  $initial_state:
+    - pos: [0.0, 0.0, 2.5] # From 1.8 to 2.5
+      quat: [0.0, 0.0, 0.0, 1.0] # x, y, z, w
+      vel_lin: [0.0, 0.0, 0.0]
+      vel_rot: [0.0, 0.0, 0.0]
+
+  $waypoints:    
+    - pos: [5.0, 0.0, 2.0]
+      quat: [1.0, 0.0, 0.0, 1.0] # x, y, z, w
+      vel_lin: [6.0, 0.0, 0.0]
+      vel_rot: [0.0, 0.0, 0.0]
+      time: 1.15
+
+    - pos: [8.0, 0.0, 2.0]
+      quat: [0.0, 0.0, 0.0, 1.0] # x, y, z, w
+      vel_lin: [0.0, 0.0, 0.0]
+      vel_rot: [0.0, 0.0, 0.0]
+      time: 1.4
