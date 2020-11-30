@@ -1,5 +1,5 @@
 trajectory_generator:
-  solver: "BoxFDDP"
+  solver: "sbFDDP"
   integrator: "Euler"
   yaml_path: "/usr/local/share/multicopter_mpc/ocp/trajectory-generator.yaml"
   initial_guess: "none"

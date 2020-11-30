@@ -74,6 +74,9 @@ bool SolverSbFDDP::solve(const std::vector<Eigen::VectorXd>& init_xs, const std:
   std::copy(init_xs.begin(), init_xs.end(), xs_.begin());
   std::copy(init_us.begin(), init_us.end(), us_.begin());
 
+  smooth_ = smooth_init_;
+  convergence_ = convergence_init_;
+
   total_iters_ = 0;
   while (convergence_ >= convergence_stop_) {
     squashingUpdate();
@@ -99,8 +102,6 @@ bool SolverSbFDDP::solve(const std::vector<Eigen::VectorXd>& init_xs, const std:
     std::copy(ddp_->get_us().begin(), ddp_->get_us().end(), us_.begin());
     total_iters_ += ddp_->get_iter() + 1;
   }
-
-  convergence_ = th_stop_;
 
   iter_ = total_iters_ - 1;
   for (std::size_t i = 0; i < problem_->get_T(); ++i) {
