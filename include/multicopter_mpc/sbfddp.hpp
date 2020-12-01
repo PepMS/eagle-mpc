@@ -40,6 +40,11 @@ class SolverSbFDDP : public crocoddyl::SolverFDDP {
   void barrierUpdate();
 
   bool solveFDDP(const std::size_t& maxiter, const bool& is_feasible, const double& reginit);
+  bool solveDDP(const std::size_t& maxiter, const bool& is_feasible, const double& reginit);
+  const Eigen::Vector2d& expectedImprovementDDP();
+  double tryStepDDP(const double& steplength = 1);
+  void forwardPassDDP(const double& steplength);
+
   boost::shared_ptr<crocoddyl::SquashingModelSmoothSat> squashing_model_;
   boost::shared_ptr<crocoddyl::ActuationSquashingModel> actuation_;
   boost::shared_ptr<crocoddyl::ActivationBounds> barrier_act_bounds_;

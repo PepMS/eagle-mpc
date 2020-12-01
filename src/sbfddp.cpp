@@ -63,7 +63,6 @@ void SolverSbFDDP::barrierInit() {
     }
     auto cost = differential_->get_costs()->get_costs().find("barrier");
     if (cost == differential_->get_costs()->get_costs().end()) {
-      MMPC_INFO << "Added control barrier cost!";
       differential_->get_costs()->addCost("barrier", squash_barr_cost_, barrier_weight_);
     }
     problem_->updateModel(i, problem_->get_runningModels()[i]);
@@ -92,13 +91,8 @@ bool SolverSbFDDP::solve(const std::vector<Eigen::VectorXd>& init_xs, const std:
   }
 
   if (!is_feasible_) {
-    ddp_->set_th_stop(th_stop_);
-    ddp_->setCallbacks(callbacks_);
-    ddp_->solve(xs_, us_, maxiter, false, reg_init_);
-
-    std::copy(ddp_->get_xs().begin(), ddp_->get_xs().end(), xs_.begin());
-    std::copy(ddp_->get_us().begin(), ddp_->get_us().end(), us_.begin());
-    total_iters_ += ddp_->get_iter() + 1;
+    solveDDP(maxiter, is_feasible_, reg_init_);
+    total_iters_ += iter_ + 1;
   }
 
   iter_ = total_iters_ - 1;
@@ -128,6 +122,7 @@ bool SolverSbFDDP::solve(const std::vector<Eigen::VectorXd>& init_xs, const std:
 }
 
 bool SolverSbFDDP::solveFDDP(const std::size_t& maxiter, const bool& is_feasible, const double& reginit) {
+  is_feasible_ = is_feasible;
   if (std::isnan(reginit)) {
     xreg_ = regmin_;
     ureg_ = regmin_;
@@ -211,6 +206,148 @@ bool SolverSbFDDP::solveFDDP(const std::size_t& maxiter, const bool& is_feasible
     }
   }
   return false;
+}
+
+bool SolverSbFDDP::solveDDP(const std::size_t& maxiter, const bool& is_feasible, const double& reginit) {
+  xs_try_[0] = problem_->get_x0();  // it is needed in case that init_xs[0] is infeasible
+
+  if (std::isnan(reginit)) {
+    xreg_ = regmin_;
+    ureg_ = regmin_;
+  } else {
+    xreg_ = reginit;
+    ureg_ = reginit;
+  }
+  was_feasible_ = false;
+
+  bool recalcDiff = true;
+  for (iter_ = 0; iter_ < maxiter; ++iter_) {
+    while (true) {
+      try {
+        computeDirection(recalcDiff);
+      } catch (std::exception& e) {
+        recalcDiff = false;
+        increaseRegularization();
+        if (xreg_ == regmax_) {
+          return false;
+        } else {
+          continue;
+        }
+      }
+      break;
+    }
+    expectedImprovementDDP();
+
+    // We need to recalculate the derivatives when the step length passes
+    recalcDiff = false;
+    for (std::vector<double>::const_iterator it = alphas_.begin(); it != alphas_.end(); ++it) {
+      steplength_ = *it;
+
+      try {
+        dV_ = tryStepDDP(steplength_);
+      } catch (std::exception& e) {
+        continue;
+      }
+      dVexp_ = steplength_ * (d_[0] + 0.5 * steplength_ * d_[1]);
+
+      if (dVexp_ >= 0) {  // descend direction
+        if (d_[0] < th_grad_ || !is_feasible_ || dV_ > th_acceptstep_ * dVexp_) {
+          was_feasible_ = is_feasible_;
+          setCandidate(xs_try_, us_try_, true);
+          cost_prev_ = cost_;
+          cost_ = cost_try_;
+          recalcDiff = true;
+          break;
+        }
+      }
+    }
+
+    if (steplength_ > th_stepdec_) {
+      decreaseRegularization();
+    }
+    if (steplength_ <= th_stepinc_) {
+      increaseRegularization();
+      if (xreg_ == regmax_) {
+        return false;
+      }
+    }
+    stoppingCriteria();
+
+    const std::size_t& n_callbacks = callbacks_.size();
+    for (std::size_t c = 0; c < n_callbacks; ++c) {
+      crocoddyl::CallbackAbstract& callback = *callbacks_[c];
+      callback(*this);
+    }
+
+    if (stoppingTestFeasible()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+const Eigen::Vector2d& SolverSbFDDP::expectedImprovementDDP() {
+  d_.fill(0);
+  const std::size_t& T = this->problem_->get_T();
+  const std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract> >& models = problem_->get_runningModels();
+  for (std::size_t t = 0; t < T; ++t) {
+    const std::size_t& nu = models[t]->get_nu();
+    if (nu != 0) {
+      d_[0] += Qu_[t].head(nu).dot(k_[t].head(nu));
+      d_[1] -= k_[t].head(nu).dot(Quuk_[t].head(nu));
+    }
+  }
+  return d_;
+}
+
+double SolverSbFDDP::tryStepDDP(const double& steplength) {
+  forwardPassDDP(steplength);
+  return cost_ - cost_try_;
+}
+
+void SolverSbFDDP::forwardPassDDP(const double& steplength) {
+  if (steplength > 1. || steplength < 0.) {
+    throw_pretty("Invalid argument: "
+                 << "invalid step length, value is between 0. to 1.");
+  }
+  cost_try_ = 0.;
+  const std::size_t& T = problem_->get_T();
+  const std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract> >& models = problem_->get_runningModels();
+  const std::vector<boost::shared_ptr<crocoddyl::ActionDataAbstract> >& datas = problem_->get_runningDatas();
+  for (std::size_t t = 0; t < T; ++t) {
+    const boost::shared_ptr<crocoddyl::ActionModelAbstract>& m = models[t];
+    const boost::shared_ptr<crocoddyl::ActionDataAbstract>& d = datas[t];
+
+    m->get_state()->diff(xs_[t], xs_try_[t], dx_[t]);
+    if (m->get_nu() != 0) {
+      const std::size_t& nu = m->get_nu();
+
+      us_try_[t].head(nu).noalias() = us_[t].head(nu);
+      us_try_[t].head(nu).noalias() -= k_[t].head(nu) * steplength;
+      us_try_[t].head(nu).noalias() -= K_[t].topRows(nu) * dx_[t];
+      m->calc(d, xs_try_[t], us_try_[t].head(nu));
+    } else {
+      m->calc(d, xs_try_[t]);
+    }
+    xs_try_[t + 1] = d->xnext;
+    cost_try_ += d->cost;
+
+    if (crocoddyl::raiseIfNaN(cost_try_)) {
+      throw_pretty("forward_error");
+    }
+    if (crocoddyl::raiseIfNaN(xs_try_[t + 1].lpNorm<Eigen::Infinity>())) {
+      throw_pretty("forward_error");
+    }
+  }
+
+  const boost::shared_ptr<crocoddyl::ActionModelAbstract>& m = problem_->get_terminalModel();
+  const boost::shared_ptr<crocoddyl::ActionDataAbstract>& d = problem_->get_terminalData();
+  m->calc(d, xs_try_.back());
+  cost_try_ += d->cost;
+
+  if (crocoddyl::raiseIfNaN(cost_try_)) {
+    throw_pretty("forward_error");
+  }
 }
 
 void SolverSbFDDP::squashingUpdate() { squashing_model_->set_smooth(smooth_); }

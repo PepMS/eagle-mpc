@@ -72,11 +72,11 @@ class SolverSquashFDDP():
             self.squashingSmooth *= self.squashingSmoothMult
             self.convergence *= self.convergenceMult
 
-        # if not self.solverFDDP.isFeasible:
-        self.solverDDP.th_stop = self.solverFDDP.th_stop
-        self.solverDDP.solve(self.xs, self.ss, self.maxIters, True, self.regInit)
-        self.xs = self.solverDDP.xs
-        self.ss = self.solverDDP.us
+        if not self.solverFDDP.isFeasible:
+            self.solverDDP.th_stop = self.solverFDDP.th_stop
+            self.solverDDP.solve(self.xs, self.ss, self.maxIters, False, self.regInit)
+            self.xs = self.solverDDP.xs
+            self.ss = self.solverDDP.us
 
     def squashingUpdate(self):
         self.actuation.squashing.smooth = self.squashingSmooth
