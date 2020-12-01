@@ -30,7 +30,7 @@ class SolverSbFDDP : public crocoddyl::SolverFDDP {
 
   virtual bool solve(const std::vector<Eigen::VectorXd>& init_xs = crocoddyl::DEFAULT_VECTOR,
                      const std::vector<Eigen::VectorXd>& init_us = crocoddyl::DEFAULT_VECTOR,
-                     const std::size_t& maxiter = 100, const bool& is_feasible = false, const double& regInit = 1e-9);
+                     const std::size_t& maxiter = 100, const bool& is_feasible = false, const double& reginit = 1e-9);
 
   const std::vector<Eigen::VectorXd>& getSquashControls() const;
 
@@ -39,6 +39,7 @@ class SolverSbFDDP : public crocoddyl::SolverFDDP {
   void squashingUpdate();
   void barrierUpdate();
 
+  bool solveFDDP(const std::size_t& maxiter, const bool& is_feasible, const double& reginit);
   boost::shared_ptr<crocoddyl::SquashingModelSmoothSat> squashing_model_;
   boost::shared_ptr<crocoddyl::ActuationSquashingModel> actuation_;
   boost::shared_ptr<crocoddyl::ActivationBounds> barrier_act_bounds_;
@@ -75,6 +76,9 @@ class SolverSbFDDP : public crocoddyl::SolverFDDP {
   std::size_t total_iters_;
 
   std::vector<Eigen::VectorXd> us_squash_;  //!< Control trajectory
+
+
+  double th_acceptnegstep_; // FDDP solver
 };
 }  // namespace multicopter_mpc
 

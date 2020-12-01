@@ -13,7 +13,8 @@ SolverSbFDDP::SolverSbFDDP(boost::shared_ptr<crocoddyl::ShootingProblem> problem
       convergence_stop_(1e-3),
       convergence_mult_(1e-1),
       max_iters_(100),
-      reg_init_(1e-9) {
+      reg_init_(1e-9),
+      th_acceptnegstep_(2) {
   smooth_ = smooth_init_;
   convergence_ = convergence_init_;
 
@@ -70,9 +71,9 @@ void SolverSbFDDP::barrierInit() {
 }
 
 bool SolverSbFDDP::solve(const std::vector<Eigen::VectorXd>& init_xs, const std::vector<Eigen::VectorXd>& init_us,
-                         const std::size_t& maxiter, const bool& is_feasible, const double& regInit) {
-  std::copy(init_xs.begin(), init_xs.end(), xs_.begin());
-  std::copy(init_us.begin(), init_us.end(), us_.begin());
+                         const std::size_t& maxiter, const bool& is_feasible, const double& reginit) {
+  xs_try_[0] = problem_->get_x0();  // it is needed in case that init_xs[0] is infeasible
+  setCandidate(init_xs, init_us, is_feasible);
 
   smooth_ = smooth_init_;
   convergence_ = convergence_init_;
@@ -83,7 +84,7 @@ bool SolverSbFDDP::solve(const std::vector<Eigen::VectorXd>& init_xs, const std:
     barrierUpdate();
 
     th_stop_ = convergence_;
-    crocoddyl::SolverFDDP::solve(xs_, us_, maxiter, false, reg_init_);
+    solveFDDP(maxiter, false, reg_init_);
 
     smooth_ *= smooth_mult_;
     convergence_ *= convergence_mult_;
@@ -94,7 +95,7 @@ bool SolverSbFDDP::solve(const std::vector<Eigen::VectorXd>& init_xs, const std:
     ddp_->set_th_stop(th_stop_);
     ddp_->setCallbacks(callbacks_);
     ddp_->solve(xs_, us_, maxiter, false, reg_init_);
-    
+
     std::copy(ddp_->get_xs().begin(), ddp_->get_xs().end(), xs_.begin());
     std::copy(ddp_->get_us().begin(), ddp_->get_us().end(), us_.begin());
     total_iters_ += ddp_->get_iter() + 1;
@@ -124,6 +125,92 @@ bool SolverSbFDDP::solve(const std::vector<Eigen::VectorXd>& init_xs, const std:
   }
 
   return true;
+}
+
+bool SolverSbFDDP::solveFDDP(const std::size_t& maxiter, const bool& is_feasible, const double& reginit) {
+  if (std::isnan(reginit)) {
+    xreg_ = regmin_;
+    ureg_ = regmin_;
+  } else {
+    xreg_ = reginit;
+    ureg_ = reginit;
+  }
+  was_feasible_ = false;
+
+  bool recalcDiff = true;
+  for (iter_ = 0; iter_ < maxiter; ++iter_) {
+    while (true) {
+      try {
+        computeDirection(recalcDiff);
+      } catch (std::exception& e) {
+        recalcDiff = false;
+        increaseRegularization();
+        if (xreg_ == regmax_) {
+          return false;
+        } else {
+          continue;
+        }
+      }
+      break;
+    }
+    updateExpectedImprovement();
+
+    // We need to recalculate the derivatives when the step length passes
+    recalcDiff = false;
+    for (std::vector<double>::const_iterator it = alphas_.begin(); it != alphas_.end(); ++it) {
+      steplength_ = *it;
+
+      try {
+        dV_ = tryStep(steplength_);
+      } catch (std::exception& e) {
+        continue;
+      }
+      expectedImprovement();
+      dVexp_ = steplength_ * (d_[0] + 0.5 * steplength_ * d_[1]);
+
+      if (dVexp_ >= 0) {  // descend direction
+        if (d_[0] < th_grad_ || dV_ > th_acceptstep_ * dVexp_) {
+          was_feasible_ = is_feasible_;
+          setCandidate(xs_try_, us_try_, (was_feasible_) || (steplength_ == 1));
+          cost_prev_ = cost_;
+          cost_ = cost_try_;
+          recalcDiff = true;
+          break;
+        }
+      } else {  // reducing the gaps by allowing a small increment in the cost value
+        if (dV_ > th_acceptnegstep_ * dVexp_) {
+          was_feasible_ = is_feasible_;
+          setCandidate(xs_try_, us_try_, (was_feasible_) || (steplength_ == 1));
+          cost_prev_ = cost_;
+          cost_ = cost_try_;
+          recalcDiff = true;
+          break;
+        }
+      }
+    }
+
+    if (steplength_ > th_stepdec_) {
+      decreaseRegularization();
+    }
+    if (steplength_ <= th_stepinc_) {
+      increaseRegularization();
+      if (xreg_ == regmax_) {
+        return false;
+      }
+    }
+    stoppingCriteria();
+
+    const std::size_t& n_callbacks = callbacks_.size();
+    for (std::size_t c = 0; c < n_callbacks; ++c) {
+      crocoddyl::CallbackAbstract& callback = *callbacks_[c];
+      callback(*this);
+    }
+
+    if (stoppingTest()) {
+      return true;
+    }
+  }
+  return false;
 }
 
 void SolverSbFDDP::squashingUpdate() { squashing_model_->set_smooth(smooth_); }
