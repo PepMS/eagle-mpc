@@ -60,8 +60,6 @@ void exposeOcpAbstract() {
   void (OcpAbstract::*createProblem_base)(const SolverTypes::Type&, const IntegratorTypes::Type&, const double&) =
       &OcpAbstract::createProblem;
 
-  bp::register_ptr_to_python<boost::shared_ptr<crocoddyl::SolverDDP>>();
-
   bp::class_<OcpAbstract_wrap, boost::noncopyable>(
       "OcpAbstract",
       "Abstract class to generate an optimal control problem designed to run on multicopter or aerial manipulators",
@@ -100,6 +98,10 @@ void exposeOcpAbstract() {
                                                       bp::return_value_policy<bp::return_by_value>()))
       .add_property("n_knots",
                     bp::make_function(&OcpAbstract_wrap::getKnots, bp::return_value_policy<bp::return_by_value>()))
+      .add_property(
+          "controls", bp::make_function(&OcpAbstract_wrap::getControls, bp::return_value_policy<bp::copy_const_reference>()))
+      .add_property(
+          "states", bp::make_function(&OcpAbstract_wrap::getStates, bp::return_value_policy<bp::copy_const_reference>()))
       .def("setInitialState", &OcpAbstract_wrap::setInitialState, bp::args("self", "initial_state"))
       .add_property(
           "diff_models_running",

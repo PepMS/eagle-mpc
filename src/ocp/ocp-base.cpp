@@ -10,11 +10,13 @@ OcpAbstract::OcpAbstract(const boost::shared_ptr<pinocchio::Model>& model,
   state_ = boost::make_shared<crocoddyl::StateMultibody>(model_);
   actuation_ =
       boost::make_shared<crocoddyl::ActuationModelMultiCopterBase>(state_, mc_params_->n_rotors_, mc_params_->tau_f_);
-
   tau_lb_ = Eigen::VectorXd(actuation_->get_nu());
   tau_ub_ = Eigen::VectorXd(actuation_->get_nu());
   tau_lb_.head(mc_params_->n_rotors_).fill(mc_params_->min_thrust_);
   tau_ub_.head(mc_params_->n_rotors_).fill(mc_params_->max_thrust_);
+  squashing_model_ = boost::make_shared<crocoddyl::SquashingModelSmoothSat>(tau_lb_, tau_ub_, mc_params_->n_rotors_);
+  actuation_squashed_ =
+      boost::make_shared<crocoddyl::ActuationSquashingModel>(actuation_, squashing_model_, mc_params_->n_rotors_);
 
   state_initial_ = state_->zero();
   frame_base_link_id_ = model_->getFrameId(mc_params_->base_link_name_);
@@ -24,6 +26,14 @@ OcpAbstract::OcpAbstract(const boost::shared_ptr<pinocchio::Model>& model,
   integrator_type_ = IntegratorTypes::NbIntegratorTypes;
   n_knots_ = 100;
   dt_ = 0.0;
+
+  states_.resize(n_knots_);
+  controls_.resize(n_knots_);
+  for (std::size_t t = 0; t < n_knots_ - 1; ++t) {
+    states_[t] = state_->zero();
+    controls_[t] = Eigen::VectorXd::Zero(actuation_->get_nu());
+  }
+  states_.back() = state_->zero();
 }
 
 OcpAbstract::~OcpAbstract() {}
@@ -45,6 +55,8 @@ void OcpAbstract::createProblem(const SolverTypes::Type& solver_type, const Inte
 void OcpAbstract::solve(const std::vector<Eigen::VectorXd>& state_trajectory,
                         const std::vector<Eigen::VectorXd>& control_trajectory) {
   solver_->solve(state_trajectory, control_trajectory, solver_iters_, false);
+  std::copy(solver_->get_xs().begin(), solver_->get_xs().end(), states_.begin());
+  std::copy(solver_->get_us().begin(), solver_->get_us().end(), controls_.begin());
 }
 
 void OcpAbstract::setSolver(const SolverTypes::Type& solver_type) {
@@ -62,6 +74,8 @@ void OcpAbstract::setSolver(const SolverTypes::Type& solver_type) {
       break;
     }
     case SolverTypes::SquashBoxFDDP: {
+      MMPC_INFO << "Solver set: SquashBox FDDP";
+      solver_ = boost::make_shared<SolverSbFDDP>(problem_, squashing_model_);
       break;
     }
     default:
@@ -71,6 +85,13 @@ void OcpAbstract::setSolver(const SolverTypes::Type& solver_type) {
   }
 
   solver_type_ = solver_type;
+  states_.resize(n_knots_);
+  controls_.resize(n_knots_);
+  for (std::size_t t = 0; t < n_knots_ - 1; ++t) {
+    states_[t] = state_->zero();
+    controls_[t] = Eigen::VectorXd::Zero(actuation_->get_nu());
+  }
+  states_.back() = state_->zero();
 }
 
 void OcpAbstract::setSolverCallbacks(const bool& activated) {
@@ -135,7 +156,7 @@ void OcpAbstract::setIntegratorType(const IntegratorTypes::Type& integrator_type
   }
 }
 
-const boost::shared_ptr<pinocchio::Model> OcpAbstract::getModel() const { return model_; }
+boost::shared_ptr<pinocchio::Model> OcpAbstract::getModel() const { return model_; }
 const boost::shared_ptr<MultiCopterBaseParams> OcpAbstract::getMcParams() const { return mc_params_; }
 const boost::shared_ptr<crocoddyl::StateMultibody> OcpAbstract::getStateMultibody() const { return state_; }
 const boost::shared_ptr<crocoddyl::ActuationModelMultiCopterBase> OcpAbstract::getActuation() const {
@@ -155,5 +176,12 @@ const std::size_t& OcpAbstract::getKnots() const {
   return n_knots_;
 }
 const IntegratorTypes::Type& OcpAbstract::getIntegratorType() const { return integrator_type_; }
+const std::vector<Eigen::VectorXd>& OcpAbstract::getStates() const { return solver_->get_xs(); };
+const std::vector<Eigen::VectorXd>& OcpAbstract::getControls() const {
+  if (solver_type_ == SolverTypes::SquashBoxFDDP) {
+    return boost::static_pointer_cast<SolverSbFDDP>(solver_)->getSquashControls();
+  }
+  return solver_->get_us();
+}
 
 }  // namespace multicopter_mpc

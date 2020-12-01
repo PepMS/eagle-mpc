@@ -36,7 +36,7 @@ class MpcMain {
   ~MpcMain();
 
   void setCurrentState(const Eigen::Ref<Eigen::VectorXd>& current_state);
-  void runMpcStep();
+  void runMpcStep(const std::size_t& idx_control = 0);
 
   void thrustToSpeed(const Eigen::Ref<const Eigen::VectorXd>& motors_thrust, Eigen::Ref<Eigen::VectorXd> motors_speed);
 
@@ -49,6 +49,7 @@ class MpcMain {
   void getStateDiff(const Eigen::Ref<const Eigen::VectorXd>& state0, const Eigen::Ref<const Eigen::VectorXd>& state1,
                     Eigen::Ref<Eigen::VectorXd> state_diff);
   const std::size_t& getCursor();
+  boost::shared_ptr<pinocchio::Model> getModel() const;
 
   void printInfo();
  private:

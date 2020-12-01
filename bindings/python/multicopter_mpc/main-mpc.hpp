@@ -32,8 +32,6 @@ void exposeMpcMain() {
                     bp::make_function(&MpcMain::getMotorsSpeed, bp::return_value_policy<bp::return_by_value>()))
       .add_property("motor_thrust",
                     bp::make_function(&MpcMain::getMotorsThrust, bp::return_value_policy<bp::return_by_value>()))
-      .add_property("ff_gains",
-                    bp::make_function(&MpcMain::getFeedForwardGains, bp::return_value_policy<bp::return_by_value>()))
       .add_property("fb_gains",
                     bp::make_function(&MpcMain::getFeedBackGains, bp::return_value_policy<bp::return_by_value>()))
       .add_property("current_state",

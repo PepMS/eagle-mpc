@@ -3,12 +3,12 @@
 #include "multicopter_mpc/utils/log.hpp"
 
 namespace multicopter_mpc {
-MpcMain::MpcMain(const MultiCopterTypes::Type& mc_type, const std::string& mission_name,
+MpcMain::MpcMain(const MultiCopterTypes::Type& mc_type, const std::string& mission_yaml_path,
                  const std::string& mpc_yaml_path)
     : mc_type_(mc_type) {
   std::string model_description_path;
   std::string model_yaml_path;
-  std::string mission_yaml_path = MULTICOPTER_MPC_MISSION_DIR "/" + mission_name;
+
   MMPC_INFO << "MULTICOPTER MPC: MPC Main initialization complete";
 
   switch (mc_type_) {
@@ -70,6 +70,8 @@ void MpcMain::loadParameters(const std::string& yaml_path) {
     mpc_controller_specs_.solver = SolverTypes::BoxFDDP;
   } else if (server.getParam<std::string>("mpc_controller/solver") == "BoxDDP") {
     mpc_controller_specs_.solver = SolverTypes::BoxDDP;
+  } else if (server.getParam<std::string>("mpc_controller/solver") == "sbFDDP") {
+    mpc_controller_specs_.solver = SolverTypes::SquashBoxFDDP;
   }
   if (server.getParam<std::string>("mpc_controller/integrator") == "Euler") {
     mpc_controller_specs_.integrator = IntegratorTypes::Euler;
@@ -108,17 +110,16 @@ void MpcMain::initializeMpcController() {
   mpc_controller_->setSolverCallbacks(mpc_controller_specs_.callback);
 }
 
-void MpcMain::runMpcStep() {
+void MpcMain::runMpcStep(const std::size_t& idx_control) {
   mpc_controller_->setInitialState(state_);
   mpc_controller_->solve(state_trajectory_, control_trajectory_);
   std::copy(mpc_controller_->getSolver()->get_xs().begin() + 1, mpc_controller_->getSolver()->get_xs().end(),
             state_trajectory_.begin());
   std::copy(mpc_controller_->getSolver()->get_us().begin() + 1, mpc_controller_->getSolver()->get_us().end(),
             control_trajectory_.begin());
-  motor_thrust_ = mpc_controller_->getControls(0);
+  motor_thrust_ = mpc_controller_->getControls()[idx_control];
   thrustToSpeed(motor_thrust_, motor_speed_);
-  ff_gains_ = mpc_controller_->getFeedForwardGains(0);
-  fb_gains_ = mpc_controller_->getFeedBackGains(0);
+  fb_gains_ = mpc_controller_->getFeedBackGains(idx_control);
 
   ++trajectory_cursor_;
   state_trajectory_.back() = mpc_controller_->getTrajectoryGenerator()->getState(trajectory_cursor_);
@@ -144,6 +145,8 @@ void MpcMain::getStateDiff(const Eigen::Ref<const Eigen::VectorXd>& state0,
                            const Eigen::Ref<const Eigen::VectorXd>& state1, Eigen::Ref<Eigen::VectorXd> state_diff) {
   mpc_controller_->getStateMultibody()->diff(state0, state1, state_diff);
 }
+
+boost::shared_ptr<pinocchio::Model> MpcMain::getModel() const { return model_; }
 
 const std::size_t& MpcMain::getCursor() { return trajectory_cursor_; };
 

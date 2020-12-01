@@ -65,7 +65,6 @@ void exposeMpcAbstract() {
       .def("setNumberKnots", &MpcAbstract_wrap::setNumberKnots, &MpcAbstract_wrap::default_setNumberKnots,
            bp::args("self", "n_knots"))
       .def("printInfo", &MpcAbstract_wrap::printInfo, &MpcAbstract_wrap::default_printInfo, bp::args("self"))
-      .def("getControls", &MpcAbstract_wrap::getControls, bp::args("self", "idx"), bp::return_internal_reference<>())
       .add_property("mission",
                     bp::make_function(&MpcAbstract_wrap::getMission, bp::return_value_policy<bp::return_by_value>()))
       .add_property("trajectory_generator", bp::make_function(&MpcAbstract_wrap::getTrajectoryGenerator,

@@ -30,6 +30,8 @@ void MpcAbstract::loadParameters(const std::string& yaml_path) {
       trajectory_generator_specs_.solver = SolverTypes::BoxFDDP;
     } else if (solver == "BoxDDP") {
       trajectory_generator_specs_.solver = SolverTypes::BoxDDP;
+    } else if (solver == "sbFDDP") {
+      trajectory_generator_specs_.solver = SolverTypes::SquashBoxFDDP;
     } else {
       trajectory_generator_specs_.solver = SolverTypes::NbSolverTypes;
     }
@@ -78,6 +80,7 @@ void MpcAbstract::initializeTrajectoryGenerator() {
                                          : integrator_type_;
   trajectory_generator_->createProblem(solver, integrator, dt_);
   trajectory_generator_->setSolverIters(300);
+  trajectory_generator_->setSolverCallbacks(true);
   std::vector<Eigen::VectorXd> state_trajectory =
       trajectory_generator_->getMission()->interpolateTrajectory(trajectory_generator_specs_.initial_guess);
   std::vector<Eigen::VectorXd> control_trajectory(trajectory_generator_->getKnots() - 1,
@@ -103,8 +106,6 @@ void MpcAbstract::setNumberKnots(const std::size_t& n_knots) {
   }
 }
 
-const Eigen::VectorXd& MpcAbstract::getControls(const std::size_t& idx) const { return solver_->get_us()[idx]; }
-const Eigen::VectorXd& MpcAbstract::getFeedForwardGains(const std::size_t& idx) const { return solver_->get_k()[idx]; }
 const Eigen::MatrixXd& MpcAbstract::getFeedBackGains(const std::size_t& idx) const { return solver_->get_K()[idx]; };
 const boost::shared_ptr<TrajectoryGenerator> MpcAbstract::getTrajectoryGenerator() const {
   return trajectory_generator_;

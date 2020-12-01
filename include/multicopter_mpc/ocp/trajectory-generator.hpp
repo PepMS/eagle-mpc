@@ -53,16 +53,16 @@ class TrajectoryGenerator : public OcpAbstract {
   const Eigen::VectorXd& getState(const std::size_t& cursor) const;
   const Eigen::VectorXd& getControl(const std::size_t& cursor) const;
   const TrajectoryGeneratorParams& getParams() const;
-  
+
   using OcpAbstract::createProblem;
 
-protected:
+ protected:
   void createProblem(const SolverTypes::Type& solver_type, const IntegratorTypes::Type& integrator_type) override;
   void initializeDefaultParameters() override;
   boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> createRunningDifferentialModel(
-      const WayPoint& waypoint);
+      const WayPoint& waypoint, const bool& squash);
   boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> createTerminalDifferentialModel(
-      const WayPoint& waypoint, const bool& is_last_wp);
+      const WayPoint& waypoint, const bool& is_last_wp, const bool& squash);
 
   void setStateHover();
 
@@ -70,6 +70,13 @@ protected:
   Eigen::VectorXd state_hover_;
   Eigen::VectorXd control_hover_;
   TrajectoryGeneratorParams params_;
+
+  double barrier_weight_;
+  Eigen::VectorXd barrier_quad_weights_;
+  Eigen::VectorXd barrier_quad_weights_aux_;
+  boost::shared_ptr<crocoddyl::ActivationBounds> barrier_act_bounds_;
+  boost::shared_ptr<crocoddyl::ActivationModelWeightedQuadraticBarrier> barrier_activation_;
+  boost::shared_ptr<crocoddyl::CostModelControl> squash_barr_cost_;
 };
 }  // namespace multicopter_mpc
 
