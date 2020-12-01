@@ -209,8 +209,6 @@ bool SolverSbFDDP::solveFDDP(const std::size_t& maxiter, const bool& is_feasible
 }
 
 bool SolverSbFDDP::solveDDP(const std::size_t& maxiter, const bool& is_feasible, const double& reginit) {
-  xs_try_[0] = problem_->get_x0();  // it is needed in case that init_xs[0] is infeasible
-
   if (std::isnan(reginit)) {
     xreg_ = regmin_;
     ureg_ = regmin_;

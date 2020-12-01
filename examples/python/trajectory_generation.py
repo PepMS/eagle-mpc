@@ -21,7 +21,7 @@ mc_params.fill(MULTICOPTER_MPC_MULTIROTOR_DIR + "/iris.yaml")
 
 # Mission
 mission = multicopter_mpc.Mission(uav.nq + uav.nv)
-mission.fillWaypoints(MULTICOPTER_MPC_MISSION_DIR + "/takeoff.yaml")
+mission.fillWaypoints(MULTICOPTER_MPC_MISSION_DIR + "/narrow.yaml")
 
 trajectory = multicopter_mpc.TrajectoryGenerator(uav_model, mc_params, mission)
 trajectory.loadParameters(MULTICOPTER_MPC_OCP_DIR + "/trajectory-generator.yaml")
@@ -37,7 +37,8 @@ control_guess = [control for _ in range(0, len(state_guess) - 1)]
 trajectory.setSolverIters(500)
 trajectory.setSolverCallbacks(True)
 trajectory.solver.th_stop = 1e-5
-trajectory.solve(state_guess, control_guess)
+# trajectory.solve(state_guess, control_guess)
+trajectory.solve()
 
 state_trajectory = trajectory.getStateTrajectory(0, trajectory.n_knots - 1)
 control_trajectory = trajectory.getControlTrajectory(0, trajectory.n_knots - 2)
