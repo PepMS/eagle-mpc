@@ -39,8 +39,8 @@ MpcMain::MpcMain(const MultiCopterTypes::Type& mc_type, const std::string& missi
 
   loadParameters(mpc_yaml_path);
   initializeMpcController();
-  state_trajectory_ = mpc_controller_->getSolver()->get_xs();
-  control_trajectory_ = mpc_controller_->getSolver()->get_us();
+  state_trajectory_ = mpc_controller_->getStates();
+  u_trajectory_ = mpc_controller_->get_us();
 
   motor_thrust_ = Eigen::VectorXd::Zero(mpc_controller_->getActuation()->get_nu());
   motor_speed_ = motor_thrust_;
@@ -103,27 +103,30 @@ void MpcMain::initializeMpcController() {
                                  mpc_controller_->getTimeStep());
   mpc_controller_->setSolverCallbacks(true);
   mpc_controller_->setSolverIters(100);
-  mpc_controller_->solve(
-      mpc_controller_->getTrajectoryGenerator()->getStateTrajectory(0, mpc_controller_->getKnots() - 1),
-      mpc_controller_->getTrajectoryGenerator()->getControlTrajectory(0, mpc_controller_->getKnots() - 2));
+  mpc_controller_->solve(mpc_controller_->getTrajectoryGenerator()->getStates(0, mpc_controller_->getKnots() - 1),
+                         mpc_controller_->getTrajectoryGenerator()->get_us(0, mpc_controller_->getKnots() - 2));
   mpc_controller_->setSolverIters(mpc_controller_specs_.running_iters);
   mpc_controller_->setSolverCallbacks(mpc_controller_specs_.callback);
 }
 
 void MpcMain::runMpcStep(const std::size_t& idx_control) {
   mpc_controller_->setInitialState(state_);
-  mpc_controller_->solve(state_trajectory_, control_trajectory_);
+  mpc_controller_->solve(state_trajectory_, u_trajectory_);
   std::copy(mpc_controller_->getSolver()->get_xs().begin() + 1, mpc_controller_->getSolver()->get_xs().end(),
             state_trajectory_.begin());
   std::copy(mpc_controller_->getSolver()->get_us().begin() + 1, mpc_controller_->getSolver()->get_us().end(),
-            control_trajectory_.begin());
+            u_trajectory_.begin());
   motor_thrust_ = mpc_controller_->getControls()[idx_control];
   thrustToSpeed(motor_thrust_, motor_speed_);
   fb_gains_ = mpc_controller_->getFeedBackGains(idx_control);
 
   ++trajectory_cursor_;
-  state_trajectory_.back() = mpc_controller_->getTrajectoryGenerator()->getState(trajectory_cursor_);
-  control_trajectory_.back() = *(control_trajectory_.end() - 2);
+  if (trajectory_cursor_ < mpc_controller_->getTrajectoryGenerator()->getKnots()) {
+    state_trajectory_.back() = mpc_controller_->getTrajectoryGenerator()->getStates()[trajectory_cursor_];
+  } else {
+    state_trajectory_.back() = mpc_controller_->getStateHover();
+  }
+  u_trajectory_.back() = *(u_trajectory_.end() - 2);
   mpc_controller_->updateProblem(trajectory_cursor_);
 }
 

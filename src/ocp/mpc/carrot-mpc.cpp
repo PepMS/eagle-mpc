@@ -231,7 +231,7 @@ boost::shared_ptr<crocoddyl::CostModelAbstract> CarrotMpc::createCostControlRegu
 boost::shared_ptr<crocoddyl::CostModelAbstract> CarrotMpc::createCostControlRegularization(
     const std::size_t& idx_traj) {
   boost::shared_ptr<crocoddyl::CostModelAbstract> cost_reg_control =
-      boost::make_shared<crocoddyl::CostModelControl>(state_, trajectory_generator_->getControl(idx_traj));
+      boost::make_shared<crocoddyl::CostModelControl>(state_, trajectory_generator_->get_us()[idx_traj]);
 
   return cost_reg_control;
 }
@@ -367,7 +367,12 @@ const crocoddyl::FrameMotion& CarrotMpc::getVelocityRef() const { return motion_
 const CarrotMpcParams& CarrotMpc::getParams() const { return params_; };
 
 void CarrotMpc::setReference(const std::size_t& idx_trajectory) {
-  state_ref_ = trajectory_generator_->getState(idx_trajectory);
+  if (idx_trajectory < trajectory_generator_->getKnots()) {
+    state_ref_ = trajectory_generator_->getStates()[idx_trajectory];
+  } else {
+    state_ref_ = state_hover_;
+  }
+
   quat_ref_ = Eigen::Quaterniond(static_cast<Eigen::Vector4d>(state_ref_.segment(3, 4)));
 
   pose_ref_.id = frame_base_link_id_;

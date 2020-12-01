@@ -63,8 +63,8 @@ void RailMpc::loadParameters(const std::string& yaml_path) {
 void RailMpc::createProblem(const SolverTypes::Type& solver_type, const IntegratorTypes::Type& integrator_type) {
   initializeTrajectoryGenerator();
 
-  setReferences(trajectory_generator_->getStateTrajectory(0, n_knots_ - 1),
-                trajectory_generator_->getControlTrajectory(0, n_knots_ - 2));
+  setReferences(trajectory_generator_->getStates(0, n_knots_ - 1),
+                trajectory_generator_->get_us(0, n_knots_ - 2));
 
   for (int i = 0; i < n_knots_ - 1; ++i) {
     boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> diff_model = createDifferentialModel(i);
@@ -149,12 +149,14 @@ void RailMpc::updateProblem(const std::size_t& idx_trajectory) {
       control_ref_[t] = control_ref_[t + 1];
       cost_control->set_reference<Eigen::VectorXd>(control_ref_[t]);
     } else {
-      control_ref_[t] = trajectory_generator_->getControl(idx_trajectory - 1);
+      // TBD: if idx_trajectory > size of trajectory this getter will throw an error
+      control_ref_[t] = trajectory_generator_->getControls()[idx_trajectory - 1];
       cost_control->set_reference<Eigen::VectorXd>(control_ref_[t]);
     }
   }
 
-  state_ref_[n_knots_ - 1] = trajectory_generator_->getState(idx_trajectory);
+  // TBD: if idx_trajectory > size of trajectory this getter will throw an error
+  state_ref_[n_knots_ - 1] = trajectory_generator_->getStates()[idx_trajectory];
   boost::shared_ptr<crocoddyl::CostModelState> cost_state = boost::static_pointer_cast<crocoddyl::CostModelState>(
       diff_model_terminal_->get_costs()->get_costs().find("state_error")->second->cost);
   cost_state->set_reference<Eigen::VectorXd>(state_ref_[n_knots_ - 1]);

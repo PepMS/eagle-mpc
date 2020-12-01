@@ -72,7 +72,7 @@ class MpcMain {
   std::size_t trajectory_cursor_;
 
   std::vector<Eigen::VectorXd> state_trajectory_;
-  std::vector<Eigen::VectorXd> control_trajectory_;
+  std::vector<Eigen::VectorXd> u_trajectory_;
 
   struct MpcControllerSpecs {
     std::string type;

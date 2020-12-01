@@ -61,7 +61,7 @@ class OcpAbstract {
   virtual void setTimeStep(const double& dt) = 0;
 
   // Other methods
-  virtual void solve(const std::vector<Eigen::VectorXd>& state_trajectory = crocoddyl::DEFAULT_VECTOR,
+  void solve(const std::vector<Eigen::VectorXd>& state_trajectory = crocoddyl::DEFAULT_VECTOR,
                      const std::vector<Eigen::VectorXd>& control_trajectory = crocoddyl::DEFAULT_VECTOR);
   void createProblem(const SolverTypes::Type& solver_type, const IntegratorTypes::Type& integrator_type,
                      const double& dt);
@@ -89,6 +89,10 @@ class OcpAbstract {
   const IntegratorTypes::Type& getIntegratorType() const;
   const std::vector<Eigen::VectorXd>& getStates() const;
   const std::vector<Eigen::VectorXd>& getControls() const;
+  const std::vector<Eigen::VectorXd>& get_us() const;
+  std::vector<Eigen::VectorXd> getStates(const std::size_t& idx_init, const std::size_t& idx_end) const;
+  std::vector<Eigen::VectorXd> getControls(const std::size_t& idx_init, const std::size_t& idx_end) const;
+  std::vector<Eigen::VectorXd> get_us(const std::size_t& idx_init, const std::size_t& idx_end) const;
 
  protected:
   // Methods
@@ -124,8 +128,6 @@ class OcpAbstract {
   Eigen::VectorXd tau_lb_;
 
   Eigen::VectorXd state_initial_;
-  std::vector<Eigen::VectorXd> states_;
-  std::vector<Eigen::VectorXd> controls_;
 };
 
 }  // namespace multicopter_mpc
