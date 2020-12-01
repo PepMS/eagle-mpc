@@ -83,9 +83,7 @@ bool SolverSbFDDP::solve(const std::vector<Eigen::VectorXd>& init_xs, const std:
     barrierUpdate();
 
     th_stop_ = convergence_;
-    if (!crocoddyl::SolverFDDP::solve(xs_, us_, max_iters_, false, reg_init_)) {
-      return false;
-    }
+    crocoddyl::SolverFDDP::solve(xs_, us_, maxiter, false, reg_init_);
 
     smooth_ *= smooth_mult_;
     convergence_ *= convergence_mult_;
@@ -95,9 +93,8 @@ bool SolverSbFDDP::solve(const std::vector<Eigen::VectorXd>& init_xs, const std:
   if (!is_feasible_) {
     ddp_->set_th_stop(th_stop_);
     ddp_->setCallbacks(callbacks_);
-    if (!ddp_->solve(xs_, us_, max_iters_, false, reg_init_)) {
-      return false;
-    }
+    ddp_->solve(xs_, us_, maxiter, false, reg_init_);
+    
     std::copy(ddp_->get_xs().begin(), ddp_->get_xs().end(), xs_.begin());
     std::copy(ddp_->get_us().begin(), ddp_->get_us().end(), us_.begin());
     total_iters_ += ddp_->get_iter() + 1;
