@@ -21,7 +21,7 @@ mc_params.fill(MULTICOPTER_MPC_MULTIROTOR_DIR + "/iris.yaml")
 
 # Mission
 mission = multicopter_mpc.Mission(uav.nq + uav.nv)
-mission.fillWaypoints(MULTICOPTER_MPC_MISSION_DIR + "/narrow.yaml")
+mission.fillWaypoints(MULTICOPTER_MPC_MISSION_DIR + "/loop.yaml")
 
 trajectory = multicopter_mpc.TrajectoryGenerator(uav_model, mc_params, mission)
 trajectory.loadParameters(MULTICOPTER_MPC_OCP_DIR + "/trajectory-generator.yaml")
@@ -39,21 +39,17 @@ trajectory.setSolverCallbacks(True)
 trajectory.solver.th_stop = 1e-5
 # trajectory.solve(state_guess, control_guess)
 trajectory.solve()
-print()
-# trajectory.solve()
 
-# state_trajectory = trajectory.getStateTrajectory(0, trajectory.n_knots - 1)
-# control_trajectory = trajectory.getControlTrajectory(0, trajectory.n_knots - 2)
-# time_lst = [trajectory.dt for i in range(0, trajectory.n_knots + 1)]
+state_trajectory = trajectory.states
+control_trajectory = trajectory.controls
+time_lst = [trajectory.dt for i in range(0, trajectory.n_knots + 1)]
 
-# if WITHDISPLAY:
-#     display = crocoddyl.GepettoDisplay(uav)
-#     for idx_wp, wp in enumerate(mission.waypoints):
-#         name = 'world/wp' + str(idx_wp)
-#         uav.viewer.gui.addXYZaxis(name, [1., 0., 0., 1.], .03, 0.5)
-#         wp_pose = pinocchio.SE3ToXYZQUATtuple(wp.pose)
-#         uav.viewer.gui.applyConfiguration(name, wp_pose)
+if WITHDISPLAY:
+    display = crocoddyl.GepettoDisplay(uav)
+    for idx_wp, wp in enumerate(mission.waypoints):
+        name = 'world/wp' + str(idx_wp)
+        uav.viewer.gui.addXYZaxis(name, [1., 0., 0., 1.], .03, 0.5)
+        wp_pose = pinocchio.SE3ToXYZQUATtuple(wp.pose)
+        uav.viewer.gui.applyConfiguration(name, wp_pose)
 
-#     display.display(state_trajectory, [], [], time_lst, 1)
-
-# crocoddyl.plotOCSolution(state_trajectory, control_trajectory, figIndex=1, show=True)
+    display.display(state_trajectory, [], [], time_lst, 1)
