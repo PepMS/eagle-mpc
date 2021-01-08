@@ -87,6 +87,14 @@ void MpcAbstract::initializeTrajectoryGenerator() {
                                                   Eigen::VectorXd::Zero(actuation_->get_nu()));
   trajectory_generator_->solve(state_trajectory, control_trajectory);
   generateMission();
+
+  state_hover_ = state_->zero();
+  state_hover_.head(3) = trajectory_generator_->getStates().back().head(3);
+  Eigen::Quaterniond quat = Eigen::Quaterniond(trajectory_generator_->getStates().back()(6), 0.0, 0.0,
+                                               trajectory_generator_->getStates().back()(5));
+  quat.normalize();
+  state_hover_(5) = quat.z();
+  state_hover_(6) = quat.w();
 }
 
 void MpcAbstract::generateMission() { mission_ = trajectory_generator_->getMission(); }
@@ -111,6 +119,8 @@ const boost::shared_ptr<TrajectoryGenerator> MpcAbstract::getTrajectoryGenerator
   return trajectory_generator_;
 }
 const boost::shared_ptr<Mission> MpcAbstract::getMission() const { return mission_; }
+
+const Eigen::VectorXd& MpcAbstract::getStateHover() const { return state_hover_; }
 
 void MpcAbstract::printInfo() {}
 

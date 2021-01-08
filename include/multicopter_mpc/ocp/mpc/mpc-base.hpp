@@ -19,14 +19,13 @@ class MpcAbstract : public OcpAbstract {
   virtual ~MpcAbstract();
 
   virtual void updateProblem(const std::size_t& idx_trajectory) = 0;
-
   virtual void loadParameters(const std::string& yaml_path) override;
-
   virtual void setNumberKnots(const std::size_t& n_knots);
 
   const Eigen::MatrixXd& getFeedBackGains(const std::size_t& idx = 0) const;
   const boost::shared_ptr<TrajectoryGenerator> getTrajectoryGenerator() const;
   const boost::shared_ptr<Mission> getMission() const;
+  const Eigen::VectorXd& getStateHover() const;
 
   using OcpAbstract::createProblem;
 
@@ -37,6 +36,8 @@ class MpcAbstract : public OcpAbstract {
 
   boost::shared_ptr<TrajectoryGenerator> trajectory_generator_;
   boost::shared_ptr<Mission> mission_;
+
+  Eigen::VectorXd state_hover_;
 
   struct TrajectoryGeneratorSpecs {
     std::string yaml_path;

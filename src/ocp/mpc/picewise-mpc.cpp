@@ -87,7 +87,8 @@ void PiceWiseMpc::generateMission() {
       for (std::size_t i = 0; i < n_groups; ++i) {
         std::size_t wp_knots = i < n_groups_small ? wp->knots / n_groups : wp->knots / n_groups + 1;
         wp_cursor = i == 0 ? wp_cursor + wp_knots - 1 : wp_cursor + wp_knots;
-        Eigen::VectorXd state_ref = trajectory_generator_->getState(wp_cursor);
+        // TBD: if cursor > size of trajectory this getter will throw an error
+        Eigen::VectorXd state_ref = trajectory_generator_->getStates()[wp_cursor];
         Eigen::Quaterniond quat(static_cast<Eigen::Vector4d>(state_ref.segment(3, 4)));
         if (i == n_groups - 1) {
           WayPoint wp_middle(*wp);

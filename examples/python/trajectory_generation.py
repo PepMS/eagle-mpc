@@ -21,7 +21,7 @@ mc_params.fill(MULTICOPTER_MPC_MULTIROTOR_DIR + "/iris.yaml")
 
 # Mission
 mission = multicopter_mpc.Mission(uav.nq + uav.nv)
-mission.fillWaypoints(MULTICOPTER_MPC_MISSION_DIR + "/narrow.yaml")
+mission.fillWaypoints(MULTICOPTER_MPC_MISSION_DIR + "/loop.yaml")
 
 trajectory = multicopter_mpc.TrajectoryGenerator(uav_model, mc_params, mission)
 trajectory.loadParameters(MULTICOPTER_MPC_OCP_DIR + "/trajectory-generator.yaml")
@@ -40,8 +40,8 @@ trajectory.solver.th_stop = 1e-5
 # trajectory.solve(state_guess, control_guess)
 trajectory.solve()
 
-state_trajectory = trajectory.getStateTrajectory(0, trajectory.n_knots - 1)
-control_trajectory = trajectory.getControlTrajectory(0, trajectory.n_knots - 2)
+state_trajectory = trajectory.states
+control_trajectory = trajectory.controls
 time_lst = [trajectory.dt for i in range(0, trajectory.n_knots + 1)]
 
 if WITHDISPLAY:
@@ -53,5 +53,3 @@ if WITHDISPLAY:
         uav.viewer.gui.applyConfiguration(name, wp_pose)
 
     display.display(state_trajectory, [], [], time_lst, 1)
-
-# crocoddyl.plotOCSolution(state_trajectory, control_trajectory, figIndex=1, show=True)

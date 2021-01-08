@@ -26,14 +26,6 @@ OcpAbstract::OcpAbstract(const boost::shared_ptr<pinocchio::Model>& model,
   integrator_type_ = IntegratorTypes::NbIntegratorTypes;
   n_knots_ = 100;
   dt_ = 0.0;
-
-  states_.resize(n_knots_);
-  controls_.resize(n_knots_);
-  for (std::size_t t = 0; t < n_knots_ - 1; ++t) {
-    states_[t] = state_->zero();
-    controls_[t] = Eigen::VectorXd::Zero(actuation_->get_nu());
-  }
-  states_.back() = state_->zero();
 }
 
 OcpAbstract::~OcpAbstract() {}
@@ -55,8 +47,6 @@ void OcpAbstract::createProblem(const SolverTypes::Type& solver_type, const Inte
 void OcpAbstract::solve(const std::vector<Eigen::VectorXd>& state_trajectory,
                         const std::vector<Eigen::VectorXd>& control_trajectory) {
   solver_->solve(state_trajectory, control_trajectory, solver_iters_, false);
-  std::copy(solver_->get_xs().begin(), solver_->get_xs().end(), states_.begin());
-  std::copy(solver_->get_us().begin(), solver_->get_us().end(), controls_.begin());
 }
 
 void OcpAbstract::setSolver(const SolverTypes::Type& solver_type) {
@@ -85,13 +75,6 @@ void OcpAbstract::setSolver(const SolverTypes::Type& solver_type) {
   }
 
   solver_type_ = solver_type;
-  states_.resize(n_knots_);
-  controls_.resize(n_knots_);
-  for (std::size_t t = 0; t < n_knots_ - 1; ++t) {
-    states_[t] = state_->zero();
-    controls_[t] = Eigen::VectorXd::Zero(actuation_->get_nu());
-  }
-  states_.back() = state_->zero();
 }
 
 void OcpAbstract::setSolverCallbacks(const bool& activated) {
@@ -182,6 +165,37 @@ const std::vector<Eigen::VectorXd>& OcpAbstract::getControls() const {
     return boost::static_pointer_cast<SolverSbFDDP>(solver_)->getSquashControls();
   }
   return solver_->get_us();
+}
+const std::vector<Eigen::VectorXd>& OcpAbstract::get_us() const { return solver_->get_us(); }
+
+std::vector<Eigen::VectorXd> OcpAbstract::getStates(const std::size_t& idx_init, const std::size_t& idx_end) const {
+  assert(idx_init < idx_end);
+  assert(idx_end < solver_->get_xs().size());
+  std::vector<Eigen::VectorXd>::const_iterator first = solver_->get_xs().begin() + idx_init;
+  std::vector<Eigen::VectorXd>::const_iterator last = solver_->get_xs().begin() + idx_end + 1;
+  return std::vector<Eigen::VectorXd>(first, last);
+}
+
+std::vector<Eigen::VectorXd> OcpAbstract::getControls(const std::size_t& idx_init, const std::size_t& idx_end) const {
+  assert(idx_init < idx_end);
+  assert(idx_end < solver_->get_us().size());
+  if (solver_type_ == SolverTypes::SquashBoxFDDP) {
+    boost::shared_ptr<SolverSbFDDP> solver = boost::static_pointer_cast<SolverSbFDDP>(solver_);
+    std::vector<Eigen::VectorXd>::const_iterator first = solver->getSquashControls().begin() + idx_init;
+    std::vector<Eigen::VectorXd>::const_iterator last = solver->getSquashControls().begin() + idx_end + 1;
+    return std::vector<Eigen::VectorXd>(first, last);
+  }
+  std::vector<Eigen::VectorXd>::const_iterator first = solver_->get_us().begin() + idx_init;
+  std::vector<Eigen::VectorXd>::const_iterator last = solver_->get_us().begin() + idx_end + 1;
+  return std::vector<Eigen::VectorXd>(first, last);
+}
+
+std::vector<Eigen::VectorXd> OcpAbstract::get_us(const std::size_t& idx_init, const std::size_t& idx_end) const {
+  assert(idx_init < idx_end);
+  assert(idx_end < solver_->get_us().size());
+  std::vector<Eigen::VectorXd>::const_iterator first = solver_->get_us().begin() + idx_init;
+  std::vector<Eigen::VectorXd>::const_iterator last = solver_->get_us().begin() + idx_end + 1;
+  return std::vector<Eigen::VectorXd>(first, last);
 }
 
 }  // namespace multicopter_mpc

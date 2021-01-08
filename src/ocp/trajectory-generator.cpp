@@ -8,9 +8,6 @@ TrajectoryGenerator::TrajectoryGenerator(const boost::shared_ptr<pinocchio::Mode
                                          const boost::shared_ptr<Mission>& mission)
     : OcpAbstract(model, mc_params), mission_(mission) {
   initializeDefaultParameters();
-
-  // To be changed!!!!!
-  control_hover_ = Eigen::VectorXd::Ones(mc_params_->n_rotors_) * 3.78;
 }
 
 TrajectoryGenerator::~TrajectoryGenerator() {}
@@ -245,57 +242,19 @@ void TrajectoryGenerator::setTimeStep(const double& dt) {
   }
 }
 
-void TrajectoryGenerator::solve(const std::vector<Eigen::VectorXd>& state_trajectory,
-                                const std::vector<Eigen::VectorXd>& control_trajectory) {
-  OcpAbstract::solve(state_trajectory, control_trajectory);
-  setStateHover();
-}
+// void TrajectoryGenerator::setStateHover() {
+//   assert(solver_->get_xs().size() > 0);
 
-void TrajectoryGenerator::setStateHover() {
-  assert(solver_->get_xs().size() > 0);
-
-  state_hover_ = state_->zero();
-  state_hover_.head(3) = solver_->get_xs().back().head(3);
-  Eigen::Quaterniond quat = Eigen::Quaterniond(solver_->get_xs().back()(6), 0.0, 0.0, solver_->get_xs().back()(5));
-  quat.normalize();
-  state_hover_(5) = quat.z();
-  state_hover_(6) = quat.w();
-}
+//   state_hover_ = state_->zero();
+//   state_hover_.head(3) = solver_->get_xs().back().head(3);
+//   Eigen::Quaterniond quat = Eigen::Quaterniond(solver_->get_xs().back()(6), 0.0, 0.0, solver_->get_xs().back()(5));
+//   quat.normalize();
+//   state_hover_(5) = quat.z();
+//   state_hover_(6) = quat.w();
+// }
 
 const boost::shared_ptr<Mission> TrajectoryGenerator::getMission() const { return mission_; }
 
 const TrajectoryGeneratorParams& TrajectoryGenerator::getParams() const { return params_; };
-
-std::vector<Eigen::VectorXd> TrajectoryGenerator::getStateTrajectory(const std::size_t& idx_init,
-                                                                     const std::size_t& idx_end) const {
-  assert(idx_init < idx_end);
-  std::vector<Eigen::VectorXd>::const_iterator first = solver_->get_xs().begin() + idx_init;
-  std::vector<Eigen::VectorXd>::const_iterator last = solver_->get_xs().begin() + idx_end + 1;
-  return std::vector<Eigen::VectorXd>(first, last);
-}
-
-std::vector<Eigen::VectorXd> TrajectoryGenerator::getControlTrajectory(const std::size_t& idx_init,
-                                                                       const std::size_t& idx_end) const {
-  assert(idx_init < idx_end);
-  std::vector<Eigen::VectorXd>::const_iterator first = solver_->get_us().begin() + idx_init;
-  std::vector<Eigen::VectorXd>::const_iterator last = solver_->get_us().begin() + idx_end + 1;
-  return std::vector<Eigen::VectorXd>(first, last);
-}
-
-const Eigen::VectorXd& TrajectoryGenerator::getState(const std::size_t& cursor) const {
-  if (cursor < states_.size()) {
-    return states_[cursor];
-  } else {
-    return state_hover_;
-  }
-}
-
-const Eigen::VectorXd& TrajectoryGenerator::getControl(const std::size_t& cursor) const {
-  if (cursor < controls_.size()) {
-    return controls_[cursor];
-  } else {
-    return control_hover_;
-  }
-}
 
 }  // namespace multicopter_mpc

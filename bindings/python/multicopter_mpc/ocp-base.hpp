@@ -33,20 +33,22 @@ class OcpAbstract_wrap : public OcpAbstract, public bp::wrapper<OcpAbstract> {
     return bp::call<void>(this->get_override("createProblem").ptr(), solver_type, integrator_type);
   }
 
-  void solve(const std::vector<Eigen::VectorXd>& state_trajectory,
-             const std::vector<Eigen::VectorXd>& control_trajectory) {
-    if (bp::override solve = this->get_override("solve")) {
-      return bp::call<void>(solve.ptr(), state_trajectory, control_trajectory);
-    }
-    std::cout << "Called solve init!" << std::endl;
-    return OcpAbstract::solve(state_trajectory, control_trajectory);
-  }
-  void default_solve(const std::vector<Eigen::VectorXd>& state_trajectory,
-                     const std::vector<Eigen::VectorXd>& control_trajectory) {
-    std::cout << "Called solve init default!" << std::endl;
-    return this->OcpAbstract::solve(state_trajectory, control_trajectory);
-  }
+  // void solve(const std::vector<Eigen::VectorXd>& state_trajectory,
+  //            const std::vector<Eigen::VectorXd>& control_trajectory) {
+  //   if (bp::override solve = this->get_override("solve")) {
+  //     return bp::call<void>(solve.ptr(), state_trajectory, control_trajectory);
+  //   }
+  //   std::cout << "Called solve init!" << std::endl;
+  //   return OcpAbstract::solve(state_trajectory, control_trajectory);
+  // }
+  // void default_solve(const std::vector<Eigen::VectorXd>& state_trajectory = crocoddyl::DEFAULT_VECTOR,
+  //                    const std::vector<Eigen::VectorXd>& control_trajectory= crocoddyl::DEFAULT_VECTOR) {
+  //   std::cout << "Called solve init default!" << std::endl;
+  //   return this->OcpAbstract::solve(state_trajectory, control_trajectory);
+  // }
 };
+
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(OcpAbstract_solves, OcpAbstract::solve, 0, 2)
 
 void exposeOcpAbstract() {
   bp::enum_<SolverTypes::Type>("SolverType")
@@ -60,19 +62,18 @@ void exposeOcpAbstract() {
   void (OcpAbstract::*createProblem_base)(const SolverTypes::Type&, const IntegratorTypes::Type&, const double&) =
       &OcpAbstract::createProblem;
 
+  const std::vector<Eigen::VectorXd>& (OcpAbstract::*get_states)() const = &OcpAbstract::getStates;
+  const std::vector<Eigen::VectorXd>& (OcpAbstract::*get_controls)() const = &OcpAbstract::getControls;
+
   bp::class_<OcpAbstract_wrap, boost::noncopyable>(
       "OcpAbstract",
       "Abstract class to generate an optimal control problem designed to run on multicopter or aerial manipulators",
       bp::init<const boost::shared_ptr<pinocchio::Model>&, const boost::shared_ptr<MultiCopterBaseParams>&>(
           bp::args("self", "model", "mc_params"), "Initialize the Optimal Control problem abstract class"))
-      // .def("createProblem", createProblem_pv,
-      //      bp::args("self", "solver_type", "integrator_type"))
       .def("createProblem", createProblem_base, bp::args("self", "solver_type", "integrator_type"))
       .def("loadParameters", pure_virtual(&OcpAbstract_wrap::loadParameters), bp::args("self", "yaml_path"))
       .def("setSolverCallbacks", &OcpAbstract_wrap::setSolverCallbacks, bp::args("self", "activated"))
-      // .def("solve", solve_void, &OcpAbstract_wrap::default_solve, bp::args("self"))
-      .def("solve", &OcpAbstract_wrap::solve, &OcpAbstract_wrap::default_solve,
-           bp::args("self", "state_trajectory", "control_trajectory"))
+      .def("solve", &OcpAbstract_wrap::solve, OcpAbstract_solves(bp::args("self", "state_trajectory", "control_trajectory")))
       .def("setSolverIters", &OcpAbstract_wrap::setSolverIters, bp::args("self", "num_iters"))
       .def("setSolverStopTh", &OcpAbstract_wrap::setSolverStopTh, bp::args("self", "stop_th"))
       .add_property("model",
@@ -98,10 +99,8 @@ void exposeOcpAbstract() {
                                                       bp::return_value_policy<bp::return_by_value>()))
       .add_property("n_knots",
                     bp::make_function(&OcpAbstract_wrap::getKnots, bp::return_value_policy<bp::return_by_value>()))
-      .add_property(
-          "controls", bp::make_function(&OcpAbstract_wrap::getControls, bp::return_value_policy<bp::copy_const_reference>()))
-      .add_property(
-          "states", bp::make_function(&OcpAbstract_wrap::getStates, bp::return_value_policy<bp::copy_const_reference>()))
+      .add_property("controls", bp::make_function(get_controls, bp::return_value_policy<bp::copy_const_reference>()))
+      .add_property("states", bp::make_function(get_states, bp::return_value_policy<bp::copy_const_reference>()))
       .def("setInitialState", &OcpAbstract_wrap::setInitialState, bp::args("self", "initial_state"))
       .add_property(
           "diff_models_running",
