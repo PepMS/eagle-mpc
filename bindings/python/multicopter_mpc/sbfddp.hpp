@@ -19,7 +19,9 @@ void exposeSolverSbFDDP() {
   bp::register_ptr_to_python<boost::shared_ptr<SolverSbFDDP> >();
 
   const std::vector<Eigen::VectorXd>& (SolverSbFDDP::*get_controls)() const = &SolverSbFDDP::get_us;
+  const std::vector<Eigen::VectorXd>& (SolverSbFDDP::*get_controls_squash)() const = &SolverSbFDDP::getSquashControls;
   const std::vector<Eigen::VectorXd>& (SolverSbFDDP::*get_states)() const = &SolverSbFDDP::get_xs;
+  const std::size_t& (SolverSbFDDP::*get_iter)() const = &SolverSbFDDP::get_iter;
   const boost::shared_ptr<crocoddyl::ShootingProblem>& (SolverSbFDDP::*getProblem)() const =
       &SolverSbFDDP::get_problem;
 
@@ -53,12 +55,13 @@ void exposeSolverSbFDDP() {
            "allowed user the diagnostic of the its performance.\n"
            ":param callbacks: set of callback functions.")
       .add_property("us", bp::make_function(get_controls, bp::return_value_policy<bp::copy_const_reference>()))
+      .add_property("us_squash",
+                    bp::make_function(get_controls_squash, bp::return_value_policy<bp::copy_const_reference>()))
       .add_property("xs", bp::make_function(get_states, bp::return_value_policy<bp::copy_const_reference>()))
       .add_property("problem", bp::make_function(getProblem, bp::return_value_policy<bp::copy_const_reference>()),
-                    "shooting problem");
-  // bp::implicitly_convertible<SolverSbFDDP, crocoddyl::SolverFDDP>();
-  // bp::implicitly_convertible<crocoddyl::SolverAbstract, SolverSbFDDP>();
-
+                    "shooting problem")
+      .add_property("iter", bp::make_function(get_iter, bp::return_value_policy<bp::return_by_value>()),
+                    "number of iterations runned in solve()");
 }  // namespace python
 }  // namespace python
 

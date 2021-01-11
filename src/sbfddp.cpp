@@ -36,6 +36,126 @@ SolverSbFDDP::SolverSbFDDP(boost::shared_ptr<crocoddyl::ShootingProblem> problem
 }
 SolverSbFDDP::~SolverSbFDDP() {}
 
+IntegratedActionModelTypes::Type SolverSbFDDP::getIntegratedModelType(
+    boost::shared_ptr<crocoddyl::ActionModelAbstract> int_action) {
+  euler_ = boost::dynamic_pointer_cast<crocoddyl::IntegratedActionModelEuler>(int_action);
+  if (euler_ != nullptr) {
+    return IntegratedActionModelTypes::Euler;
+  } else {
+    rk4_ = boost::dynamic_pointer_cast<crocoddyl::IntegratedActionModelRK4>(int_action);
+    if (rk4_ != nullptr) {
+      return IntegratedActionModelTypes::RK4;
+    }
+  }
+  MMPC_ERROR << "Integrated action type not found";
+  return IntegratedActionModelTypes::NbIntegratedActionModelTypes;
+}
+
+DifferentialActionModelTypes::Type SolverSbFDDP::getDifferentialModelType(
+    boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract> diff_action) {
+  free_ = boost::dynamic_pointer_cast<crocoddyl::DifferentialActionModelFreeFwdDynamics>(diff_action);
+  if (free_ != nullptr) {
+    return DifferentialActionModelTypes::Free;
+  } else {
+    contact_ = boost::dynamic_pointer_cast<crocoddyl::DifferentialActionModelContactFwdDynamics>(diff_action);
+    if (contact_ != nullptr) {
+      return DifferentialActionModelTypes::Contact;
+    }
+  }
+  MMPC_ERROR << "Differential action type not found";
+  return DifferentialActionModelTypes::NbDifferentialActionModelTypes;
+}
+
+boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract> SolverSbFDDP::getDifferentialModelFromIntegrated(
+    boost::shared_ptr<crocoddyl::ActionModelAbstract> int_action) {
+  switch (getIntegratedModelType(int_action)) {
+    case IntegratedActionModelTypes::Euler:
+      return euler_->get_differential();
+      break;
+    case IntegratedActionModelTypes::RK4:
+      return rk4_->get_differential();
+      break;
+    default:
+      return nullptr;
+      break;
+  }
+}
+
+boost::shared_ptr<crocoddyl::CostModelSum> SolverSbFDDP::getCostsFromDifferentialModel(
+    boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract> diff_action) {
+  switch (getDifferentialModelType(diff_action)) {
+    case DifferentialActionModelTypes::Free:
+      return free_->get_costs();
+      break;
+    case DifferentialActionModelTypes::Contact:
+      return contact_->get_costs();
+      break;
+    default:
+      return nullptr;
+      break;
+  }
+}
+
+IntegratedActionModelTypes::Type SolverSbFDDP::getIntegratedDataType(
+    boost::shared_ptr<crocoddyl::ActionDataAbstract> int_action) {
+  euler_d_ = boost::dynamic_pointer_cast<crocoddyl::IntegratedActionDataEuler>(int_action);
+  if (euler_d_ != nullptr) {
+    return IntegratedActionModelTypes::Euler;
+  } else {
+    rk4_d_ = boost::dynamic_pointer_cast<crocoddyl::IntegratedActionDataRK4>(int_action);
+    if (rk4_d_ != nullptr) {
+      return IntegratedActionModelTypes::RK4;
+    }
+  }
+  MMPC_ERROR << "Integrated action data type not found";
+  return IntegratedActionModelTypes::NbIntegratedActionModelTypes;
+}
+
+DifferentialActionModelTypes::Type SolverSbFDDP::getDifferentialDataType(
+    boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> diff_action) {
+  free_d_ = boost::dynamic_pointer_cast<crocoddyl::DifferentialActionDataFreeFwdDynamics>(diff_action);
+  if (free_d_ != nullptr) {
+    return DifferentialActionModelTypes::Free;
+  } else {
+    contact_d_ = boost::dynamic_pointer_cast<crocoddyl::DifferentialActionDataContactFwdDynamics>(diff_action);
+    if (contact_d_ != nullptr) {
+      return DifferentialActionModelTypes::Contact;
+    }
+  }
+  MMPC_ERROR << "Differential action data type not found";
+  return DifferentialActionModelTypes::NbDifferentialActionModelTypes;
+}
+
+boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> SolverSbFDDP::getDifferentialDataFromIntegrated(
+    boost::shared_ptr<crocoddyl::ActionDataAbstract> int_action) {
+  switch (getIntegratedDataType(int_action)) {
+    case IntegratedActionModelTypes::Euler:
+      return euler_d_->differential;
+      break;
+    case IntegratedActionModelTypes::RK4:
+      return rk4_d_->differential[0];
+      break;
+    default:
+      return nullptr;
+      break;
+  }
+}
+
+boost::shared_ptr<crocoddyl::ActuationDataAbstract> SolverSbFDDP::getActuationDataFromDifferential(
+    boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> diff_action) {
+  switch (getDifferentialDataType(diff_action)) {
+    case DifferentialActionModelTypes::Free:
+      return free_d_->multibody.actuation;
+      break;
+    case DifferentialActionModelTypes::Contact:
+      return contact_d_->multibody.actuation;
+      break;
+    default:
+      return nullptr;
+      break;
+  }
+}
+
 void SolverSbFDDP::barrierInit() {
   barrier_act_bounds_ =
       boost::make_shared<crocoddyl::ActivationBounds>(squashing_model_->get_s_lb(), squashing_model_->get_s_ub(), 1.0);
@@ -45,25 +165,10 @@ void SolverSbFDDP::barrierInit() {
                                                                       barrier_activation_, squashing_model_->get_ns());
 
   for (std::size_t i = 0; i < problem_->get_runningModels().size(); ++i) {
-    euler_ = boost::dynamic_pointer_cast<crocoddyl::IntegratedActionModelEuler>(problem_->get_runningModels()[i]);
-    if (euler_ != nullptr) {
-      differential_ =
-          boost::dynamic_pointer_cast<crocoddyl::DifferentialActionModelFreeFwdDynamics>(euler_->get_differential());
-    } else {
-      rk4_ = boost::dynamic_pointer_cast<crocoddyl::IntegratedActionModelRK4>(problem_->get_runningModels()[i]);
-      if (rk4_ == nullptr) {
-        MMPC_ERROR << "RK4 model is nullptr inside Squashing solver!";
-      }
-      differential_ =
-          boost::dynamic_pointer_cast<crocoddyl::DifferentialActionModelFreeFwdDynamics>(rk4_->get_differential());
-    }
-
-    if (differential_ == nullptr) {
-      MMPC_ERROR << "Differential is nullptr inside Squashing solver!";
-    }
-    auto cost = differential_->get_costs()->get_costs().find("barrier");
-    if (cost == differential_->get_costs()->get_costs().end()) {
-      differential_->get_costs()->addCost("barrier", squash_barr_cost_, barrier_weight_);
+    costs_ = getCostsFromDifferentialModel(getDifferentialModelFromIntegrated(problem_->get_runningModels()[i]));
+    auto cost = costs_->get_costs().find("barrier");
+    if (cost == costs_->get_costs().end()) {
+      costs_->addCost("barrier", squash_barr_cost_, barrier_weight_);
     }
     problem_->updateModel(i, problem_->get_runningModels()[i]);
   }
@@ -96,27 +201,7 @@ bool SolverSbFDDP::solve(const std::vector<Eigen::VectorXd>& init_xs, const std:
   }
 
   iter_ = total_iters_ - 1;
-  for (std::size_t i = 0; i < problem_->get_T(); ++i) {
-    euler_d_ = boost::dynamic_pointer_cast<crocoddyl::IntegratedActionDataEuler>(problem_->get_runningDatas()[i]);
-    if (euler_d_ != nullptr) {
-      differential_d_ =
-          boost::dynamic_pointer_cast<crocoddyl::DifferentialActionDataFreeFwdDynamics>(euler_d_->differential);
-    } else {
-      rk4_d_ = boost::dynamic_pointer_cast<crocoddyl::IntegratedActionDataRK4>(problem_->get_runningDatas()[i]);
-      if (rk4_d_ == nullptr) {
-        MMPC_ERROR << "RK4 data is nullptr inside Squashing solver!";
-      }
-      differential_d_ =
-          boost::dynamic_pointer_cast<crocoddyl::DifferentialActionDataFreeFwdDynamics>(rk4_d_->differential[0]);
-    }
-
-    if (differential_d_ == nullptr) {
-      MMPC_ERROR << "Differential Data is nullptr inside Squashing solver!";
-    }
-    actuation_squashing_d_ =
-        boost::dynamic_pointer_cast<crocoddyl::ActuationSquashingData>(differential_d_->multibody.actuation);
-    us_squash_[i] = actuation_squashing_d_->squashing->u;
-  }
+  fillSquashedOutputs();
 
   return true;
 }
@@ -355,29 +440,21 @@ void SolverSbFDDP::barrierUpdate() {
   barrier_quad_weights_ = 1. / barrier_quad_weights_aux_.array().pow(2);
 
   for (std::size_t i = 0; i < problem_->get_runningModels().size(); ++i) {
-    euler_ = boost::dynamic_pointer_cast<crocoddyl::IntegratedActionModelEuler>(problem_->get_runningModels()[i]);
-    if (euler_ != nullptr) {
-      differential_ =
-          boost::dynamic_pointer_cast<crocoddyl::DifferentialActionModelFreeFwdDynamics>(euler_->get_differential());
-    } else {
-      rk4_ = boost::dynamic_pointer_cast<crocoddyl::IntegratedActionModelRK4>(problem_->get_runningModels()[i]);
-      if (rk4_ == nullptr) {
-        MMPC_ERROR << "RK4 model is nullptr inside Squashing solver!";
-      }
-      differential_ =
-          boost::dynamic_pointer_cast<crocoddyl::DifferentialActionModelFreeFwdDynamics>(rk4_->get_differential());
-    }
-
-    if (differential_ == nullptr) {
-      MMPC_ERROR << "Differential is nullptr inside Squashing solver!";
-    }
+    costs_ = getCostsFromDifferentialModel(getDifferentialModelFromIntegrated(problem_->get_runningModels()[i]));
     barrier_activation_ = boost::dynamic_pointer_cast<crocoddyl::ActivationModelWeightedQuadraticBarrier>(
-        differential_->get_costs()->get_costs().find("barrier")->second->cost->get_activation());
+        costs_->get_costs().find("barrier")->second->cost->get_activation());
     barrier_activation_->set_weights(barrier_quad_weights_);
-    differential_->get_costs()->get_costs().find("barrier")->second->weight = barrier_weight_;
+    costs_->get_costs().find("barrier")->second->weight = barrier_weight_;
   }
 }
 
+void SolverSbFDDP::fillSquashedOutputs() {
+  for (std::size_t i = 0; i < problem_->get_T(); ++i) {
+    actuation_squashing_d_ = boost::dynamic_pointer_cast<crocoddyl::ActuationSquashingData>(
+        getActuationDataFromDifferential(getDifferentialDataFromIntegrated(problem_->get_runningDatas()[i])));
+    us_squash_[i] = actuation_squashing_d_->squashing->u;
+  }
+}
 const std::vector<Eigen::VectorXd>& SolverSbFDDP::getSquashControls() const { return us_squash_; }
 
 }  // namespace multicopter_mpc
