@@ -1,0 +1,33 @@
+trajectory:
+  robot:
+    name: "hexarotor_370_flying_arm_3"
+    platform_yaml: "/usr/local/share/multicopter_mpc/multicopter/carrot-mpc.yaml"
+
+  stages:
+    - name: "navigation"
+      duration: 1000 #ms
+      costs:
+        - type: "state"
+          name: "stateReg"
+          activation: "weighted_quad"
+          weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 100, 100, 100]
+          weight: 1e-4
+        - type: "control"
+          name: "controlReg"
+          activation: "weigthedQuadraticBarrier"
+          upperBound: [1, 1, 1, 1]
+          lowerBound: [1, 1, 1, 1]
+          weight: 1e-2
+    - name: "hover"
+      duration: 10 #ms
+      costs:
+        - type: "state"
+          name: "stateReg"
+          activation: "weighted_quad"
+          weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 100, 100, 100]
+          weight: 1e-4
+        - type: "control"
+          name: "controlReg"
+          activation: "weigthedQuadraticBarrier"
+          upperBound: [1, 1, 1, 1]
+          lowerBound: [1, 1, 1, 1]

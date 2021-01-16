@@ -166,7 +166,7 @@ bool isAtomic(std::string _key, YAML::Node _n) {
 }
 }  // namespace
 
-namespace yaml_parser{
+namespace yaml_parser {
 ParserYAML::ParserYAML(std::string _file, std::string path_root, bool freely_parse) {
   params_ = std::map<std::string, std::string>();
   active_name_ = "";
@@ -466,7 +466,7 @@ void ParserYAML::insert_register(std::string _key, std::string _value) {
   if (_key.substr(0, 1) == "/") _key = _key.substr(1, _key.size() - 1);
   auto inserted_it = params_.insert(std::pair<std::string, std::string>(_key, _value));
   if (not inserted_it.second)
-    std::cout << "Skipping key '" << _key << "' with value '" << _value << "'. There already exists the register: (" <<
-              inserted_it.first->first << "," << inserted_it.first->second << ")" << std::endl;
+    std::cout << "Skipping key '" << _key << "' with value '" << _value << "'. There already exists the register: ("
+              << inserted_it.first->first << "," << inserted_it.first->second << ")" << std::endl;
 }
-} // namespace yaml_parser 
+}  // namespace yaml_parser
