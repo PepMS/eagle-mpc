@@ -7,27 +7,28 @@ trajectory:
     - name: "navigation"
       duration: 1000 #ms
       costs:
-        - type: "state"
-          name: "stateReg"
+        - name: "stateReg"
+          type: "state"
           activation: "weighted_quad"
           weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 100, 100, 100]
           weight: 1e-4
-        - type: "control"
-          name: "controlReg"
+        - name: "controlReg"
+          type: "control"
           activation: "weigthedQuadraticBarrier"
           upperBound: [1, 1, 1, 1]
           lowerBound: [1, 1, 1, 1]
           weight: 1e-2
     - name: "hover"
-      duration: 10 #ms
+      duration: 1000 #ms
       costs:
-        - type: "state"
-          name: "stateReg"
+        - name: "stateReg"
+          type: "state"
           activation: "weighted_quad"
           weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 100, 100, 100]
           weight: 1e-4
-        - type: "control"
-          name: "controlReg"
+        - name: "controlReg"
+          type: "control"
           activation: "weigthedQuadraticBarrier"
           upperBound: [1, 1, 1, 1]
           lowerBound: [1, 1, 1, 1]
+          weight: 1e-2

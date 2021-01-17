@@ -3,28 +3,51 @@
 
 #include <string>
 #include <regex>
+#include <cassert>
+#include <numeric>
 
 #include "yaml-cpp/yaml.h"
 
+#include "multicopter_mpc/utils/converter.hpp"
+
 namespace multicopter_mpc {
+
 class ParserYaml {
  public:
-  ParserYaml(std::string file_path);
+  ParserYaml(std::string file, std::string path_root = "");
+  const std::map<std::string, std::string>& get_params();
 
  private:
   void parse();
-  void parseFirstLevel(const std::string& file_path);
-  YAML::Node loadYaml(const std::string file_path);
-  void walkTreeRecursive(const YAML::Node& node, const std::string& node_root, const std::string& node_name);
-  
+  void parseFirstLevel(std::string file_path);
+
+  YAML::Node loadYaml(std::string file_path);
+
+  std::string generatePath(std::string);
+
+  void walkTreeRecursive(YAML::Node node, std::vector<std::string>& node_root, std::string node_name);
+  void walkTree(std::string file, std::vector<std::string>& root, std::string name);
+  void walkTree(std::string file, std::vector<std::string>& root);
+  void walkTree(std::string file);
+
+  void updateActiveName(std::string tag);
+
+  void insertRegister(std::string key, std::string value);
+
   struct ParamsInitStage {
     std::string name;
     std::string duration;
-    YAML::Node n;
+    YAML::Node stage;
+    YAML::Node costs;
   };
 
-  std::string file_path_;
+  std::string file_;
+  std::string path_root_;
   std::vector<ParamsInitStage> stages_;
+  std::stack<std::string> parsing_file_;
+  std::map<std::string, std::string> params_;
+
+  std::string active_name_;
 
   YAML::Node robot_;
 };

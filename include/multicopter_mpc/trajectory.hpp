@@ -5,9 +5,7 @@
 #include <map>
 #include <string>
 
-#include "yaml_parser/parser_yaml.h"
-#include "yaml_parser/params_server.hpp"
-
+#include "multicopter_mpc/utils/params_server.hpp"
 #include "multicopter_mpc/stage.hpp"
 
 namespace multicopter_mpc {
@@ -16,7 +14,7 @@ class Trajectory {
   Trajectory();
   ~Trajectory();
 
-  void loadStagesFromYaml(const std::string& yaml_path);
+  void autoSetup(const ParamsServer& server);
 
  private:
  std::map<std::string, Stage> stages_;

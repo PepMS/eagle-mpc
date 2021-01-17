@@ -33,5 +33,5 @@ install(EXPORT multicopter_mpc CONFIGURATIONS Release DESTINATION ${LIBRARY_DEST
 install(DIRECTORY ../include/multicopter_mpc DESTINATION ${INCLUDE_DESTINATION})
 install(FILES ${multicopter_mpc_SOURCE_DIR}/config/other/path.h DESTINATION ${INCLUDE_DESTINATION}/multicopter_mpc)
 install(DIRECTORY ../config/mission DESTINATION ${SHARE_DESTINATION})
-install(DIRECTORY ../config/multirotor DESTINATION ${SHARE_DESTINATION})
+install(DIRECTORY ../config/multicopter DESTINATION ${SHARE_DESTINATION})
 install(DIRECTORY ../config/ocp DESTINATION ${SHARE_DESTINATION})
