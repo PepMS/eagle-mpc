@@ -28,9 +28,14 @@ class Trajectory : public boost::enable_shared_from_this<Trajectory> {
 
   void autoSetup(const ParamsServer& server);
 
-  const boost::shared_ptr<pinocchio::Model>& get_robot_model();
+  const boost::shared_ptr<pinocchio::Model>& get_robot_model() const;
+  const boost::shared_ptr<MultiCopterBaseParams>& get_platform_params() const;
+  const boost::shared_ptr<crocoddyl::StateMultibody>& get_robot_state() const;
+  const boost::shared_ptr<crocoddyl::ActuationModelMultiCopterBase>& get_actuation() const;
+  const boost::shared_ptr<crocoddyl::SquashingModelSmoothSat>& get_squash() const;
+  const boost::shared_ptr<crocoddyl::ActuationSquashingModel>& get_actuation_squash() const;
 
- private:
+ private: 
   Trajectory();
 
   std::map<std::string, boost::shared_ptr<Stage>> stages_;

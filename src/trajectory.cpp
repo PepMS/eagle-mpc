@@ -30,11 +30,20 @@ void Trajectory::autoSetup(const ParamsServer& server) {
 
   auto stages = server.getParam<std::vector<std::map<std::string, std::string>>>("stages");
   for (auto stage : stages) {
-    boost::shared_ptr<Stage> stage_ptr = boost::make_shared<Stage>(shared_from_this());
+    boost::shared_ptr<Stage> stage_ptr = Stage::create(shared_from_this());
     stage_ptr->autoSetup("stages/", stage, server);
   }
 }
 
-const boost::shared_ptr<pinocchio::Model>& Trajectory::get_robot_model() { return robot_model_; }
+const boost::shared_ptr<pinocchio::Model>& Trajectory::get_robot_model() const { return robot_model_; }
+const boost::shared_ptr<MultiCopterBaseParams>& Trajectory::get_platform_params() const { return platform_params_; }
+const boost::shared_ptr<crocoddyl::StateMultibody>& Trajectory::get_robot_state() const { return robot_state_; }
+const boost::shared_ptr<crocoddyl::ActuationModelMultiCopterBase>& Trajectory::get_actuation() const {
+  return actuation_;
+}
+const boost::shared_ptr<crocoddyl::SquashingModelSmoothSat>& Trajectory::get_squash() const { return squash_; }
+const boost::shared_ptr<crocoddyl::ActuationSquashingModel>& Trajectory::get_actuation_squash() const {
+  return actuation_squash_;
+}
 
 }  // namespace multicopter_mpc

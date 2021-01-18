@@ -1,21 +1,22 @@
 trajectory:
   robot:
     name: "hexarotor_370_flying_arm_3"
-    urdf: "/home/pepms/robotics/libraries/example-robot-data/robots/flying_arm_5_description/urdf/flying_arm_5.urdf"
+    urdf: "/home/pepms/robotics/libraries/example-robot-data/robots/flying_arm_3_description/urdf/flying_arm_3.urdf"
     follow: "/home/pepms/robotics/libraries/multicopter-mpc/config/multicopter/hexarotor370.yaml"
 
   stages:
     - name: "navigation"
       duration: 1000 #ms
       costs:
-        - name: "stateReg"
-          type: "state"
-          activation: "weighted_quad"
-          weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 100, 100, 100]
+        - name: "state_reg"
+          type: "CostModelState"
           weight: 1e-4
+          reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 100, 100, 100]
         - name: "controlReg"
-          type: "control"
-          activation: "weigthedQuadraticBarrier"
+          type: "CostModelControl"
+          activation: "ActivationModelWeightedQuad"
           upperBound: [1, 1, 1, 1]
           lowerBound: [1, 1, 1, 1]
           weight: 1e-2
@@ -23,7 +24,7 @@ trajectory:
       duration: 1000 #ms
       costs:
         - name: "stateReg"
-          type: "state"
+          type: "CostModelState"
           activation: "weighted_quad"
           weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 100, 100, 100]
           weight: 1e-4
