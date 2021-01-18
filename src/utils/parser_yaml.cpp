@@ -171,8 +171,7 @@ void ParserYaml::parse() {
     insertRegister("stages/" + stage.name + "/duration", stage.duration);
     for (auto cost : stage.costs) {
       tags.push_back("stages/" + stage.name + "/costs");
-      walkTreeRecursive(cost, tags,
-                        "stages/" + stage.name + "/costs/" + cost["name"].Scalar());
+      walkTreeRecursive(cost, tags, "stages/" + stage.name + "/costs/" + cost["name"].Scalar());
     }
   }
 }
@@ -198,12 +197,20 @@ void ParserYaml::parseFirstLevel(std::string file) {
     for (auto stage : n_trajectory["stages"]) {
       ParamsInitStage p_stage = {stage["name"].Scalar(), stage["duration"].Scalar(), stage, stage["costs"]};
       stages_.push_back(p_stage);
-      map_container.push_back(std::map<std::string, std::string>(
-          {{"name", stage["name"].Scalar()}, {"duration", stage["duration"].Scalar()}}));
+      std::vector<std::string> cost_container;
+      YAML::Node costs = stage["costs"];
+      for (auto cost : costs) {
+        cost_container.push_back(cost["name"].Scalar());
+      }
+      map_container.push_back(
+          std::map<std::string, std::string>({{"name", stage["name"].Scalar()},
+                                              {"duration", stage["duration"].Scalar()},
+                                              {"costs", converter<std::string>::convert(cost_container)}}));
     }
     insertRegister("stages", converter<std::string>::convert(map_container));
   } catch (const std::exception& e) {
-    throw std::runtime_error("Error parsing stages @" + generatePath(file));
+    throw std::runtime_error("Error parsing stages @" + generatePath(file) +
+                             ". Make sure every stage has a name, duration and, at least, one cost.");
   }
 }
 

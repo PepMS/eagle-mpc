@@ -5,8 +5,13 @@
 
 #include "Eigen/Dense"
 
+#include "pinocchio/spatial/se3.hpp"
+
+// To be removed after the refactoring
 #include "yaml_parser/params_server.hpp"
 #include "yaml_parser/parser_yaml.h"
+
+#include "multicopter_mpc/utils/params_server.hpp"
 
 namespace multicopter_mpc {
 class MultiCopterBaseParams {
@@ -19,6 +24,7 @@ class MultiCopterBaseParams {
   ~MultiCopterBaseParams();
 
   void fill(const std::string& yaml_path);
+  void autoSetup(const std::string& path_to_platform, const ParamsServer& server);
 
   double cf_;                   // Propeller's lift force coefficient
   double cm_;                   // Propeller's drag moment coefficient
@@ -31,6 +37,10 @@ class MultiCopterBaseParams {
   // To be used when dealing with UAM
   Eigen::VectorXd max_torque_;  // Max torque for each manipulator's joint
   Eigen::VectorXd min_torque_;  // Min torque for each manipulator's joint
+
+  std::vector<pinocchio::SE3> rotors_pose_;
+  std::vector<int> rotors_spin_dir_;
+
 };
 }  // namespace multicopter_mpc
 #endif  // MULTICOPTER_MPC_MULTICOPTER_BASE_PARAMS_HPP_

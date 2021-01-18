@@ -37,7 +37,6 @@ void MultiCopterBaseParams::fill(const std::string& yaml_path) {
   cm_ = server.getParam<double>("multirotor/cm");
   max_thrust_ = server.getParam<double>("multirotor/max_thrust");
   min_thrust_ = server.getParam<double>("multirotor/min_thrust");
-  min_thrust_ = server.getParam<double>("multirotor/min_thrust");
   base_link_name_ = server.getParam<std::string>("multirotor/base_link_name");
 
   std::vector<std::string> rotors = server.getParam<std::vector<std::string>>("multirotor/rotors");
@@ -66,4 +65,52 @@ void MultiCopterBaseParams::fill(const std::string& yaml_path) {
     MMPC_INFO << "Multicopter params: Multirotor detected, no arm.";
   }
 }
+
+void MultiCopterBaseParams::autoSetup(const std::string& path_to_platform, const ParamsServer& server) {
+  try {
+    cf_ = server.getParam<double>(path_to_platform + "cf");
+    cm_ = server.getParam<double>(path_to_platform + "cm");
+    max_thrust_ = server.getParam<double>(path_to_platform + "max_thrust");
+    min_thrust_ = server.getParam<double>(path_to_platform + "min_thrust");
+    // This parameter may be removed after refactor
+    base_link_name_ = server.getParam<std::string>(path_to_platform + "base_link_name");
+    n_rotors_ = server.getParam<int>(path_to_platform + "n_rotors");
+    std::vector<std::string> rotors = server.getParam<std::vector<std::string>>(path_to_platform + "rotors");
+    if (n_rotors_ != rotors.size()) {
+      throw std::runtime_error("'n_rotors' field and the number of rotor poses specified must be the same.");
+    }
+
+    Eigen::Vector3d translation;
+    Eigen::Quaterniond orientation;
+    for (int i = 0; i < n_rotors_; ++i) {
+      std::map<std::string, Eigen::VectorXd> rotor =
+          yaml_parser::converter<std::map<std::string, Eigen::VectorXd>>::convert(rotors[i]);
+
+      translation = rotor["translation"];
+      orientation = Eigen::Quaterniond(Eigen::Vector4d(rotor["orientation"]));
+      orientation.normalize();
+      pinocchio::SE3 rotor_pose(orientation.toRotationMatrix(), translation);
+      rotors_pose_.push_back(rotor_pose);
+
+      int spin_dir = int(rotor["spin_direction"](0));
+      rotors_spin_dir_.push_back(spin_dir);
+    }
+  } catch (const std::exception& e) {
+    std::cerr << e.what() << '\n';
+  }
+
+  Eigen::Vector3d e3;
+  Eigen::Vector3d thrust_w = Eigen::Vector3d::Zero();
+  Eigen::Vector3d torque_yaw = Eigen::Vector3d::Zero();
+  e3 << 0, 0, 1;
+  tau_f_ = Eigen::MatrixXd::Zero(6, n_rotors_);
+  for (std::size_t i = 0; i < rotors_pose_.size(); ++i) {
+    thrust_w = rotors_pose_[i].rotation() * e3;
+    tau_f_.block<3, 1>(0, i) = thrust_w;
+
+    torque_yaw = rotors_spin_dir_[i] * cm_ / cf_ * thrust_w;
+    tau_f_.block<3, 1>(3, i) = rotors_pose_[i].translation().cross(thrust_w) + torque_yaw;
+  }
+}
+
 }  // namespace multicopter_mpc

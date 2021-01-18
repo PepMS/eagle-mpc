@@ -1,7 +1,8 @@
 trajectory:
   robot:
     name: "hexarotor_370_flying_arm_3"
-    platform_yaml: "/usr/local/share/multicopter_mpc/multicopter/carrot-mpc.yaml"
+    urdf: "/home/pepms/robotics/libraries/example-robot-data/robots/flying_arm_5_description/urdf/flying_arm_5.urdf"
+    follow: "/home/pepms/robotics/libraries/multicopter-mpc/config/multicopter/hexarotor370.yaml"
 
   stages:
     - name: "navigation"
