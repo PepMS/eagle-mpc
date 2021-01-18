@@ -5,8 +5,10 @@
 #include <map>
 #include <string>
 
-#include "pinocchio/parsers/urdf.hpp"
+#include "boost/enable_shared_from_this.hpp"
+
 #include "pinocchio/multibody/model.hpp"
+#include "pinocchio/parsers/urdf.hpp"
 
 #include "crocoddyl/core/actuation/squashing/smooth-sat.hpp"
 #include "crocoddyl/core/actuation/actuation-squashing.hpp"
@@ -19,17 +21,19 @@
 #include "multicopter_mpc/utils/params_server.hpp"
 
 namespace multicopter_mpc {
-class Trajectory {
+class Stage;
+class Trajectory : public boost::enable_shared_from_this<Trajectory> {
  public:
-  Trajectory();
-  ~Trajectory();
+  static boost::shared_ptr<Trajectory> create();
 
   void autoSetup(const ParamsServer& server);
 
   const boost::shared_ptr<pinocchio::Model>& get_robot_model();
 
  private:
-  std::map<std::string, Stage> stages_;
+  Trajectory();
+
+  std::map<std::string, boost::shared_ptr<Stage>> stages_;
 
   boost::shared_ptr<pinocchio::Model> robot_model_;
 

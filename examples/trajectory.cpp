@@ -6,11 +6,10 @@
 #include "multicopter_mpc/path.h"
 
 int main(void) {
-  multicopter_mpc::Trajectory trajectory;
+  boost::shared_ptr<multicopter_mpc::Trajectory> trajectory = multicopter_mpc::Trajectory::create();
 
   multicopter_mpc::ParserYaml parser("hover.yaml", "/home/pepms/robotics/libraries/multicopter-mpc/config/trajectory");
   multicopter_mpc::ParamsServer server(parser.get_params());
-  
-  trajectory.autoSetup(server);
 
+  trajectory->autoSetup(server);
 }

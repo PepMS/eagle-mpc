@@ -79,3 +79,5 @@ class Hexarotor370Params(multicopterParams):
             self.tauF[:3, idx] = np.dot(M.rotation, np.array([0, 0, 1]))
             self.tauF[3:, idx] = np.cross(M.translation, np.dot(M.rotation, np.array(
                 [0, 0, 1]))) + (-1)**idx * self.cm / self.cf * np.dot(M.rotation, np.array([0, 0, 1]))
+        
+        print()

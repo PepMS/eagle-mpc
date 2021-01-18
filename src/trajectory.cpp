@@ -1,9 +1,13 @@
 #include "multicopter_mpc/trajectory.hpp"
 
 namespace multicopter_mpc {
+
 Trajectory::Trajectory() {}
 
-Trajectory::~Trajectory() {}
+boost::shared_ptr<Trajectory> Trajectory::create() {
+  boost::shared_ptr<Trajectory> trajectory(new Trajectory());
+  return trajectory;
+}
 
 void Trajectory::autoSetup(const ParamsServer& server) {
   std::string prefix_robot = "robot/";
@@ -26,12 +30,8 @@ void Trajectory::autoSetup(const ParamsServer& server) {
 
   auto stages = server.getParam<std::vector<std::map<std::string, std::string>>>("stages");
   for (auto stage : stages) {
-    std::cout << "Stage name: " << stage["name"] << std::endl;
-    std::cout << "Stage duration: " << stage["duration"] << std::endl;
-    std::vector<std::string> costs = converter<std::vector<std::string>>::convert(stage["costs"]);
-    for (auto cost : costs) {
-      std::cout << "Stage cost: " << cost << std::endl;
-    }
+    boost::shared_ptr<Stage> stage_ptr = boost::make_shared<Stage>(shared_from_this());
+    stage_ptr->autoSetup("stages/", stage, server);
   }
 }
 
