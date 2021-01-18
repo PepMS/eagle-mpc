@@ -57,13 +57,6 @@ void MultiCopterBaseParams::fill(const std::string& yaml_path) {
     S(5, ii) = z * cm_ / cf_;  // Mz
   }
   tau_f_ = S;
-
-  try {
-    max_torque_ = server.getParam<Eigen::VectorXd>("arm/max_torque");
-    min_torque_ = server.getParam<Eigen::VectorXd>("arm/min_torque");
-  } catch (const std::exception& e) {
-    MMPC_INFO << "Multicopter params: Multirotor detected, no arm.";
-  }
 }
 
 void MultiCopterBaseParams::autoSetup(const std::string& path_to_platform, const ParamsServer& server) {
@@ -111,6 +104,24 @@ void MultiCopterBaseParams::autoSetup(const std::string& path_to_platform, const
     torque_yaw = rotors_spin_dir_[i] * cm_ / cf_ * thrust_w;
     tau_f_.block<3, 1>(3, i) = rotors_pose_[i].translation().cross(thrust_w) + torque_yaw;
   }
+}
+
+void MultiCopterBaseParams::autoSetup(const std::string& path_to_platform, const ParamsServer& server,
+                                      const boost::shared_ptr<pinocchio::Model>& robot_model) {
+  autoSetup(path_to_platform, server);
+  setControlLimits(robot_model);
+}
+
+void MultiCopterBaseParams::setControlLimits(const boost::shared_ptr<pinocchio::Model>& robot_model) {
+  std::size_t n_arm_joints = robot_model->nq - 6;
+  u_lb = Eigen::VectorXd::Zero(robot_model->nq - 6 + n_rotors_);
+  u_ub = u_lb;
+
+  u_lb.head(n_rotors_) = Eigen::VectorXd::Ones(n_rotors_) * min_thrust_;
+  u_ub.head(n_rotors_) = Eigen::VectorXd::Ones(n_rotors_) * max_thrust_;
+
+  u_lb.tail(n_arm_joints) = -robot_model->effortLimit.tail(n_arm_joints);
+  u_ub.tail(n_arm_joints) = robot_model->effortLimit.tail(n_arm_joints);
 }
 
 }  // namespace multicopter_mpc
