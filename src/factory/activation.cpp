@@ -25,33 +25,69 @@ boost::shared_ptr<crocoddyl::ActivationModelAbstract> ActivationModelFactory::cr
   Eigen::VectorXd weights;
 
   switch (ActivationModelTypes::all.at(name)) {
-    case ActivationModelTypes::ActivationModelQuad:
+    case ActivationModelTypes::ActivationModelQuad: {
       activation = boost::make_shared<crocoddyl::ActivationModelQuad>(nr);
-      break;
-    case ActivationModelTypes::ActivationModelWeightedQuad:
+    } break;
+    case ActivationModelTypes::ActivationModelWeightedQuad: {
       try {
         weights = converter<Eigen::VectorXd>::convert(server.getParam<std::string>(path_to_cost + "weights"));
       } catch (const std::exception& e) {
         MMPC_WARN << e.what() << " Set to a unitary vector";
         weights = Eigen::VectorXd::Ones(nr);
       }
+
       if (weights.size() != nr) {
-        throw std::runtime_error("Weights vector @" + path_to_cost + "/weights has dimension " +
+        throw std::runtime_error("Weights vector @" + path_to_cost + "weights has dimension " +
                                  std::to_string(weights.size()) + ". Should be " + std::to_string(nr));
       }
+
       activation = boost::make_shared<crocoddyl::ActivationModelWeightedQuad>(weights);
-      break;
-    case ActivationModelTypes::ActivationModelQuadraticBarrier:
-      // activation = boost::make_shared<crocoddyl::ActivationModelQuadraticBarrier>(crocoddyl::ActivationBounds(lb,
-      // ub)); break;
-    case ActivationModelTypes::ActivationModelWeightedQuadraticBarrier:
-      // activation = boost::make_shared<crocoddyl::ActivationModelWeightedQuadraticBarrier>(
-      //     crocoddyl::ActivationBounds(lb, ub), weights);
-      // break;
-    default:
-      throw std::runtime_error("Activation '" + name + "' @" + path_to_cost + "/activation not found");
-      break;
+    } break;
+    case ActivationModelTypes::ActivationModelQuadraticBarrier: {
+      Eigen::VectorXd lb = converter<Eigen::VectorXd>::convert(server.getParam<std::string>(path_to_cost + "l_bound"));
+      Eigen::VectorXd ub = converter<Eigen::VectorXd>::convert(server.getParam<std::string>(path_to_cost + "u_bound"));
+
+      if (lb.size() != nr) {
+        throw std::runtime_error("l_bound vector @" + path_to_cost + "l_bound has dimension " +
+                                 std::to_string(lb.size()) + ". Should be " + std::to_string(nr));
+      }
+      if (ub.size() != nr) {
+        throw std::runtime_error("u_bound vector @" + path_to_cost + "u_bound has dimension " +
+                                 std::to_string(ub.size()) + ". Should be " + std::to_string(nr));
+      }
+      crocoddyl::ActivationBounds bounds(lb, ub);
+      activation = boost::make_shared<crocoddyl::ActivationModelQuadraticBarrier>(bounds);
+    } break;
+    case ActivationModelTypes::ActivationModelWeightedQuadraticBarrier: {
+      Eigen::VectorXd lb = converter<Eigen::VectorXd>::convert(server.getParam<std::string>(path_to_cost + "l_bound"));
+      Eigen::VectorXd ub = converter<Eigen::VectorXd>::convert(server.getParam<std::string>(path_to_cost + "u_bound"));
+      try {
+        weights = converter<Eigen::VectorXd>::convert(server.getParam<std::string>(path_to_cost + "weights"));
+      } catch (const std::exception& e) {
+        MMPC_WARN << e.what() << " Set to a unitary vector";
+        weights = Eigen::VectorXd::Ones(nr);
+      }
+
+      if (weights.size() != nr) {
+        throw std::runtime_error("Weights vector @" + path_to_cost + "weights has dimension " +
+                                 std::to_string(weights.size()) + ". Should be " + std::to_string(nr));
+      }
+      if (lb.size() != nr) {
+        throw std::runtime_error("l_bound vector @" + path_to_cost + "l_bound has dimension " +
+                                 std::to_string(lb.size()) + ". Should be " + std::to_string(nr));
+      }
+      if (ub.size() != nr) {
+        throw std::runtime_error("u_bound vector @" + path_to_cost + "u_bound has dimension " +
+                                 std::to_string(ub.size()) + ". Should be " + std::to_string(nr));
+      }
+      crocoddyl::ActivationBounds bounds(lb, ub);
+      activation = boost::make_shared<crocoddyl::ActivationModelWeightedQuadraticBarrier>(bounds, weights);
+    } break;
+    default: {
+      throw std::runtime_error("Activation '" + name + "' @" + path_to_cost + "activation not found");
+    } break;
   }
+
   return activation;
 }
 

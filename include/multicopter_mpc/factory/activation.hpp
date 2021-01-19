@@ -16,6 +16,8 @@
 #include "crocoddyl/core/activation-base.hpp"
 #include "crocoddyl/core/activations/quadratic.hpp"
 #include "crocoddyl/core/activations/weighted-quadratic.hpp"
+#include "crocoddyl/core/activations/quadratic-barrier.hpp"
+#include "crocoddyl/core/activations/weighted-quadratic-barrier.hpp"
 
 #include "multicopter_mpc/utils/params_server.hpp"
 
