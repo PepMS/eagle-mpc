@@ -16,7 +16,11 @@
 #include <Eigen/Dense>
 
 #include "crocoddyl/core/cost-base.hpp"
+#include "crocoddyl/core/costs/control.hpp"
+
 #include "crocoddyl/multibody/costs/state.hpp"
+#include "crocoddyl/multibody/costs/frame-placement.hpp"
+#include "crocoddyl/multibody/costs/frame-velocity.hpp"
 
 #include "multicopter_mpc/stage.hpp"
 #include "multicopter_mpc/utils/params_server.hpp"
