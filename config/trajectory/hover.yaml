@@ -6,7 +6,7 @@ trajectory:
 
   stages:
     - name: "navigation"
-      duration: 1000 #ms
+      duration: 2000 #ms
       costs:
         - name: "state_reg"
           type: "CostModelState"
@@ -14,23 +14,43 @@ trajectory:
           reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
           weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 100, 100, 100]
-        - name: "controlReg"
-          type: "CostModelControl"
-          activation: "ActivationModelWeightedQuad"
-          upperBound: [1, 1, 1, 1]
-          lowerBound: [1, 1, 1, 1]
-          weight: 1e-2
-    - name: "hover"
-      duration: 1000 #ms
-      costs:
-        - name: "stateReg"
+
+        - name: "state_limits"
           type: "CostModelState"
-          activation: "weighted_quad"
-          weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 100, 100, 100]
-          weight: 1e-4
-        - name: "controlReg"
-          type: "control"
-          activation: "weigthedQuadraticBarrier"
-          upperBound: [1, 1, 1, 1]
-          lowerBound: [1, 1, 1, 1]
-          weight: 1e-2
+          weight: 10
+          reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuadraticBarrier"
+          weights: [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1]
+          u_bound: [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1]
+          l_bound: [0, 0, 0, 0, 0, 0, -1, -1, -1, 0, 0, 0, 0, 0, 0, -1, -1, -1]
+
+        - name: "control_reg"
+          type: "CostModelControl"
+          weight: 5e-2
+          reference: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 1, 1, 1, 1000, 1000, 1000]
+
+    - name: "hover"
+      duration: 0 #ms
+      costs:
+        - name: "state_arm"
+          type: "CostModelState"
+          weight: 20
+          reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights: [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1]
+
+        - name: "placement_base_link"
+          type: "CostModelFramePlacement"
+          weight: 20
+          link_name: "base_link"
+          position: [1, 0, 2]
+          orientation: [0, 0, 0, 1] # x,y,z,w
+
+        - name: "motion_base_link"
+          type: "CostModelFrameVelocity"
+          weight: 20
+          link_name: "base_link"
+          linear: [0, 0, 0]
+          angular: [0, 0, 0]
