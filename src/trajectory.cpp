@@ -22,7 +22,7 @@ void Trajectory::autoSetup(const ParamsServer& server) {
 
   robot_state_ = boost::make_shared<crocoddyl::StateMultibody>(robot_model_);
   actuation_ = boost::make_shared<crocoddyl::ActuationModelMultiCopterBase>(
-      robot_state_, robot_model_->nq - 6 + platform_params_->n_rotors_, platform_params_->tau_f_);
+      robot_state_, platform_params_->n_rotors_, platform_params_->tau_f_);
   squash_ = boost::make_shared<crocoddyl::SquashingModelSmoothSat>(platform_params_->u_lb, platform_params_->u_ub,
                                                                    actuation_->get_nu());
   actuation_squash_ =
