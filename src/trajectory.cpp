@@ -2,10 +2,17 @@
 
 namespace multicopter_mpc {
 
-Trajectory::Trajectory() {}
+Trajectory::Trajectory() {
+  has_contact_ = false;
+  dam_factory_ = boost::make_shared<DifferentialActionModelFactory>();
+  iam_factory_ = boost::make_shared<IntegratedActionModelFactory>();
+}
+
+Trajectory::~Trajectory() { std::cout << "Inside trajectory constructor" << std::endl; }
 
 boost::shared_ptr<Trajectory> Trajectory::create() {
   boost::shared_ptr<Trajectory> trajectory(new Trajectory());
+  // boost::shared_ptr<Trajectory> trajectory = boost::make_shared<Trajectory>();
   return trajectory;
 }
 
@@ -21,8 +28,8 @@ void Trajectory::autoSetup(const ParamsServer& server) {
   platform_params_->autoSetup("robot/platform/", server, robot_model_);
 
   robot_state_ = boost::make_shared<crocoddyl::StateMultibody>(robot_model_);
-  actuation_ = boost::make_shared<crocoddyl::ActuationModelMultiCopterBase>(
-      robot_state_, platform_params_->n_rotors_, platform_params_->tau_f_);
+  actuation_ = boost::make_shared<crocoddyl::ActuationModelMultiCopterBase>(robot_state_, platform_params_->n_rotors_,
+                                                                            platform_params_->tau_f_);
   squash_ = boost::make_shared<crocoddyl::SquashingModelSmoothSat>(platform_params_->u_lb, platform_params_->u_ub,
                                                                    actuation_->get_nu());
   actuation_squash_ =
@@ -32,9 +39,48 @@ void Trajectory::autoSetup(const ParamsServer& server) {
   for (auto stage : stages) {
     boost::shared_ptr<Stage> stage_ptr = Stage::create(shared_from_this());
     stage_ptr->autoSetup("stages/", stage, server);
+    stages_.insert({stage.at("name"), stage_ptr});
+    if (!has_contact_ && stage_ptr->get_contacts()->get_contacts().size() > 0) {
+      has_contact_ = true;
+    }
   }
 }
 
+boost::shared_ptr<crocoddyl::ShootingProblem> Trajectory::createProblem(const std::size_t& dt, const bool& squash,
+                                                                        const Eigen::VectorXd& x0,
+                                                                        const std::string& integration_method) const {
+  std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> running_models;
+  boost::shared_ptr<crocoddyl::ActionModelAbstract> terminal_model;
+
+  for (auto stage = stages_.begin(); stage != stages_.end(); ++stage) {
+    boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract> dam =
+        dam_factory_->create(has_contact_, squash, stage->second);
+
+    boost::shared_ptr<crocoddyl::ActionModelAbstract> iam = iam_factory_->create(integration_method, dt, dam);
+
+    std::size_t n_knots = stage->second->get_duration() / dt + 1;
+    if (std::next(stage) == stages_.end()) {
+      n_knots -= 1;
+    }
+
+    std::cout << "Lower bound" << platform_params_->u_lb << std::endl;
+    std::cout << "Lower bound" << platform_params_->u_ub << std::endl;
+    
+    iam->set_u_lb(platform_params_->u_lb);
+    iam->set_u_ub(platform_params_->u_ub);
+
+    std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> iams_stage(n_knots, iam);
+    terminal_model = iam;
+    running_models.insert(running_models.begin(), iams_stage.begin(), iams_stage.end());
+  }
+
+  boost::shared_ptr<crocoddyl::ShootingProblem> problem =
+      boost::make_shared<crocoddyl::ShootingProblem>(x0, running_models, terminal_model);
+
+  return problem;
+}
+
+const std::map<std::string, boost::shared_ptr<Stage>>& Trajectory::get_stages() const { return stages_; }
 const boost::shared_ptr<pinocchio::Model>& Trajectory::get_robot_model() const { return robot_model_; }
 const boost::shared_ptr<MultiCopterBaseParams>& Trajectory::get_platform_params() const { return platform_params_; }
 const boost::shared_ptr<crocoddyl::StateMultibody>& Trajectory::get_robot_state() const { return robot_state_; }
