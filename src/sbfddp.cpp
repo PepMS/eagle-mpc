@@ -40,11 +40,11 @@ IntegratedActionModelTypes::Type SolverSbFDDP::getIntegratedModelType(
     boost::shared_ptr<crocoddyl::ActionModelAbstract> int_action) {
   euler_ = boost::dynamic_pointer_cast<crocoddyl::IntegratedActionModelEuler>(int_action);
   if (euler_ != nullptr) {
-    return IntegratedActionModelTypes::Euler;
+    return IntegratedActionModelTypes::IntegratedActionModelEuler;
   } else {
     rk4_ = boost::dynamic_pointer_cast<crocoddyl::IntegratedActionModelRK4>(int_action);
     if (rk4_ != nullptr) {
-      return IntegratedActionModelTypes::RK4;
+      return IntegratedActionModelTypes::IntegratedActionModelRK4;
     }
   }
   MMPC_ERROR << "Integrated action type not found";
@@ -55,11 +55,11 @@ DifferentialActionModelTypes::Type SolverSbFDDP::getDifferentialModelType(
     boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract> diff_action) {
   free_ = boost::dynamic_pointer_cast<crocoddyl::DifferentialActionModelFreeFwdDynamics>(diff_action);
   if (free_ != nullptr) {
-    return DifferentialActionModelTypes::Free;
+    return DifferentialActionModelTypes::DifferentialActionModelFreeFwdDynamics;
   } else {
     contact_ = boost::dynamic_pointer_cast<crocoddyl::DifferentialActionModelContactFwdDynamics>(diff_action);
     if (contact_ != nullptr) {
-      return DifferentialActionModelTypes::Contact;
+      return DifferentialActionModelTypes::DifferentialActionModelContactFwdDynamics;
     }
   }
   MMPC_ERROR << "Differential action type not found";
@@ -69,10 +69,10 @@ DifferentialActionModelTypes::Type SolverSbFDDP::getDifferentialModelType(
 boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract> SolverSbFDDP::getDifferentialModelFromIntegrated(
     boost::shared_ptr<crocoddyl::ActionModelAbstract> int_action) {
   switch (getIntegratedModelType(int_action)) {
-    case IntegratedActionModelTypes::Euler:
+    case IntegratedActionModelTypes::IntegratedActionModelEuler:
       return euler_->get_differential();
       break;
-    case IntegratedActionModelTypes::RK4:
+    case IntegratedActionModelTypes::IntegratedActionModelRK4:
       return rk4_->get_differential();
       break;
     default:
@@ -84,10 +84,10 @@ boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract> SolverSbFDDP::getD
 boost::shared_ptr<crocoddyl::CostModelSum> SolverSbFDDP::getCostsFromDifferentialModel(
     boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract> diff_action) {
   switch (getDifferentialModelType(diff_action)) {
-    case DifferentialActionModelTypes::Free:
+    case DifferentialActionModelTypes::DifferentialActionModelFreeFwdDynamics:
       return free_->get_costs();
       break;
-    case DifferentialActionModelTypes::Contact:
+    case DifferentialActionModelTypes::DifferentialActionModelContactFwdDynamics:
       return contact_->get_costs();
       break;
     default:
@@ -100,11 +100,11 @@ IntegratedActionModelTypes::Type SolverSbFDDP::getIntegratedDataType(
     boost::shared_ptr<crocoddyl::ActionDataAbstract> int_action) {
   euler_d_ = boost::dynamic_pointer_cast<crocoddyl::IntegratedActionDataEuler>(int_action);
   if (euler_d_ != nullptr) {
-    return IntegratedActionModelTypes::Euler;
+    return IntegratedActionModelTypes::IntegratedActionModelEuler;
   } else {
     rk4_d_ = boost::dynamic_pointer_cast<crocoddyl::IntegratedActionDataRK4>(int_action);
     if (rk4_d_ != nullptr) {
-      return IntegratedActionModelTypes::RK4;
+      return IntegratedActionModelTypes::IntegratedActionModelRK4;
     }
   }
   MMPC_ERROR << "Integrated action data type not found";
@@ -115,11 +115,11 @@ DifferentialActionModelTypes::Type SolverSbFDDP::getDifferentialDataType(
     boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> diff_action) {
   free_d_ = boost::dynamic_pointer_cast<crocoddyl::DifferentialActionDataFreeFwdDynamics>(diff_action);
   if (free_d_ != nullptr) {
-    return DifferentialActionModelTypes::Free;
+    return DifferentialActionModelTypes::DifferentialActionModelFreeFwdDynamics;
   } else {
     contact_d_ = boost::dynamic_pointer_cast<crocoddyl::DifferentialActionDataContactFwdDynamics>(diff_action);
     if (contact_d_ != nullptr) {
-      return DifferentialActionModelTypes::Contact;
+      return DifferentialActionModelTypes::DifferentialActionModelContactFwdDynamics;
     }
   }
   MMPC_ERROR << "Differential action data type not found";
@@ -129,10 +129,10 @@ DifferentialActionModelTypes::Type SolverSbFDDP::getDifferentialDataType(
 boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> SolverSbFDDP::getDifferentialDataFromIntegrated(
     boost::shared_ptr<crocoddyl::ActionDataAbstract> int_action) {
   switch (getIntegratedDataType(int_action)) {
-    case IntegratedActionModelTypes::Euler:
+    case IntegratedActionModelTypes::IntegratedActionModelEuler:
       return euler_d_->differential;
       break;
-    case IntegratedActionModelTypes::RK4:
+    case IntegratedActionModelTypes::IntegratedActionModelRK4:
       return rk4_d_->differential[0];
       break;
     default:
@@ -144,10 +144,10 @@ boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> SolverSbFDDP::getDi
 boost::shared_ptr<crocoddyl::ActuationDataAbstract> SolverSbFDDP::getActuationDataFromDifferential(
     boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> diff_action) {
   switch (getDifferentialDataType(diff_action)) {
-    case DifferentialActionModelTypes::Free:
+    case DifferentialActionModelTypes::DifferentialActionModelFreeFwdDynamics:
       return free_d_->multibody.actuation;
       break;
-    case DifferentialActionModelTypes::Contact:
+    case DifferentialActionModelTypes::DifferentialActionModelContactFwdDynamics:
       return contact_d_->multibody.actuation;
       break;
     default:

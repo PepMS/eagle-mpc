@@ -18,17 +18,10 @@
 #include "crocoddyl/multibody/actions/free-fwddyn.hpp"
 #include "crocoddyl/multibody/actions/contact-fwddyn.hpp"
 
+#include "multicopter_mpc/factory/diff-action.hpp"
 #include "multicopter_mpc/utils/log.hpp"
 
 namespace multicopter_mpc {
-
-struct IntegratedActionModelTypes {
-  enum Type { Euler, RK4, NbIntegratedActionModelTypes };
-};
-
-struct DifferentialActionModelTypes {
-  enum Type { Free, Contact, NbDifferentialActionModelTypes };
-};
 
 class SolverSbFDDP : public crocoddyl::SolverFDDP {
  public:
