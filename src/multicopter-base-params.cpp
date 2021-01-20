@@ -113,8 +113,9 @@ void MultiCopterBaseParams::autoSetup(const std::string& path_to_platform, const
 }
 
 void MultiCopterBaseParams::setControlLimits(const boost::shared_ptr<pinocchio::Model>& robot_model) {
-  std::size_t n_arm_joints = robot_model->nq - 6;
-  u_lb = Eigen::VectorXd::Zero(robot_model->nq - 6 + n_rotors_);
+  std::size_t n_arm_joints = robot_model->nq - 7;
+
+  u_lb = Eigen::VectorXd::Zero(n_arm_joints + n_rotors_);
   u_ub = u_lb;
 
   u_lb.head(n_rotors_) = Eigen::VectorXd::Ones(n_rotors_) * min_thrust_;
