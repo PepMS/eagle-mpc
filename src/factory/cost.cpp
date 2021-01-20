@@ -6,7 +6,7 @@ namespace multicopter_mpc {
 
 const std::map<std::string, CostModelTypes::Type> CostModelTypes::all = CostModelTypes::init_all();
 
-CostModelFactory::CostModelFactory() {}
+CostModelFactory::CostModelFactory() { activation_factory_ = boost::make_shared<ActivationModelFactory>(); }
 CostModelFactory::~CostModelFactory() {}
 
 boost::shared_ptr<crocoddyl::CostModelAbstract> CostModelFactory::create(const std::string& path_to_cost,
@@ -63,7 +63,12 @@ boost::shared_ptr<crocoddyl::CostModelAbstract> CostModelFactory::create(const s
           converter<Eigen::VectorXd>::convert(server.getParam<std::string>(path_to_cost + "position"));
       Eigen::Vector4d orientation =
           converter<Eigen::VectorXd>::convert(server.getParam<std::string>(path_to_cost + "orientation"));
+
       std::string link_name = server.getParam<std::string>(path_to_cost + "link_name");
+      std::size_t link_id = stage->get_trajectory()->get_robot_model()->getFrameId(link_name);
+      if (link_id == stage->get_trajectory()->get_robot_model()->frames.size()) {
+        throw std::runtime_error("Link " + link_name + "does no exists");
+      }
 
       Eigen::Quaterniond quat(orientation);
       quat.normalize();
@@ -81,10 +86,14 @@ boost::shared_ptr<crocoddyl::CostModelAbstract> CostModelFactory::create(const s
       Eigen::Vector3d angular =
           converter<Eigen::VectorXd>::convert(server.getParam<std::string>(path_to_cost + "angular"));
       std::string link_name = server.getParam<std::string>(path_to_cost + "link_name");
+      std::size_t link_id = stage->get_trajectory()->get_robot_model()->getFrameId(link_name);
+      if (link_id == stage->get_trajectory()->get_robot_model()->frames.size()) {
+        throw std::runtime_error("Link " + link_name + "does no exists");
+      }
 
       pinocchio::Motion motion_ref(linear, angular);
 
-      crocoddyl::FrameMotion frame(stage->get_trajectory()->get_robot_model()->getFrameId(link_name), motion_ref);
+      crocoddyl::FrameMotion frame(link_id, motion_ref);
       cost = boost::make_shared<crocoddyl::CostModelFrameVelocity>(stage->get_trajectory()->get_robot_state(),
                                                                    activation, frame);
     } break;

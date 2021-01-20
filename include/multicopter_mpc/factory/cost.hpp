@@ -15,6 +15,8 @@
 
 #include <Eigen/Dense>
 
+#include "pinocchio/spatial/se3.hpp"
+
 #include "crocoddyl/core/cost-base.hpp"
 #include "crocoddyl/core/costs/control.hpp"
 
@@ -52,7 +54,6 @@ struct CostModelTypes {
     m.insert({"CostModelFrameRotation", CostModelFrameRotation});
     m.insert({"CostModelFrameTranslation", CostModelFrameTranslation});
     m.insert({"CostModelFrameVelocity", CostModelFrameVelocity});
-    std::cout << "Here in static" << std::endl;
     return m;
   }
   static const std::map<std::string, Type> all;
