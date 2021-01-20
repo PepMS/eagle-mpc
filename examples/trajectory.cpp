@@ -1,5 +1,13 @@
 #include <iostream>
 
+#include "crocoddyl/core/optctrl/shooting.hpp"
+#include "crocoddyl/core/solvers/box-fddp.hpp"
+#include "crocoddyl/core/solvers/fddp.hpp"
+#include "crocoddyl/core/utils/callbacks.hpp"
+
+#include "crocoddyl/multibody/actuations/multicopter-base.hpp"
+#include "crocoddyl/multibody/states/multibody.hpp"
+
 #include "multicopter_mpc/trajectory.hpp"
 #include "multicopter_mpc/utils/parser_yaml.hpp"
 #include "multicopter_mpc/utils/params_server.hpp"
