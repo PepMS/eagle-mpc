@@ -7,15 +7,20 @@
 
 #include "crocoddyl/core/costs/cost-sum.hpp"
 #include "crocoddyl/core/activation-base.hpp"
+#include "crocoddyl/multibody/contacts/multiple-contacts.hpp"
+#include "crocoddyl/multibody/actions/contact-fwddyn.hpp"
+#include "crocoddyl/multibody/actions/free-fwddyn.hpp"
 
 #include "multicopter_mpc/trajectory.hpp"
 #include "multicopter_mpc/utils/params_server.hpp"
 
 #include "multicopter_mpc/factory/cost.hpp"
+#include "multicopter_mpc/factory/diff-action.hpp"
+
 namespace multicopter_mpc {
 class Trajectory;
 class CostModelFactory;
-class Stage :public boost::enable_shared_from_this<Stage>{
+class Stage : public boost::enable_shared_from_this<Stage> {
  public:
   static boost::shared_ptr<Stage> create(const boost::shared_ptr<Trajectory>& trajectory);
   ~Stage();
@@ -24,15 +29,26 @@ class Stage :public boost::enable_shared_from_this<Stage>{
                  const ParamsServer& server);
 
   const boost::shared_ptr<Trajectory>& get_trajectory() const;
+  const boost::shared_ptr<crocoddyl::CostModelSum>& get_costs() const;
+  const boost::shared_ptr<crocoddyl::ContactModelMultiple>& get_contacts() const;
+
+  const std::size_t& get_duration() const;
+  const bool& get_is_terminal() const;
  private:
   Stage(const boost::shared_ptr<Trajectory>& trajectory);
-  boost::shared_ptr<Trajectory> trajectory_;
-
+  
   boost::shared_ptr<crocoddyl::CostModelSum> costs_;
+  boost::shared_ptr<crocoddyl::ContactModelMultiple> contacts_;
+
+  boost::shared_ptr<Trajectory> trajectory_;
   boost::shared_ptr<CostModelFactory> cost_factory_;
+  
 
   std::string name_;
   std::size_t duration_;
+
+  bool is_terminal_;
+
 };
 
 }  // namespace multicopter_mpc

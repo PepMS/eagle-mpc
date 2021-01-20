@@ -6,15 +6,18 @@ namespace multicopter_mpc {
 Stage::Stage(const boost::shared_ptr<Trajectory>& trajectory) : trajectory_(trajectory) {
   costs_ = boost::make_shared<crocoddyl::CostModelSum>(trajectory_->get_robot_state(),
                                                        trajectory_->get_actuation()->get_nu());
+  contacts_ = boost::make_shared<crocoddyl::ContactModelMultiple>(trajectory_->get_robot_state(),
+                                                                  trajectory_->get_actuation()->get_nu());
   cost_factory_ = boost::make_shared<CostModelFactory>();
+  is_terminal_ = false;
 }
+
+Stage::~Stage() { std::cout << "Inside trajectory constructor" << std::endl; }
 
 boost::shared_ptr<Stage> Stage::create(const boost::shared_ptr<Trajectory>& trajectory) {
   boost::shared_ptr<Stage> stage(new Stage(trajectory));
   return stage;
 }
-
-Stage::~Stage() {}
 
 void Stage::autoSetup(const std::string& path_to_stages, const std::map<std::string, std::string>& stage,
                       const ParamsServer& server) {
@@ -33,14 +36,17 @@ void Stage::autoSetup(const std::string& path_to_stages, const std::map<std::str
       MMPC_WARN << e.what() << " Set to true.";
       active = true;
     }
-    std::cout << "Inside stage autosetup" << std::endl;
     boost::shared_ptr<crocoddyl::CostModelAbstract> cost =
         cost_factory_->create(path_to_stage + "costs/" + cost_name + "/", server, shared_from_this());
     costs_->addCost(cost_name, cost, weight, active);
-    std::cout << "Cost Added" << std::endl;
+    MMPC_INFO << "Stage " << name_ << ": added cost " << cost_name;
   }
 }
 
 const boost::shared_ptr<Trajectory>& Stage::get_trajectory() const { return trajectory_; }
+const boost::shared_ptr<crocoddyl::CostModelSum>& Stage::get_costs() const { return costs_; }
+const boost::shared_ptr<crocoddyl::ContactModelMultiple>& Stage::get_contacts() const { return contacts_; }
+
+const std::size_t& Stage::get_duration() const { return duration_; }
 
 }  // namespace multicopter_mpc
