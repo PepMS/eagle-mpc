@@ -1,0 +1,34 @@
+#include "multicopter_mpc/factory/int-action.hpp"
+
+namespace multicopter_mpc {
+
+const std::map<std::string, IntegratedActionModelTypes::Type> IntegratedActionModelTypes::all(
+    IntegratedActionModelTypes::init_all());
+
+IntegratedActionModelFactory::IntegratedActionModelFactory() {}
+
+IntegratedActionModelFactory::~IntegratedActionModelFactory() {}
+
+boost::shared_ptr<crocoddyl::ActionModelAbstract> IntegratedActionModelFactory::create(
+    const std::string& integration_method, const std::size_t& dt,
+    const boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract>& diff_model) const {
+  boost::shared_ptr<crocoddyl::ActionModelAbstract> iam;
+  double dt_s = double(dt) / 1000.;
+
+  switch (IntegratedActionModelTypes::all.at(integration_method)) {
+    case IntegratedActionModelTypes::IntegratedActionModelEuler:
+      iam = boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_model, dt_s);
+      break;
+
+    case IntegratedActionModelTypes::IntegratedActionModelRK4:
+      iam = boost::make_shared<crocoddyl::IntegratedActionModelRK4>(diff_model, dt_s);
+      break;
+
+    default:
+      throw std::runtime_error("The integration method " + integration_method + " does not exists.");
+      break;
+  }
+  return iam;
+}
+
+}  // namespace multicopter_mpc
