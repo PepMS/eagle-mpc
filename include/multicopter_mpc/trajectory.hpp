@@ -42,7 +42,7 @@ class Trajectory : public boost::enable_shared_from_this<Trajectory> {
                                                               const Eigen::VectorXd& x0,
                                                               const std::string& integration_method) const;
 
-  const std::map<std::string, boost::shared_ptr<Stage>>& get_stages() const;
+  const std::vector<boost::shared_ptr<Stage>>& get_stages() const;
 
   const boost::shared_ptr<pinocchio::Model>& get_robot_model() const;
   const boost::shared_ptr<MultiCopterBaseParams>& get_platform_params() const;
@@ -53,7 +53,7 @@ class Trajectory : public boost::enable_shared_from_this<Trajectory> {
 
  private:
   Trajectory();
-  std::map<std::string, boost::shared_ptr<Stage>> stages_;
+  std::vector<boost::shared_ptr<Stage>> stages_;
 
   boost::shared_ptr<pinocchio::Model> robot_model_;
   boost::shared_ptr<MultiCopterBaseParams> platform_params_;
@@ -67,7 +67,6 @@ class Trajectory : public boost::enable_shared_from_this<Trajectory> {
 
   boost::shared_ptr<DifferentialActionModelFactory> dam_factory_;
   boost::shared_ptr<IntegratedActionModelFactory> iam_factory_;
-
 };
 }  // namespace multicopter_mpc
 

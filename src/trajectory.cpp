@@ -39,7 +39,7 @@ void Trajectory::autoSetup(const ParamsServer& server) {
   for (auto stage : stages) {
     boost::shared_ptr<Stage> stage_ptr = Stage::create(shared_from_this());
     stage_ptr->autoSetup("stages/", stage, server);
-    stages_.insert({stage.at("name"), stage_ptr});
+    stages_.push_back(stage_ptr);
     if (!has_contact_ && stage_ptr->get_contacts()->get_contacts().size() > 0) {
       has_contact_ = true;
     }
@@ -54,24 +54,23 @@ boost::shared_ptr<crocoddyl::ShootingProblem> Trajectory::createProblem(const st
 
   for (auto stage = stages_.begin(); stage != stages_.end(); ++stage) {
     boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract> dam =
-        dam_factory_->create(has_contact_, squash, stage->second);
+        dam_factory_->create(has_contact_, squash, *stage);
 
     boost::shared_ptr<crocoddyl::ActionModelAbstract> iam = iam_factory_->create(integration_method, dt, dam);
 
-    std::size_t n_knots = stage->second->get_duration() / dt + 1;
+    std::size_t n_knots = (*stage)->get_duration() / dt + 1;
     if (std::next(stage) == stages_.end()) {
       n_knots -= 1;
+      terminal_model = iam_factory_->create(integration_method, 0, dam);
     }
 
-    std::cout << "Lower bound" << platform_params_->u_lb << std::endl;
-    std::cout << "Lower bound" << platform_params_->u_ub << std::endl;
-    
     iam->set_u_lb(platform_params_->u_lb);
     iam->set_u_ub(platform_params_->u_ub);
 
     std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> iams_stage(n_knots, iam);
-    terminal_model = iam;
+    // terminal_model = iam;
     running_models.insert(running_models.begin(), iams_stage.begin(), iams_stage.end());
+    std::cout << "Running models at stage " << (*stage)->get_duration() << ": " << running_models.size() << std::endl;
   }
 
   boost::shared_ptr<crocoddyl::ShootingProblem> problem =
@@ -80,7 +79,7 @@ boost::shared_ptr<crocoddyl::ShootingProblem> Trajectory::createProblem(const st
   return problem;
 }
 
-const std::map<std::string, boost::shared_ptr<Stage>>& Trajectory::get_stages() const { return stages_; }
+const std::vector<boost::shared_ptr<Stage>>& Trajectory::get_stages() const { return stages_; }
 const boost::shared_ptr<pinocchio::Model>& Trajectory::get_robot_model() const { return robot_model_; }
 const boost::shared_ptr<MultiCopterBaseParams>& Trajectory::get_platform_params() const { return platform_params_; }
 const boost::shared_ptr<crocoddyl::StateMultibody>& Trajectory::get_robot_state() const { return robot_state_; }
