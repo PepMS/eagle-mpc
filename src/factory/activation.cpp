@@ -18,7 +18,7 @@ boost::shared_ptr<crocoddyl::ActivationModelAbstract> ActivationModelFactory::cr
   try {
     name = server.getParam<std::string>(path_to_cost + "activation");
   } catch (const std::exception& e) {
-    MMPC_WARN << e.what() << " Set to quadratic cost.";
+    MMPC_WARN << e.what() << " Set to quadratic activation.";
     name = "ActivationModelQuad";
   }
 
