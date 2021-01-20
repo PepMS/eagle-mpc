@@ -12,4 +12,16 @@ int main(void) {
   multicopter_mpc::ParamsServer server(parser.get_params());
 
   trajectory->autoSetup(server);
+
+  boost::shared_ptr<crocoddyl::ShootingProblem> problem =
+      trajectory->createProblem(10, false, trajectory->get_robot_state()->zero(), "IntegratedActionModelEuler");
+
+  boost::shared_ptr<crocoddyl::SolverBoxFDDP> solver = boost::make_shared<crocoddyl::SolverBoxFDDP>(problem);
+
+  std::vector<boost::shared_ptr<crocoddyl::CallbackAbstract>> callbacks;
+  callbacks.push_back(boost::make_shared<crocoddyl::CallbackVerbose>());
+  solver->setCallbacks(callbacks);
+
+  solver->solve();
+  std::cout << "Finished \n";
 }
