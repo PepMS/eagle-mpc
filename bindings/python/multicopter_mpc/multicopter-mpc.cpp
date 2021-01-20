@@ -16,6 +16,9 @@
 #include "python/multicopter_mpc/main-mpc.hpp"
 #include "python/multicopter_mpc/ocp/mpc-base.hpp"
 #include "python/multicopter_mpc/sbfddp.hpp"
+#include "python/multicopter_mpc/trajectory.hpp"
+#include "python/multicopter_mpc/utils/parser_yaml.hpp"
+#include "python/multicopter_mpc/utils/params_server.hpp"
 
 namespace multicopter_mpc {
 namespace python {
@@ -33,6 +36,9 @@ BOOST_PYTHON_MODULE(libmulticopter_mpc_pywrap) {
   exposeMpcMain();
   exposeMpcAbstract();
   exposeSolverSbFDDP();
+  exposeTrajectory();
+  exposeParamsServer();
+  exposeParserYaml();
 }
 
 }  // namespace python
