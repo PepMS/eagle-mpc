@@ -1,7 +1,7 @@
 trajectory:
   robot:
     name: "hexarotor_370_flying_arm_3"
-    urdf: "/home/pepms/robotics/libraries/example-robot-data/robots/flying_arm_3_description/urdf/flying_arm_3.urdf"
+    urdf: "/home/pepms/robotics/libraries/example-robot-data/robots/hexarotor_370_description/urdf/hexarotor_370_flying_arm_3.urdf"
     follow: "/home/pepms/robotics/libraries/multicopter-mpc/config/multicopter/hexarotor370.yaml"
 
   stages:
@@ -21,8 +21,8 @@ trajectory:
           reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuadraticBarrier"
           weights: [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1]
-          u_bound: [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1]
-          l_bound: [0, 0, 0, 0, 0, 0, -1, -1, -1, 0, 0, 0, 0, 0, 0, -1, -1, -1]
+          u_bound: [0, 0, 0, 0, 0, 0, 1.9, 1.9, 1.9, 0, 0, 0, 0, 0, 0, 3, 3, 3]
+          l_bound: [0, 0, 0, 0, 0, 0, -1.9, -1.9, -1.9, 0, 0, 0, 0, 0, 0, -3, -3, -3]
 
         - name: "control_reg"
           type: "CostModelControl"
