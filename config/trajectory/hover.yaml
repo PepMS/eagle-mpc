@@ -6,7 +6,7 @@ trajectory:
 
   stages:
     - name: "navigation"
-      duration: 2000 #ms
+      duration: 1500 #ms
       costs:
         - name: "state_reg"
           type: "CostModelState"
@@ -36,21 +36,21 @@ trajectory:
       costs:
         - name: "state_arm"
           type: "CostModelState"
-          weight: 20
+          weight: 2000
           reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
           weights: [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1]
 
         - name: "placement_base_link"
           type: "CostModelFramePlacement"
-          weight: 20
+          weight: 2000
           link_name: "base_link"
           position: [1, 0, 2]
           orientation: [0, 0, 0, 1] # x,y,z,w
 
         - name: "motion_base_link"
           type: "CostModelFrameVelocity"
-          weight: 20
+          weight: 2000
           link_name: "base_link"
           linear: [0, 0, 0]
           angular: [0, 0, 0]
