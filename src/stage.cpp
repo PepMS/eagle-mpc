@@ -39,7 +39,7 @@ void Stage::autoSetup(const std::string& path_to_stages, const std::map<std::str
     boost::shared_ptr<crocoddyl::CostModelAbstract> cost =
         cost_factory_->create(path_to_stage + "costs/" + cost_name + "/", server, shared_from_this());
     costs_->addCost(cost_name, cost, weight, active);
-    MMPC_INFO << "Stage " << name_ << ": added cost " << cost_name;
+    MMPC_INFO << "Stage '" << name_ << "': added cost " << cost_name;
   }
 }
 

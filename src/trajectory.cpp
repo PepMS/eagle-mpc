@@ -1,5 +1,6 @@
 #include "multicopter_mpc/trajectory.hpp"
 
+#include "multicopter_mpc/utils/log.hpp"
 namespace multicopter_mpc {
 
 Trajectory::Trajectory() {
@@ -35,14 +36,16 @@ void Trajectory::autoSetup(const ParamsServer& server) {
   actuation_squash_ =
       boost::make_shared<crocoddyl::ActuationSquashingModel>(actuation_, squash_, actuation_->get_nu());
 
-  auto stages = server.getParam<std::vector<std::map<std::string, std::string>>>("stages");
-  for (auto stage : stages) {
-    boost::shared_ptr<Stage> stage_ptr = Stage::create(shared_from_this());
-    stage_ptr->autoSetup("stages/", stage, server);
-    stages_.push_back(stage_ptr);
-    if (!has_contact_ && stage_ptr->get_contacts()->get_contacts().size() > 0) {
+  auto stages_params = server.getParam<std::vector<std::map<std::string, std::string>>>("stages");
+  for (auto stage_param : stages_params) {
+    boost::shared_ptr<Stage> stage = Stage::create(shared_from_this());
+    stage->autoSetup("stages/", stage_param, server);
+    stages_.push_back(stage);
+    if (!has_contact_ && stage->get_contacts()->get_contacts().size() > 0) {
       has_contact_ = true;
+      MMPC_INFO << "Stage '" << stage_param.at("name") << "' DOES have contacts";
     }
+    MMPC_INFO << "Stage '" << stage_param.at("name") << "' DOES NOT have contacts";
   }
 }
 
@@ -58,19 +61,14 @@ boost::shared_ptr<crocoddyl::ShootingProblem> Trajectory::createProblem(const st
 
     boost::shared_ptr<crocoddyl::ActionModelAbstract> iam = iam_factory_->create(integration_method, dt, dam);
 
-    std::size_t n_knots = (*stage)->get_duration() / dt + 1;
-    if (std::next(stage) == stages_.end()) {
-      n_knots -= 1;
-      terminal_model = iam_factory_->create(integration_method, 0, dam);
-    }
+    std::size_t n_knots = (*stage)->get_duration() / dt;
 
     iam->set_u_lb(platform_params_->u_lb);
     iam->set_u_ub(platform_params_->u_ub);
 
     std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> iams_stage(n_knots, iam);
-    // terminal_model = iam;
+    terminal_model = iam;
     running_models.insert(running_models.begin(), iams_stage.begin(), iams_stage.end());
-    std::cout << "Running models at stage " << (*stage)->get_duration() << ": " << running_models.size() << std::endl;
   }
 
   boost::shared_ptr<crocoddyl::ShootingProblem> problem =

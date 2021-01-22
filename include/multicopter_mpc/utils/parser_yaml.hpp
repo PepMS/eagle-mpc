@@ -39,6 +39,7 @@ class ParserYaml {
     std::string duration;
     YAML::Node stage;
     YAML::Node costs;
+    YAML::Node contacts;
   };
 
   std::string file_;

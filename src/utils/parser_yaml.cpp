@@ -173,6 +173,10 @@ void ParserYaml::parse() {
       tags.push_back("stages/" + stage.name + "/costs");
       walkTreeRecursive(cost, tags, "stages/" + stage.name + "/costs/" + cost["name"].Scalar());
     }
+    for (auto contact : stage.contacts) {
+      tags.push_back("stages/" + stage.name + "/contacts");
+      walkTreeRecursive(contact, tags, "stages/" + stage.name + "/contacts/" + contact["name"].Scalar());
+    }
   }
 }
 
@@ -195,17 +199,33 @@ void ParserYaml::parseFirstLevel(std::string file) {
   std::vector<std::map<std::string, std::string>> map_container;
   try {
     for (auto stage : n_trajectory["stages"]) {
-      ParamsInitStage p_stage = {stage["name"].Scalar(), stage["duration"].Scalar(), stage, stage["costs"]};
+      ParamsInitStage p_stage = {stage["name"].Scalar(), stage["duration"].Scalar(), stage, stage["costs"],
+                                 stage["contacts"]};
+
       stages_.push_back(p_stage);
+
       std::vector<std::string> cost_container;
-      YAML::Node costs = stage["costs"];
-      for (auto cost : costs) {
+      for (auto cost : p_stage.costs) {
         cost_container.push_back(cost["name"].Scalar());
       }
-      map_container.push_back(
-          std::map<std::string, std::string>({{"name", stage["name"].Scalar()},
-                                              {"duration", stage["duration"].Scalar()},
-                                              {"costs", converter<std::string>::convert(cost_container)}}));
+
+      std::vector<std::string> contacts_container;
+      for (auto contact : p_stage.contacts) {
+        cost_container.push_back(contact["name"].Scalar());
+      }
+
+      if (p_stage.contacts.Type() == YAML::NodeType::Undefined) {
+        map_container.push_back(
+            std::map<std::string, std::string>({{"name", stage["name"].Scalar()},
+                                                {"duration", stage["duration"].Scalar()},
+                                                {"costs", converter<std::string>::convert(cost_container)}}));
+      } else {
+        map_container.push_back(
+            std::map<std::string, std::string>({{"name", stage["name"].Scalar()},
+                                                {"duration", stage["duration"].Scalar()},
+                                                {"costs", converter<std::string>::convert(cost_container)},
+                                                {"contacts", converter<std::string>::convert(contacts_container)}}));
+      }
     }
     insertRegister("stages", converter<std::string>::convert(map_container));
   } catch (const std::exception& e) {
