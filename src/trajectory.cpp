@@ -50,7 +50,6 @@ void Trajectory::autoSetup(const ParamsServer& server) {
 boost::shared_ptr<crocoddyl::ShootingProblem> Trajectory::createProblem(const std::size_t& dt, const bool& squash,
                                                                         const Eigen::VectorXd& x0,
                                                                         const std::string& integration_method) const {
-  
   MMPC_INFO << "Creating problem for the given stages. Contact Trajectory = " << has_contact_;
   std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> running_models;
   boost::shared_ptr<crocoddyl::ActionModelAbstract> terminal_model;
@@ -62,13 +61,14 @@ boost::shared_ptr<crocoddyl::ShootingProblem> Trajectory::createProblem(const st
     boost::shared_ptr<crocoddyl::ActionModelAbstract> iam = iam_factory_->create(integration_method, dt, dam);
 
     std::size_t n_knots = (*stage)->get_duration() / dt;
+    MMPC_INFO << "Create Problem; " << (*stage)->get_name() << ", # Knots: " << n_knots;
 
     iam->set_u_lb(platform_params_->u_lb);
     iam->set_u_ub(platform_params_->u_ub);
 
     std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> iams_stage(n_knots, iam);
     terminal_model = iam;
-    running_models.insert(running_models.begin(), iams_stage.begin(), iams_stage.end());
+    running_models.insert(running_models.end(), iams_stage.begin(), iams_stage.end());
   }
 
   boost::shared_ptr<crocoddyl::ShootingProblem> problem =
