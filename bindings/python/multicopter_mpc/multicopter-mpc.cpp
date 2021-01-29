@@ -19,6 +19,7 @@
 #include "python/multicopter_mpc/trajectory.hpp"
 #include "python/multicopter_mpc/utils/parser_yaml.hpp"
 #include "python/multicopter_mpc/utils/params_server.hpp"
+#include "python/multicopter_mpc/stage.hpp"
 
 namespace multicopter_mpc {
 namespace python {
@@ -39,6 +40,7 @@ BOOST_PYTHON_MODULE(libmulticopter_mpc_pywrap) {
   exposeTrajectory();
   exposeParamsServer();
   exposeParserYaml();
+  exposeStage();
 }
 
 }  // namespace python
