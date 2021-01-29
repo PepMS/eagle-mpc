@@ -62,5 +62,7 @@ const boost::shared_ptr<crocoddyl::CostModelSum>& Stage::get_costs() const { ret
 const boost::shared_ptr<crocoddyl::ContactModelMultiple>& Stage::get_contacts() const { return contacts_; }
 
 const std::size_t& Stage::get_duration() const { return duration_; }
+const std::string& Stage::get_name() const { return name_; };
+const bool& Stage::get_is_terminal() const { return is_terminal_; }
 
 }  // namespace multicopter_mpc

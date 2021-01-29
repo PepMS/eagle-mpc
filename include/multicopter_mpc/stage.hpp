@@ -37,22 +37,22 @@ class Stage : public boost::enable_shared_from_this<Stage> {
 
   const std::size_t& get_duration() const;
   const bool& get_is_terminal() const;
+  const std::string& get_name() const;
+
  private:
   Stage(const boost::shared_ptr<Trajectory>& trajectory);
-  
+
   boost::shared_ptr<crocoddyl::CostModelSum> costs_;
   boost::shared_ptr<crocoddyl::ContactModelMultiple> contacts_;
   boost::shared_ptr<Trajectory> trajectory_;
 
   boost::shared_ptr<CostModelFactory> cost_factory_;
   boost::shared_ptr<ContactModelFactory> contact_factory_;
-  
 
   std::string name_;
   std::size_t duration_;
 
   bool is_terminal_;
-
 };
 
 }  // namespace multicopter_mpc
