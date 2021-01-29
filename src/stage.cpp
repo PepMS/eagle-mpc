@@ -13,7 +13,7 @@ Stage::Stage(const boost::shared_ptr<Trajectory>& trajectory) : trajectory_(traj
   is_terminal_ = false;
 }
 
-Stage::~Stage() { std::cout << "Inside trajectory constructor" << std::endl; }
+Stage::~Stage() {}
 
 boost::shared_ptr<Stage> Stage::create(const boost::shared_ptr<Trajectory>& trajectory) {
   boost::shared_ptr<Stage> stage(new Stage(trajectory));
