@@ -24,6 +24,7 @@
 #include "crocoddyl/multibody/costs/frame-placement.hpp"
 #include "crocoddyl/multibody/costs/frame-velocity.hpp"
 #include "crocoddyl/multibody/costs/frame-translation.hpp"
+#include "crocoddyl/multibody/costs/contact-friction-cone.hpp"
 
 #include "multicopter_mpc/stage.hpp"
 #include "multicopter_mpc/utils/params_server.hpp"
@@ -37,11 +38,10 @@ struct CostModelTypes {
   enum Type {
     CostModelState,
     CostModelControl,
-    CostModelCoMPosition,
     CostModelFramePlacement,
-    CostModelFrameRotation,
     CostModelFrameTranslation,
     CostModelFrameVelocity,
+    CostModelContactFrictionCone,
     NbCostModelTypes
   };
 
@@ -50,11 +50,10 @@ struct CostModelTypes {
     m.clear();
     m.insert({"CostModelState", CostModelState});
     m.insert({"CostModelControl", CostModelControl});
-    m.insert({"CostModelCoMPosition", CostModelCoMPosition});
     m.insert({"CostModelFramePlacement", CostModelFramePlacement});
-    m.insert({"CostModelFrameRotation", CostModelFrameRotation});
     m.insert({"CostModelFrameTranslation", CostModelFrameTranslation});
     m.insert({"CostModelFrameVelocity", CostModelFrameVelocity});
+    m.insert({"CostModelContactFrictionCone", CostModelContactFrictionCone});
     return m;
   }
   static const std::map<std::string, Type> all;

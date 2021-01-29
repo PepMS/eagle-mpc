@@ -16,7 +16,15 @@ boost::shared_ptr<crocoddyl::CostModelAbstract> CostModelFactory::create(const s
   boost::shared_ptr<crocoddyl::ActivationModelAbstract> activation;
   Eigen::VectorXd reference;
 
-  switch (CostModelTypes::all.at(server.getParam<std::string>(path_to_cost + "type"))) {
+  CostModelTypes::Type cost_type;
+  try {
+    cost_type = CostModelTypes::all.at(server.getParam<std::string>(path_to_cost + "type"));
+  } catch (const std::exception& e) {
+    throw std::runtime_error("Cost " + server.getParam<std::string>(path_to_cost + "type") +
+                             " not found. Please make sure the specified cost exists.");
+  }
+
+  switch (cost_type) {
     case CostModelTypes::CostModelState: {
       activation =
           activation_factory_->create(path_to_cost, server, stage->get_trajectory()->get_robot_state()->get_ndx());
@@ -75,8 +83,9 @@ boost::shared_ptr<crocoddyl::CostModelAbstract> CostModelFactory::create(const s
       pinocchio::SE3 m_ref(quat.toRotationMatrix(), position);
 
       crocoddyl::FramePlacement frame(stage->get_trajectory()->get_robot_model()->getFrameId(link_name), m_ref);
-      cost = boost::make_shared<crocoddyl::CostModelFramePlacement>(stage->get_trajectory()->get_robot_state(),
-                                                                    activation, frame);
+      cost = boost::make_shared<crocoddyl::CostModelFramePlacement>(
+          stage->get_trajectory()->get_robot_state(), activation, frame,
+          stage->get_trajectory()->get_actuation()->get_nu());
     } break;
     case CostModelTypes::CostModelFrameVelocity: {
       activation = activation_factory_->create(path_to_cost, server, 6);
@@ -95,7 +104,8 @@ boost::shared_ptr<crocoddyl::CostModelAbstract> CostModelFactory::create(const s
 
       crocoddyl::FrameMotion frame(link_id, motion_ref);
       cost = boost::make_shared<crocoddyl::CostModelFrameVelocity>(stage->get_trajectory()->get_robot_state(),
-                                                                   activation, frame);
+                                                                   activation, frame,
+                                                                   stage->get_trajectory()->get_actuation()->get_nu());
     } break;
     case CostModelTypes::CostModelFrameTranslation: {
       activation = activation_factory_->create(path_to_cost, server, 3);
@@ -109,13 +119,31 @@ boost::shared_ptr<crocoddyl::CostModelAbstract> CostModelFactory::create(const s
       }
 
       crocoddyl::FrameTranslation frame(link_id, position);
-      cost = boost::make_shared<crocoddyl::CostModelFrameTranslation>(stage->get_trajectory()->get_robot_state(),
-                                                                      activation, frame);
+      cost = boost::make_shared<crocoddyl::CostModelFrameTranslation>(
+          stage->get_trajectory()->get_robot_state(), activation, frame,
+          stage->get_trajectory()->get_actuation()->get_nu());
     } break;
-    default:
-      throw std::runtime_error("Cost " + server.getParam<std::string>(path_to_cost + "type") +
-                               "not found. Please make sure the specified cost exists.");
-      break;
+    case CostModelTypes::CostModelContactFrictionCone: {
+      Eigen::Vector3d n_surf =
+          converter<Eigen::VectorXd>::convert(server.getParam<std::string>(path_to_cost + "n_surf"));
+      double mu = server.getParam<double>(path_to_cost + "mu");
+
+      crocoddyl::FrictionCone friction_cone(n_surf, mu, 4, false);
+      std::string link_name = server.getParam<std::string>(path_to_cost + "link_name");
+      std::size_t link_id = stage->get_trajectory()->get_robot_model()->getFrameId(link_name);
+      if (link_id == stage->get_trajectory()->get_robot_model()->frames.size()) {
+        throw std::runtime_error("Link " + link_name + "does no exists");
+      }
+      crocoddyl::FrameFrictionCone frame(link_id, friction_cone);
+
+      // In a constrained solver this might not be useful
+      crocoddyl::ActivationBounds bounds(friction_cone.get_lb(), friction_cone.get_ub());
+      activation = boost::make_shared<crocoddyl::ActivationModelQuadraticBarrier>(bounds);
+
+      cost = boost::make_shared<crocoddyl::CostModelContactFrictionCone>(
+          stage->get_trajectory()->get_robot_state(), activation, frame,
+          stage->get_trajectory()->get_actuation()->get_nu());
+    } break;
   }
   return cost;
 }
