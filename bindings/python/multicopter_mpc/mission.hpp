@@ -14,8 +14,8 @@ namespace python {
 namespace bp = boost::python;
 
 void exposeMission() {
-  bp::to_python_converter<std::vector<WayPoint, std::allocator<WayPoint>>, vector_to_list<WayPoint, true>>();
-  list_to_vector().from_python<std::vector<WayPoint, std::allocator<WayPoint>>>();
+  // bp::to_python_converter<std::vector<WayPoint, std::allocator<WayPoint>>, vector_to_list<WayPoint, true>>();
+  // list_to_vector().from_python<std::vector<WayPoint, std::allocator<WayPoint>>>();
   // list_to_vector().from_python<std::vector<std::size_t, std::allocator<WayPoint>>>();
 
   bp::register_ptr_to_python<boost::shared_ptr<Mission>>();
