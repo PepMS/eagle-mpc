@@ -16,10 +16,13 @@
 
 #include "multicopter_mpc/factory/cost.hpp"
 #include "multicopter_mpc/factory/diff-action.hpp"
+#include "multicopter_mpc/factory/contacts.hpp"
 
 namespace multicopter_mpc {
 class Trajectory;
 class CostModelFactory;
+class ContactModelFactory;
+
 class Stage : public boost::enable_shared_from_this<Stage> {
  public:
   static boost::shared_ptr<Stage> create(const boost::shared_ptr<Trajectory>& trajectory);
@@ -39,9 +42,10 @@ class Stage : public boost::enable_shared_from_this<Stage> {
   
   boost::shared_ptr<crocoddyl::CostModelSum> costs_;
   boost::shared_ptr<crocoddyl::ContactModelMultiple> contacts_;
-
   boost::shared_ptr<Trajectory> trajectory_;
+
   boost::shared_ptr<CostModelFactory> cost_factory_;
+  boost::shared_ptr<ContactModelFactory> contact_factory_;
   
 
   std::string name_;

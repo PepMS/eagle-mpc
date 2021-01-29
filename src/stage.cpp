@@ -9,6 +9,7 @@ Stage::Stage(const boost::shared_ptr<Trajectory>& trajectory) : trajectory_(traj
   contacts_ = boost::make_shared<crocoddyl::ContactModelMultiple>(trajectory_->get_robot_state(),
                                                                   trajectory_->get_actuation()->get_nu());
   cost_factory_ = boost::make_shared<CostModelFactory>();
+  contact_factory_ = boost::make_shared<ContactModelFactory>();
   is_terminal_ = false;
 }
 
@@ -26,6 +27,19 @@ void Stage::autoSetup(const std::string& path_to_stages, const std::map<std::str
   name_ = stage.at("name");
   duration_ = std::size_t(converter<int>::convert(stage.at("duration")));
 
+  try {
+    std::vector<std::string> contact_names = converter<std::vector<std::string>>::convert(stage.at("contacts"));
+    for (auto contact_name : contact_names) {
+      boost::shared_ptr<crocoddyl::ContactModelAbstract> contact =
+          contact_factory_->create(path_to_stage + "contacts/" + contact_name + "/", server, shared_from_this());
+      contacts_->addContact(contact_name, contact);
+
+      MMPC_INFO << "Stage '" << name_ << "': added contact '" << contact_name << "'";
+    }
+  } catch (const std::exception& e) {
+    MMPC_INFO << "Stage: " << name_ << " DOES NOT HAVE contacts";
+  }
+
   std::vector<std::string> cost_names = converter<std::vector<std::string>>::convert(stage.at("costs"));
   for (auto cost_name : cost_names) {
     double weight = server.getParam<double>(path_to_stage + "costs/" + cost_name + "/weight");
@@ -39,7 +53,7 @@ void Stage::autoSetup(const std::string& path_to_stages, const std::map<std::str
     boost::shared_ptr<crocoddyl::CostModelAbstract> cost =
         cost_factory_->create(path_to_stage + "costs/" + cost_name + "/", server, shared_from_this());
     costs_->addCost(cost_name, cost, weight, active);
-    MMPC_INFO << "Stage '" << name_ << "': added cost " << cost_name;
+    MMPC_INFO << "Stage '" << name_ << "': added cost '" << cost_name << "'";
   }
 }
 

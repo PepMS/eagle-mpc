@@ -41,11 +41,6 @@ void Trajectory::autoSetup(const ParamsServer& server) {
     boost::shared_ptr<Stage> stage = Stage::create(shared_from_this());
     stage->autoSetup("stages/", stage_param, server);
     stages_.push_back(stage);
-    if (!has_contact_ && stage->get_contacts()->get_contacts().size() > 0) {
-      has_contact_ = true;
-      MMPC_INFO << "Stage '" << stage_param.at("name") << "' DOES have contacts";
-    }
-    MMPC_INFO << "Stage '" << stage_param.at("name") << "' DOES NOT have contacts";
   }
 }
 

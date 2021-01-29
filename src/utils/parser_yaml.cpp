@@ -209,9 +209,9 @@ void ParserYaml::parseFirstLevel(std::string file) {
         cost_container.push_back(cost["name"].Scalar());
       }
 
-      std::vector<std::string> contacts_container;
+      std::vector<std::string> contact_container;
       for (auto contact : p_stage.contacts) {
-        cost_container.push_back(contact["name"].Scalar());
+        contact_container.push_back(contact["name"].Scalar());
       }
 
       if (p_stage.contacts.Type() == YAML::NodeType::Undefined) {
@@ -224,7 +224,7 @@ void ParserYaml::parseFirstLevel(std::string file) {
             std::map<std::string, std::string>({{"name", stage["name"].Scalar()},
                                                 {"duration", stage["duration"].Scalar()},
                                                 {"costs", converter<std::string>::convert(cost_container)},
-                                                {"contacts", converter<std::string>::convert(contacts_container)}}));
+                                                {"contacts", converter<std::string>::convert(contact_container)}}));
       }
     }
     insertRegister("stages", converter<std::string>::convert(map_container));
