@@ -23,6 +23,7 @@
 #include "crocoddyl/multibody/costs/state.hpp"
 #include "crocoddyl/multibody/costs/frame-placement.hpp"
 #include "crocoddyl/multibody/costs/frame-velocity.hpp"
+#include "crocoddyl/multibody/costs/frame-translation.hpp"
 
 #include "multicopter_mpc/stage.hpp"
 #include "multicopter_mpc/utils/params_server.hpp"
