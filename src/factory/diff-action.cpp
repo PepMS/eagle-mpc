@@ -22,7 +22,7 @@ boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract> DifferentialAction
 
   if (is_contact) {
     dam = boost::make_shared<crocoddyl::DifferentialActionModelContactFwdDynamics>(
-        stage->get_trajectory()->get_robot_state(), actuation, stage->get_contacts(), stage->get_costs());
+        stage->get_trajectory()->get_robot_state(), actuation, stage->get_contacts(), stage->get_costs(), 0, true);
   } else {
     dam = boost::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(
         stage->get_trajectory()->get_robot_state(), actuation, stage->get_costs());
