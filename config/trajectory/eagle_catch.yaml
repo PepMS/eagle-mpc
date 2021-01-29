@@ -113,16 +113,18 @@ trajectory:
           angular: [0, 0, 0]
 
         - name: "friction_cone"
-          type: "CostModelFrictionCone"
+          type: "CostModelContactFrictionCone"
           weight: 10
+          n_surf: [0, 0, 1]
+          mu: 0.7
           link_name: "base_link"
-          linear: [0, 0, 0]
-          angular: [0, 0, 0]
-      
+
       contacts:
         - name: "end_effector"
           type: "ContactModel3D"
-
+          link_name: "base_link"
+          position: [1, 0, 2]
+          gains: [0, 0]
 
     - name: "move_away"
       duration: 1510 #ms

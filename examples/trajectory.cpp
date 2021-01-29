@@ -15,9 +15,16 @@
 #include "multicopter_mpc/sbfddp.hpp"
 
 int main(void) {
+  multicopter_mpc::ParserYaml parser_aux(
+      "/home/pepms/robotics/libraries/multicopter-mpc/config/trajectory/trajectory.yaml", "", true);
+  
+  multicopter_mpc::ParamsServer server_aux(parser_aux.get_params());
+  std::string trajectory_yaml = server_aux.getParam<std::string>("trajectory_file");
+
   boost::shared_ptr<multicopter_mpc::Trajectory> trajectory = multicopter_mpc::Trajectory::create();
 
-  multicopter_mpc::ParserYaml parser("trajectory.yaml", "/home/pepms/robotics/libraries/multicopter-mpc/config/trajectory");
+  multicopter_mpc::ParserYaml parser(trajectory_yaml,
+                                     "/home/pepms/robotics/libraries/multicopter-mpc/config/trajectory");
   multicopter_mpc::ParamsServer server(parser.get_params());
 
   trajectory->autoSetup(server);
@@ -25,7 +32,7 @@ int main(void) {
   // boost::shared_ptr<crocoddyl::ShootingProblem> problem =
   //     trajectory->createProblem(10, false, trajectory->get_robot_state()->zero(), "IntegratedActionModelEuler");
   // boost::shared_ptr<crocoddyl::SolverBoxFDDP> solver = boost::make_shared<crocoddyl::SolverBoxFDDP>(problem);
-  
+
   boost::shared_ptr<crocoddyl::ShootingProblem> problem =
       trajectory->createProblem(10, true, trajectory->get_robot_state()->zero(), "IntegratedActionModelEuler");
   boost::shared_ptr<multicopter_mpc::SolverSbFDDP> solver =
