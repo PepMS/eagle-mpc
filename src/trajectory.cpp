@@ -41,12 +41,17 @@ void Trajectory::autoSetup(const ParamsServer& server) {
     boost::shared_ptr<Stage> stage = Stage::create(shared_from_this());
     stage->autoSetup("stages/", stage_param, server);
     stages_.push_back(stage);
+    if (!has_contact_) {
+      has_contact_ = stage->get_contacts()->get_contacts().size() != 0;
+    }
   }
 }
 
 boost::shared_ptr<crocoddyl::ShootingProblem> Trajectory::createProblem(const std::size_t& dt, const bool& squash,
                                                                         const Eigen::VectorXd& x0,
                                                                         const std::string& integration_method) const {
+  
+  MMPC_INFO << "Creating problem for the given stages. Contact Trajectory = " << has_contact_;
   std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> running_models;
   boost::shared_ptr<crocoddyl::ActionModelAbstract> terminal_model;
 
