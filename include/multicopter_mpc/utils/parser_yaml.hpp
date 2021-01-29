@@ -14,11 +14,12 @@ namespace multicopter_mpc {
 
 class ParserYaml {
  public:
-  ParserYaml(std::string file, std::string path_root = "");
+  ParserYaml(std::string file, std::string path_root = "", const bool& freely_parse = false);
   const std::map<std::string, std::string>& get_params();
 
  private:
   void parse();
+  void parseFreely();
   void parseFirstLevel(std::string file_path);
 
   YAML::Node loadYaml(std::string file_path);

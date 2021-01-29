@@ -142,7 +142,7 @@ bool isAtomic(std::string key, YAML::Node node) {
   return false;
 }
 
-ParserYaml::ParserYaml(std::string file, std::string path_root) {
+ParserYaml::ParserYaml(std::string file, std::string path_root, const bool& freely_parse) {
   file_ = file;
   parsing_file_ = std::stack<std::string>();
 
@@ -153,7 +153,11 @@ ParserYaml::ParserYaml(std::string file, std::string path_root) {
     else
       path_root_ = path_root;
   }
-  parse();
+  if (not freely_parse) {
+    parse();
+  } else {
+    parseFreely();
+  }
 }
 
 void ParserYaml::parse() {
@@ -232,6 +236,13 @@ void ParserYaml::parseFirstLevel(std::string file) {
     throw std::runtime_error("Error parsing stages @" + generatePath(file) +
                              ". Make sure every stage has a name, duration and, at least, one cost.");
   }
+}
+
+void ParserYaml::parseFreely() {
+  parsing_file_.push(generatePath(file_));
+  std::vector<std::string> tags = std::vector<std::string>();
+  walkTreeRecursive(loadYaml(file_), tags, "");
+  parsing_file_.pop();
 }
 
 YAML::Node ParserYaml::loadYaml(std::string file_path) {
