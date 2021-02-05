@@ -59,12 +59,12 @@ struct converter<utils::list<A>> {
 
 template <>
 struct converter<int> {
-  static int convert(std::string val) { return stod(val); }
+  static int convert(std::string val) { return stoi(val); }
 };
 
 template <>
 struct converter<unsigned int> {
-  static unsigned int convert(std::string val) { return stod(val); }
+  static unsigned int convert(std::string val) { return stoul(val); }
 };
 
 template <>

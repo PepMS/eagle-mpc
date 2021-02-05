@@ -29,14 +29,14 @@ int main(void) {
 
   trajectory->autoSetup(server);
 
-  // boost::shared_ptr<crocoddyl::ShootingProblem> problem =
-  //     trajectory->createProblem(10, false, trajectory->get_robot_state()->zero(), "IntegratedActionModelEuler");
-  // boost::shared_ptr<crocoddyl::SolverBoxFDDP> solver = boost::make_shared<crocoddyl::SolverBoxFDDP>(problem);
-
   boost::shared_ptr<crocoddyl::ShootingProblem> problem =
-      trajectory->createProblem(10, true, trajectory->get_robot_state()->zero(), "IntegratedActionModelEuler");
-  boost::shared_ptr<multicopter_mpc::SolverSbFDDP> solver =
-      boost::make_shared<multicopter_mpc::SolverSbFDDP>(problem, trajectory->get_squash());
+      trajectory->createProblem(10, false, trajectory->get_robot_state()->zero(), "IntegratedActionModelEuler");
+  boost::shared_ptr<crocoddyl::SolverBoxFDDP> solver = boost::make_shared<crocoddyl::SolverBoxFDDP>(problem);
+
+//   boost::shared_ptr<crocoddyl::ShootingProblem> problem =
+//       trajectory->createProblem(10, true, trajectory->get_robot_state()->zero(), "IntegratedActionModelEuler");
+//   boost::shared_ptr<multicopter_mpc::SolverSbFDDP> solver =
+//       boost::make_shared<multicopter_mpc::SolverSbFDDP>(problem, trajectory->get_squash());
 
   std::vector<boost::shared_ptr<crocoddyl::CallbackAbstract>> callbacks;
   callbacks.push_back(boost::make_shared<crocoddyl::CallbackVerbose>());

@@ -13,7 +13,8 @@ trajectory:
           weight: 1e-5
           reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
-          weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 100, 100, 100]
+          weights:
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1000, 1000, 1000]
 
         - name: "state_limits"
           type: "CostModelState"
@@ -30,7 +31,7 @@ trajectory:
           weight: 5e-2
           reference: [0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
-          weights: [1, 1, 1, 1, 1, 1, 1000, 1000, 1000]
+          weights: [1, 1, 1, 1, 1, 1, 10, 10, 10]
 
     - name: "pre_grasp"
       duration: 10 #ms
@@ -40,7 +41,8 @@ trajectory:
           weight: 1e-5
           reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
-          weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 100, 100, 100]
+          weights:
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1000, 1000, 1000]
 
         - name: "state_limits"
           type: "CostModelState"
@@ -57,21 +59,20 @@ trajectory:
           weight: 5e-2
           reference: [0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
-          weights: [1, 1, 1, 1, 1, 1, 1000, 1000, 1000]
+          weights: [1, 1, 1, 1, 1, 1, 10, 10, 10]
 
         - name: "translation_ee"
           type: "CostModelFrameTranslation"
-          weight: 10000
-          link_name: "base_link"
-          position: [1, 0, 2]
+          weight: 1e4
+          link_name: "arm_ee"
+          position: [0, 0, 0]
 
-        - name: "motion_base_link"
+        - name: "motion_ee"
           type: "CostModelFrameVelocity"
-          weight: 2000
-          link_name: "base_link"
+          weight: 1e3
+          link_name: "arm_ee"
           linear: [0, 0, 0]
           angular: [0, 0, 0]
-
     - name: "grasp"
       duration: 160 #ms
       costs:
@@ -80,8 +81,8 @@ trajectory:
           weight: 1e-3
           reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
-          weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 100, 100, 100]
-
+          weights:
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1000, 1000, 1000]
         - name: "state_limits"
           type: "CostModelState"
           weight: 10
@@ -91,41 +92,35 @@ trajectory:
           u_bound: [0, 0, 0, 0, 0, 0, 1.9, 1.9, 1.9, 0, 0, 0, 0, 0, 0, 3, 3, 3]
           l_bound:
             [0, 0, 0, 0, 0, 0, -1.9, -1.9, -1.9, 0, 0, 0, 0, 0, 0, -3, -3, -3]
-
         - name: "control_reg"
           type: "CostModelControl"
           weight: 5e-2
           reference: [0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
-          weights: [1, 1, 1, 1, 1, 1, 1000, 1000, 1000]
-
+          weights: [1, 1, 1, 1, 1, 1, 10, 10, 10]
         - name: "translation_ee"
           type: "CostModelFrameTranslation"
           weight: 1000
-          link_name: "base_link"
-          position: [1, 0, 2]
-
+          link_name: "arm_ee"
+          position: [0, 0, 0]
         - name: "motion_ee"
           type: "CostModelFrameVelocity"
           weight: 1000
-          link_name: "base_link"
+          link_name: "arm_ee"
           linear: [0, 0, 0]
           angular: [0, 0, 0]
-
         - name: "friction_cone"
           type: "CostModelContactFrictionCone"
           weight: 10
           n_surf: [0, 0, 1]
           mu: 0.7
-          link_name: "base_link"
-
+          link_name: "arm_ee"
       contacts:
         - name: "end_effector"
           type: "ContactModel3D"
-          link_name: "base_link"
-          position: [1, 0, 2]
+          link_name: "arm_ee"
+          position: [0, 0, 0]
           gains: [0, 0]
-
     - name: "move_away"
       duration: 1510 #ms
       costs:
@@ -134,8 +129,8 @@ trajectory:
           weight: 1e-5
           reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
-          weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 100, 100, 100]
-
+          weights:
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1000, 1000, 1000]
         - name: "state_limits"
           type: "CostModelState"
           weight: 10
@@ -145,14 +140,12 @@ trajectory:
           u_bound: [0, 0, 0, 0, 0, 0, 1.9, 1.9, 1.9, 0, 0, 0, 0, 0, 0, 3, 3, 3]
           l_bound:
             [0, 0, 0, 0, 0, 0, -1.9, -1.9, -1.9, 0, 0, 0, 0, 0, 0, -3, -3, -3]
-
         - name: "control_reg"
           type: "CostModelControl"
           weight: 5e-2
           reference: [0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
-          weights: [1, 1, 1, 1, 1, 1, 1000, 1000, 1000]
-
+          weights: [1, 1, 1, 1, 1, 1, 10, 10, 10]
     - name: "hover"
       duration: 0 #ms
       costs:
@@ -162,14 +155,12 @@ trajectory:
           reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
           weights: [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1]
-
         - name: "placement_base_link"
           type: "CostModelFramePlacement"
           weight: 2000
           link_name: "base_link"
-          position: [1, 0, 2]
+          position: [5, 0, 1.5]
           orientation: [0, 0, 0, 1] # x,y,z,w
-
         - name: "motion_base_link"
           type: "CostModelFrameVelocity"
           weight: 2000

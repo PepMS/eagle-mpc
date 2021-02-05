@@ -22,7 +22,8 @@ trajectory:
           activation: "ActivationModelWeightedQuadraticBarrier"
           weights: [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1]
           u_bound: [0, 0, 0, 0, 0, 0, 1.9, 1.9, 1.9, 0, 0, 0, 0, 0, 0, 3, 3, 3]
-          l_bound: [0, 0, 0, 0, 0, 0, -1.9, -1.9, -1.9, 0, 0, 0, 0, 0, 0, -3, -3, -3]
+          l_bound:
+            [0, 0, 0, 0, 0, 0, -1.9, -1.9, -1.9, 0, 0, 0, 0, 0, 0, -3, -3, -3]
 
         - name: "control_reg"
           type: "CostModelControl"
