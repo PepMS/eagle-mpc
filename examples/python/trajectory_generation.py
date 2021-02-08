@@ -1,6 +1,8 @@
 import sys
 import numpy as np
 
+import matplotlib.pyplot as plt
+
 import multicopter_mpc
 
 import pinocchio
@@ -12,7 +14,7 @@ from multicopter_mpc.utils.path import MULTICOPTER_MPC_MULTIROTOR_DIR, MULTICOPT
 WITHDISPLAY = 'display' in sys.argv
 WITHPLOT = 'plot' in sys.argv
 
-uav = example_robot_data.loadIris()
+uav = example_robot_data.load('iris')
 uav_model = uav.model
 
 # # UAV Params
@@ -21,12 +23,12 @@ mc_params.fill(MULTICOPTER_MPC_MULTIROTOR_DIR + "/iris.yaml")
 
 # Mission
 mission = multicopter_mpc.Mission(uav.nq + uav.nv)
-mission.fillWaypoints(MULTICOPTER_MPC_MISSION_DIR + "/loop.yaml")
+mission.fillWaypoints(MULTICOPTER_MPC_MISSION_DIR + "/hover.yaml")
 
 trajectory = multicopter_mpc.TrajectoryGenerator(uav_model, mc_params, mission)
 trajectory.loadParameters(MULTICOPTER_MPC_OCP_DIR + "/trajectory-generator.yaml")
 
-trajectory.createProblem(multicopter_mpc.SolverType.SolverTypeSquashBoxFDDP,
+trajectory.createProblem(multicopter_mpc.SolverType.SolverTypeBoxFDDP,
                          multicopter_mpc.IntegratorType.IntegratorTypeEuler, trajectory.dt)
 trajectory.setSolverCallbacks(True)
 
@@ -39,6 +41,15 @@ trajectory.setSolverCallbacks(True)
 trajectory.solver.th_stop = 1e-5
 # trajectory.solve(state_guess, control_guess)
 trajectory.solve()
+
+
+fig, axs = plt.subplots(4, 1)
+us = np.vstack(trajectory.controls).T
+for idx, ax in enumerate(axs):
+    ax.plot(us[idx, :])
+
+plt.show()
+
 
 state_trajectory = trajectory.states
 control_trajectory = trajectory.controls
