@@ -1,8 +1,8 @@
 platform:
   cf: 4.138394792004922e-06
-  cm: 6.991478005829954e-08 # (from Gazebo plugin: 1.6e-2*cf)
-  max_thrust: 20.6991 # (1100 rad/s)
-  min_thrust: 0.0 # (0 rad/s)
+  cm: 6.991478005829954e-08 
+  max_thrust: 20.6991 
+  min_thrust: 0.0
   base_link_name: "base_link"
   n_rotors: 6
   $rotors:
