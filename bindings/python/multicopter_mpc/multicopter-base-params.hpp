@@ -7,22 +7,23 @@
 
 #include <Eigen/Dense>
 
+#include "python/multicopter_mpc/utils/vector-converter.hpp"
+
 namespace multicopter_mpc {
 namespace python {
 
 namespace bp = boost::python;
 
 void exposeMultiCopterBaseParams() {
-  bp::register_ptr_to_python<boost::shared_ptr<MultiCopterBaseParams> >();
+  bp::register_ptr_to_python<boost::shared_ptr<MultiCopterBaseParams>>();
+
+  StdVectorPythonVisitor<pinocchio::SE3, std::allocator<pinocchio::SE3>, true>::expose("StdVec_Rotors");
 
   bp::class_<MultiCopterBaseParams>(
       "MultiCopterBaseParams",
       bp::init<const double&, const double&, const Eigen::MatrixXd&, const double&, const double&, const std::string&>(
           bp::args("self", "cf", "cm", "torque_force", "max_th", "min_th", "base_link_name"),
           "Initialize multicopter params"))
-      // .def(bp::init<double, double, Eigen::MatrixXd, double, double, Eigen::VectorXd, Eigen::VectorXd>(
-      //     bp::args("cf", "cm", "torque_force", "max_th", "min_th", "max torque", "min torque"),
-      //     "Initialize multicopter params"))
       .def(bp::init<>(bp::args("self"), "Default initialization"))
       .def("fill", &MultiCopterBaseParams::fill, bp::args("yaml_path"))
       .add_property("cf", bp::make_getter(&MultiCopterBaseParams::cf_, bp::return_value_policy<bp::return_by_value>()),
@@ -54,7 +55,9 @@ void exposeMultiCopterBaseParams() {
       .add_property(
           "min_torque",
           bp::make_getter(&MultiCopterBaseParams::min_torque_, bp::return_value_policy<bp::return_by_value>()),
-          bp::make_setter(&MultiCopterBaseParams::min_torque_), "min torque for arm joints");
+          bp::make_setter(&MultiCopterBaseParams::min_torque_), "min torque for arm joints")
+      .add_property("rotors_pose",
+                    bp::make_getter(&MultiCopterBaseParams::rotors_pose_, bp::return_value_policy<bp::return_by_value>()));
   // .add_property(
   //     "max_torque",
   //     bp::make_getter(&MultiCopterBaseParams::max_torque_, bp::return_value_policy<bp::return_by_value>()),
