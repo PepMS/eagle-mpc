@@ -36,7 +36,7 @@ SolverSbFDDP::SolverSbFDDP(boost::shared_ptr<crocoddyl::ShootingProblem> problem
 }
 SolverSbFDDP::~SolverSbFDDP() {}
 
-IntegratedActionModelTypes::Type SolverSbFDDP::getIntegratedModelType(
+IntegratedActionModelTypes SolverSbFDDP::getIntegratedModelType(
     boost::shared_ptr<crocoddyl::ActionModelAbstract> int_action) {
   euler_ = boost::dynamic_pointer_cast<crocoddyl::IntegratedActionModelEuler>(int_action);
   if (euler_ != nullptr) {
@@ -51,7 +51,7 @@ IntegratedActionModelTypes::Type SolverSbFDDP::getIntegratedModelType(
   return IntegratedActionModelTypes::NbIntegratedActionModelTypes;
 }
 
-DifferentialActionModelTypes::Type SolverSbFDDP::getDifferentialModelType(
+DifferentialActionModelTypes SolverSbFDDP::getDifferentialModelType(
     boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract> diff_action) {
   free_ = boost::dynamic_pointer_cast<crocoddyl::DifferentialActionModelFreeFwdDynamics>(diff_action);
   if (free_ != nullptr) {
@@ -96,7 +96,7 @@ boost::shared_ptr<crocoddyl::CostModelSum> SolverSbFDDP::getCostsFromDifferentia
   }
 }
 
-IntegratedActionModelTypes::Type SolverSbFDDP::getIntegratedDataType(
+IntegratedActionModelTypes SolverSbFDDP::getIntegratedDataType(
     boost::shared_ptr<crocoddyl::ActionDataAbstract> int_action) {
   euler_d_ = boost::dynamic_pointer_cast<crocoddyl::IntegratedActionDataEuler>(int_action);
   if (euler_d_ != nullptr) {
@@ -111,7 +111,7 @@ IntegratedActionModelTypes::Type SolverSbFDDP::getIntegratedDataType(
   return IntegratedActionModelTypes::NbIntegratedActionModelTypes;
 }
 
-DifferentialActionModelTypes::Type SolverSbFDDP::getDifferentialDataType(
+DifferentialActionModelTypes SolverSbFDDP::getDifferentialDataType(
     boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> diff_action) {
   free_d_ = boost::dynamic_pointer_cast<crocoddyl::DifferentialActionDataFreeFwdDynamics>(diff_action);
   if (free_d_ != nullptr) {

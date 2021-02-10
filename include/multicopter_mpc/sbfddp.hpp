@@ -48,17 +48,16 @@ class SolverSbFDDP : public crocoddyl::SolverFDDP {
   double tryStepDDP(const double& steplength = 1);
   void forwardPassDDP(const double& steplength);
 
-  IntegratedActionModelTypes::Type getIntegratedModelType(
-      boost::shared_ptr<crocoddyl::ActionModelAbstract> int_action);
-  DifferentialActionModelTypes::Type getDifferentialModelType(
+  IntegratedActionModelTypes getIntegratedModelType(boost::shared_ptr<crocoddyl::ActionModelAbstract> int_action);
+  DifferentialActionModelTypes getDifferentialModelType(
       boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract> diff_action);
   boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract> getDifferentialModelFromIntegrated(
       boost::shared_ptr<crocoddyl::ActionModelAbstract> int_action);
   boost::shared_ptr<crocoddyl::CostModelSum> getCostsFromDifferentialModel(
       boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract> diff_action);
 
-  IntegratedActionModelTypes::Type getIntegratedDataType(boost::shared_ptr<crocoddyl::ActionDataAbstract> int_action);
-  DifferentialActionModelTypes::Type getDifferentialDataType(
+  IntegratedActionModelTypes getIntegratedDataType(boost::shared_ptr<crocoddyl::ActionDataAbstract> int_action);
+  DifferentialActionModelTypes getDifferentialDataType(
       boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> diff_action);
   boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> getDifferentialDataFromIntegrated(
       boost::shared_ptr<crocoddyl::ActionDataAbstract> int_action);
