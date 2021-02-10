@@ -22,6 +22,8 @@ namespace multicopter_mpc {
 class Trajectory;
 class CostModelFactory;
 class ContactModelFactory;
+enum class CostModelTypes;
+enum class ContactModelTypes;
 
 class Stage : public boost::enable_shared_from_this<Stage> {
  public:
@@ -35,6 +37,8 @@ class Stage : public boost::enable_shared_from_this<Stage> {
   const boost::shared_ptr<crocoddyl::CostModelSum>& get_costs() const;
   const boost::shared_ptr<crocoddyl::ContactModelMultiple>& get_contacts() const;
 
+  const std::map<std::string, CostModelTypes>& get_cost_types() const;
+  const std::map<std::string, ContactModelTypes>& get_contact_types() const;
   const std::size_t& get_duration() const;
   const bool& get_is_terminal() const;
   const std::string& get_name() const;
@@ -45,6 +49,9 @@ class Stage : public boost::enable_shared_from_this<Stage> {
   boost::shared_ptr<crocoddyl::CostModelSum> costs_;
   boost::shared_ptr<crocoddyl::ContactModelMultiple> contacts_;
   boost::shared_ptr<Trajectory> trajectory_;
+
+  std::map<std::string, CostModelTypes> cost_types_;
+  std::map<std::string, ContactModelTypes> contact_types_;
 
   boost::shared_ptr<CostModelFactory> cost_factory_;
   boost::shared_ptr<ContactModelFactory> contact_factory_;

@@ -30,10 +30,11 @@ void Stage::autoSetup(const std::string& path_to_stages, const std::map<std::str
   try {
     std::vector<std::string> contact_names = converter<std::vector<std::string>>::convert(stage.at("contacts"));
     for (auto contact_name : contact_names) {
-      boost::shared_ptr<crocoddyl::ContactModelAbstract> contact =
-          contact_factory_->create(path_to_stage + "contacts/" + contact_name + "/", server, shared_from_this());
+      ContactModelTypes contact_type;
+      boost::shared_ptr<crocoddyl::ContactModelAbstract> contact = contact_factory_->create(
+          path_to_stage + "contacts/" + contact_name + "/", server, shared_from_this(), contact_type);
       contacts_->addContact(contact_name, contact);
-
+      contact_types_.insert({contact_name, contact_type});
       MMPC_INFO << "Stage '" << name_ << "': added contact '" << contact_name << "'";
     }
   } catch (const std::exception& e) {
@@ -50,9 +51,12 @@ void Stage::autoSetup(const std::string& path_to_stages, const std::map<std::str
       MMPC_WARN << e.what() << " Set to true.";
       active = true;
     }
+    CostModelTypes cost_type;
     boost::shared_ptr<crocoddyl::CostModelAbstract> cost =
-        cost_factory_->create(path_to_stage + "costs/" + cost_name + "/", server, shared_from_this());
+        cost_factory_->create(path_to_stage + "costs/" + cost_name + "/", server, shared_from_this(), cost_type);
     costs_->addCost(cost_name, cost, weight, active);
+    cost_types_.insert({cost_name, cost_type});
+
     MMPC_INFO << "Stage '" << name_ << "': added cost '" << cost_name << "'";
   }
 }
@@ -60,6 +64,9 @@ void Stage::autoSetup(const std::string& path_to_stages, const std::map<std::str
 const boost::shared_ptr<Trajectory>& Stage::get_trajectory() const { return trajectory_; }
 const boost::shared_ptr<crocoddyl::CostModelSum>& Stage::get_costs() const { return costs_; }
 const boost::shared_ptr<crocoddyl::ContactModelMultiple>& Stage::get_contacts() const { return contacts_; }
+
+const std::map<std::string, CostModelTypes>& Stage::get_cost_types() const { return cost_types_; }
+const std::map<std::string, ContactModelTypes>& Stage::get_contact_types() const { return contact_types_; }
 
 const std::size_t& Stage::get_duration() const { return duration_; }
 const std::string& Stage::get_name() const { return name_; };
