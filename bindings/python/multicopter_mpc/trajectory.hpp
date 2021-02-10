@@ -1,13 +1,13 @@
 #ifndef BINDINGS_PYTHON_MULTICOPTER_TRAJECTORY_HPP_
 #define BINDINGS_PYTHON_MULTICOPTER_TRAJECTORY_HPP_
 
-#include "multicopter_mpc/trajectory.hpp"
-
-#include "python/multicopter_mpc/utils/vector-converter.hpp"
-
+#include <Eigen/Dense>
+#include <pinocchio/fwd.hpp>
 #include "crocoddyl/multibody/states/multibody.hpp"
 
-#include <Eigen/Dense>
+#include "multicopter_mpc/trajectory.hpp"
+#include "python/multicopter_mpc/utils/vector-converter.hpp"
+
 
 namespace multicopter_mpc {
 namespace python {
@@ -19,6 +19,7 @@ void exposeTrajectory() {
       "StdVec_Stages");
 
   bp::register_ptr_to_python<boost::shared_ptr<crocoddyl::StateMultibody>>();
+  bp::register_ptr_to_python<boost::shared_ptr<pinocchio::Model>>();
 
   bp::class_<Trajectory, boost::shared_ptr<Trajectory>>("Trajectory", bp::no_init)
       .def("__init__", bp::make_constructor(&Trajectory::create))
