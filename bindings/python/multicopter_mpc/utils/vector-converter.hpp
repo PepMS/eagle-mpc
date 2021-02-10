@@ -13,12 +13,6 @@
 #include <vector>
 #include <boost/python/stl_iterator.hpp>
 #include <boost/python/to_python_converter.hpp>
-
-#include <Eigen/Dense>
-#include <vector>
-#include <boost/python/stl_iterator.hpp>
-#include <boost/python/to_python_converter.hpp>
-
 namespace multicopter_mpc {
 namespace python {
 

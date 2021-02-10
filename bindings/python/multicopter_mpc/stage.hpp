@@ -4,6 +4,7 @@
 #include "multicopter_mpc/stage.hpp"
 
 #include "python/multicopter_mpc/utils/vector-converter.hpp"
+#include "python/multicopter_mpc/utils/map-converter.hpp"
 
 #include <Eigen/Dense>
 
@@ -13,6 +14,25 @@ namespace python {
 namespace bp = boost::python;
 
 void exposeStage() {
+  bp::enum_<CostModelTypes>("CostModelTypes")
+      .value("CostModelState", CostModelTypes::CostModelState)
+      .value("CostModelControl", CostModelTypes::CostModelControl)
+      .value("CostModelFramePlacement", CostModelTypes::CostModelFramePlacement)
+      .value("CostModelFrameTranslation", CostModelTypes::CostModelFrameTranslation)
+      .value("CostModelFrameVelocity", CostModelTypes::CostModelFrameVelocity)
+      .value("CostModelContactFrictionCone", CostModelTypes::CostModelContactFrictionCone);
+
+  bp::enum_<ContactModelTypes>("ContactModelTypes")
+      .value("ContactModel2D", ContactModelTypes::ContactModel2D)
+      .value("ContactModel3D", ContactModelTypes::ContactModel3D)
+      .value("ContactModel6D", ContactModelTypes::ContactModel6D);
+
+  StdMapPythonVisitor<std::string, CostModelTypes, std::less<std::string>,
+                      std::allocator<std::pair<const std::string, CostModelTypes>>, true>::expose("StdMap_CostType");
+  StdMapPythonVisitor<std::string, ContactModelTypes, std::less<std::string>,
+                      std::allocator<std::pair<const std::string, ContactModelTypes>>,
+                      true>::expose("StdMap_ContactType");
+
   bp::class_<Stage, boost::shared_ptr<Stage>>("Stage", bp::no_init)
       .def("__init__", bp::make_constructor(&Stage::create))
       .add_property("trajectory",
@@ -31,7 +51,12 @@ void exposeStage() {
                     "true if the stage is terminal")
       .add_property("name", bp::make_function(&Stage::get_name, bp::return_value_policy<bp::return_by_value>()),
                     "name of the stage")
-
+      .add_property("cost_types",
+                    bp::make_function(&Stage::get_cost_types, bp::return_value_policy<bp::return_by_value>()),
+                    "existing cost types")
+      .add_property("contact_types",
+                    bp::make_function(&Stage::get_contact_types, bp::return_value_policy<bp::return_by_value>()),
+                    "existing contact types")
       .def("autoSetup", &Stage::autoSetup, bp::args("self", "stages", "server"));
 }
 }  // namespace python
