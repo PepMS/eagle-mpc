@@ -2,9 +2,6 @@
 
 namespace multicopter_mpc {
 
-const std::map<std::string, IntegratedActionModelTypes::Type> IntegratedActionModelTypes::all(
-    IntegratedActionModelTypes::init_all());
-
 IntegratedActionModelFactory::IntegratedActionModelFactory() {}
 
 IntegratedActionModelFactory::~IntegratedActionModelFactory() {}
@@ -15,7 +12,7 @@ boost::shared_ptr<crocoddyl::ActionModelAbstract> IntegratedActionModelFactory::
   boost::shared_ptr<crocoddyl::ActionModelAbstract> iam;
   double dt_s = double(dt) / 1000.;
 
-  switch (IntegratedActionModelTypes::all.at(integration_method)) {
+  switch (IntegratedActionModelTypes_map.at(integration_method)) {
     case IntegratedActionModelTypes::IntegratedActionModelEuler:
       iam = boost::make_shared<crocoddyl::IntegratedActionModelEuler>(diff_model, dt_s);
       break;

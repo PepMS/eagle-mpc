@@ -4,21 +4,19 @@
 
 namespace multicopter_mpc {
 
-const std::map<std::string, CostModelTypes::Type> CostModelTypes::all = CostModelTypes::init_all();
-
 CostModelFactory::CostModelFactory() { activation_factory_ = boost::make_shared<ActivationModelFactory>(); }
 CostModelFactory::~CostModelFactory() {}
 
 boost::shared_ptr<crocoddyl::CostModelAbstract> CostModelFactory::create(const std::string& path_to_cost,
                                                                          const ParamsServer& server,
-                                                                         const boost::shared_ptr<Stage>& stage) const {
+                                                                         const boost::shared_ptr<Stage>& stage,
+                                                                         CostModelTypes& cost_type) const {
   boost::shared_ptr<crocoddyl::CostModelAbstract> cost;
   boost::shared_ptr<crocoddyl::ActivationModelAbstract> activation;
   Eigen::VectorXd reference;
 
-  CostModelTypes::Type cost_type;
   try {
-    cost_type = CostModelTypes::all.at(server.getParam<std::string>(path_to_cost + "type"));
+    cost_type = CostModelTypes_map.at(server.getParam<std::string>(path_to_cost + "type"));
   } catch (const std::exception& e) {
     throw std::runtime_error("Cost " + server.getParam<std::string>(path_to_cost + "type") +
                              " not found. Please make sure the specified cost exists.");
@@ -44,6 +42,7 @@ boost::shared_ptr<crocoddyl::CostModelAbstract> CostModelFactory::create(const s
       cost =
           boost::make_shared<crocoddyl::CostModelState>(stage->get_trajectory()->get_robot_state(), activation,
                                                         reference, stage->get_trajectory()->get_actuation()->get_nu());
+      // cost_type = CostModelTypes::CostModelState;
     } break;
     case CostModelTypes::CostModelControl: {
       activation =

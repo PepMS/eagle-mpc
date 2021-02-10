@@ -24,22 +24,17 @@
 #include "multicopter_mpc/factory/activation.hpp"
 
 namespace multicopter_mpc {
+enum class ContactModelTypes { ContactModel2D, ContactModel3D, ContactModel6D, NbContactModelTypes };
 
-class Stage;
-
-struct ContactModelTypes {
-  enum Type { ContactModel2D, ContactModel3D, ContactModel6D, NbContactModelTypes };
-
-  static std::map<std::string, Type> init_all() {
-    std::map<std::string, Type> m;
-    m.clear();
-    m.insert({"ContactModel2D", ContactModel2D});
-    m.insert({"ContactModel3D", ContactModel3D});
-    m.insert({"ContactModel6D", ContactModel6D});
-    return m;
-  }
-  static const std::map<std::string, Type> all;
-};
+static std::map<std::string, ContactModelTypes> ContactModelTypes_init_map() {
+  std::map<std::string, ContactModelTypes> m;
+  m.clear();
+  m.insert({"ContactModel2D", ContactModelTypes::ContactModel2D});
+  m.insert({"ContactModel3D", ContactModelTypes::ContactModel3D});
+  m.insert({"ContactModel6D", ContactModelTypes::ContactModel6D});
+  return m;
+}
+static const std::map<std::string, ContactModelTypes> ContactModelTypes_map = ContactModelTypes_init_map();
 
 class ContactModelFactory {
  public:
@@ -50,7 +45,8 @@ class ContactModelFactory {
 
   boost::shared_ptr<crocoddyl::ContactModelAbstract> create(const std::string& path_to_contact,
                                                             const ParamsServer& server,
-                                                            const boost::shared_ptr<Stage>& stage) const;
+                                                            const boost::shared_ptr<Stage>& stage,
+                                                            ContactModelTypes& contact_type) const;
 };
 
 }  // namespace multicopter_mpc

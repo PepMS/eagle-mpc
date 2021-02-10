@@ -14,22 +14,23 @@ namespace multicopter_mpc {
 
 class Stage;
 
-struct DifferentialActionModelTypes {
-  enum Type {
-    DifferentialActionModelFreeFwdDynamics,
-    DifferentialActionModelContactFwdDynamics,
-    NbDifferentialActionModelTypes
-  };
-
-  static std::map<std::string, Type> init_all() {
-    std::map<std::string, Type> m;
-    m.clear();
-    m.insert({"DifferentialActionModelFreeFwdDynamics", DifferentialActionModelFreeFwdDynamics});
-    m.insert({"DifferentialActionModelContactFwdDynamics", DifferentialActionModelContactFwdDynamics});
-    return m;
-  }
-  static const std::map<std::string, Type> all;
+enum class DifferentialActionModelTypes {
+  DifferentialActionModelFreeFwdDynamics,
+  DifferentialActionModelContactFwdDynamics,
+  NbDifferentialActionModelTypes
 };
+
+static std::map<std::string, DifferentialActionModelTypes> DifferentialActionModelTypes_init_map() {
+  std::map<std::string, DifferentialActionModelTypes> m;
+  m.clear();
+  m.insert({"DifferentialActionModelFreeFwdDynamics",
+            DifferentialActionModelTypes::DifferentialActionModelFreeFwdDynamics});
+  m.insert({"DifferentialActionModelContactFwdDynamics",
+            DifferentialActionModelTypes::DifferentialActionModelContactFwdDynamics});
+  return m;
+}
+static const std::map<std::string, DifferentialActionModelTypes> DifferentialActionModelTypes_map =
+    DifferentialActionModelTypes_init_map();
 
 class DifferentialActionModelFactory {
  public:

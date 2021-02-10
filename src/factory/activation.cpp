@@ -4,8 +4,6 @@
 
 namespace multicopter_mpc {
 
-const std::map<std::string, ActivationModelTypes::Type> ActivationModelTypes::all(ActivationModelTypes::init_all());
-
 ActivationModelFactory::ActivationModelFactory() {}
 ActivationModelFactory::~ActivationModelFactory() {}
 
@@ -24,7 +22,7 @@ boost::shared_ptr<crocoddyl::ActivationModelAbstract> ActivationModelFactory::cr
 
   Eigen::VectorXd weights;
 
-  switch (ActivationModelTypes::all.at(name)) {
+  switch (ActivationModelTypes_map.at(name)) {
     case ActivationModelTypes::ActivationModelQuad: {
       activation = boost::make_shared<crocoddyl::ActivationModelQuad>(nr);
     } break;

@@ -32,33 +32,31 @@
 
 namespace multicopter_mpc {
 
-class Stage;
-
-struct CostModelTypes {
-  enum Type {
-    CostModelState,
-    CostModelControl,
-    CostModelFramePlacement,
-    CostModelFrameTranslation,
-    CostModelFrameVelocity,
-    CostModelContactFrictionCone,
-    NbCostModelTypes
-  };
-
-  static std::map<std::string, Type> init_all() {
-    std::map<std::string, Type> m;
-    m.clear();
-    m.insert({"CostModelState", CostModelState});
-    m.insert({"CostModelControl", CostModelControl});
-    m.insert({"CostModelFramePlacement", CostModelFramePlacement});
-    m.insert({"CostModelFrameTranslation", CostModelFrameTranslation});
-    m.insert({"CostModelFrameVelocity", CostModelFrameVelocity});
-    m.insert({"CostModelContactFrictionCone", CostModelContactFrictionCone});
-    return m;
-  }
-  static const std::map<std::string, Type> all;
+enum class CostModelTypes {
+  CostModelState,
+  CostModelControl,
+  CostModelFramePlacement,
+  CostModelFrameTranslation,
+  CostModelFrameVelocity,
+  CostModelContactFrictionCone,
+  NbCostModelTypes
 };
 
+static std::map<std::string, CostModelTypes> CostModelTypes_init_map() {
+  std::map<std::string, CostModelTypes> m;
+  m.clear();
+  m.insert({"CostModelState", CostModelTypes::CostModelState});
+  m.insert({"CostModelControl", CostModelTypes::CostModelControl});
+  m.insert({"CostModelFramePlacement", CostModelTypes::CostModelFramePlacement});
+  m.insert({"CostModelFrameTranslation", CostModelTypes::CostModelFrameTranslation});
+  m.insert({"CostModelFrameVelocity", CostModelTypes::CostModelFrameVelocity});
+  m.insert({"CostModelContactFrictionCone", CostModelTypes::CostModelContactFrictionCone});
+  return m;
+}
+
+static const std::map<std::string, CostModelTypes> CostModelTypes_map = CostModelTypes_init_map();
+
+class Stage;
 class CostModelFactory {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -67,7 +65,8 @@ class CostModelFactory {
   ~CostModelFactory();
 
   boost::shared_ptr<crocoddyl::CostModelAbstract> create(const std::string& path_to_cost, const ParamsServer& server,
-                                                         const boost::shared_ptr<Stage>& stage) const;
+                                                         const boost::shared_ptr<Stage>& stage,
+                                                         CostModelTypes& cost_type) const;
 
   boost::shared_ptr<ActivationModelFactory> activation_factory_;
 };

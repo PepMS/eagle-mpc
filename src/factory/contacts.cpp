@@ -4,16 +4,23 @@
 
 namespace multicopter_mpc {
 
-const std::map<std::string, ContactModelTypes::Type> ContactModelTypes::all = ContactModelTypes::init_all();
-
 ContactModelFactory::ContactModelFactory() {}
 ContactModelFactory::~ContactModelFactory() {}
 
-boost::shared_ptr<crocoddyl::ContactModelAbstract> ContactModelFactory::create(
-    const std::string& path_to_contact, const ParamsServer& server, const boost::shared_ptr<Stage>& stage) const {
+boost::shared_ptr<crocoddyl::ContactModelAbstract> ContactModelFactory::create(const std::string& path_to_contact,
+                                                                               const ParamsServer& server,
+                                                                               const boost::shared_ptr<Stage>& stage,
+                                                                               ContactModelTypes& contact_type) const {
   boost::shared_ptr<crocoddyl::ContactModelAbstract> contact;
 
-  switch (ContactModelTypes::all.at(server.getParam<std::string>(path_to_contact + "type"))) {
+  try {
+    contact_type = ContactModelTypes_map.at(server.getParam<std::string>(path_to_contact + "type"));
+  } catch (const std::exception& e) {
+    throw std::runtime_error("Contact " + server.getParam<std::string>(path_to_contact + "type") +
+                             "not found. Please make sure the specified contact exists.");
+  }
+
+  switch (contact_type) {
     case ContactModelTypes::ContactModel3D: {
       Eigen::Vector3d position =
           converter<Eigen::VectorXd>::convert(server.getParam<std::string>(path_to_contact + "position"));
@@ -65,10 +72,6 @@ boost::shared_ptr<crocoddyl::ContactModelAbstract> ContactModelFactory::create(
           boost::make_shared<crocoddyl::ContactModel6D>(stage->get_trajectory()->get_robot_state(), frame,
                                                         stage->get_trajectory()->get_actuation()->get_nu(), gains);
     } break;
-    default:
-      throw std::runtime_error("Cost " + server.getParam<std::string>(path_to_contact + "type") +
-                               "not found. Please make sure the specified cost exists.");
-      break;
   }
   return contact;
 }

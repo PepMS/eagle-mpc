@@ -2,12 +2,9 @@
 
 namespace multicopter_mpc {
 
-const std::map<std::string, DifferentialActionModelTypes::Type> DifferentialActionModelTypes::all(
-    DifferentialActionModelTypes::init_all());
+DifferentialActionModelFactory::DifferentialActionModelFactory() {}
 
-DifferentialActionModelFactory::DifferentialActionModelFactory(){}
-
-DifferentialActionModelFactory::~DifferentialActionModelFactory(){}
+DifferentialActionModelFactory::~DifferentialActionModelFactory() {}
 
 boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract> DifferentialActionModelFactory::create(
     const bool& is_contact, const bool& squash, const boost::shared_ptr<Stage>& stage) const {
