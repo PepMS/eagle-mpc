@@ -8,7 +8,6 @@
 #include "multicopter_mpc/trajectory.hpp"
 #include "python/multicopter_mpc/utils/vector-converter.hpp"
 
-
 namespace multicopter_mpc {
 namespace python {
 
@@ -27,6 +26,8 @@ void exposeTrajectory() {
                     bp::make_function(&Trajectory::get_stages, bp::return_value_policy<bp::return_by_value>()))
       .add_property("robot_model",
                     bp::make_function(&Trajectory::get_robot_model, bp::return_value_policy<bp::return_by_value>()))
+      .add_property("robot_model_path", bp::make_function(&Trajectory::get_robot_model_path,
+                                                          bp::return_value_policy<bp::return_by_value>()))
       .add_property("platform_params", bp::make_function(&Trajectory::get_platform_params,
                                                          bp::return_value_policy<bp::return_by_value>()))
       .add_property("state",
@@ -37,7 +38,10 @@ void exposeTrajectory() {
                                                           bp::return_value_policy<bp::return_by_value>()))
       .add_property("squash",
                     bp::make_function(&Trajectory::get_squash, bp::return_value_policy<bp::return_by_value>()))
-      .def("createProblem", &Trajectory::createProblem, bp::args("self", "dt", "squash", "x0", "integration_method"))
+      .add_property("initial_state",
+                    bp::make_function(&Trajectory::get_initial_state, bp::return_internal_reference<>()),
+                    &Trajectory::set_initial_state, "initial state")
+      .def("createProblem", &Trajectory::createProblem, bp::args("self", "dt", "squash", "integration_method"))
       .def("autoSetup", &Trajectory::autoSetup, bp::args("self", "server"));
 }
 }  // namespace python

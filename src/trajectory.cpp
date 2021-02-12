@@ -13,16 +13,15 @@ Trajectory::~Trajectory() { std::cout << "Inside trajectory constructor" << std:
 
 boost::shared_ptr<Trajectory> Trajectory::create() {
   boost::shared_ptr<Trajectory> trajectory(new Trajectory());
-  // boost::shared_ptr<Trajectory> trajectory = boost::make_shared<Trajectory>();
   return trajectory;
 }
 
 void Trajectory::autoSetup(const ParamsServer& server) {
   std::string prefix_robot = "robot/";
-  std::string model_urdf_path = server.getParam<std::string>(prefix_robot + "urdf");
+  robot_model_path_ = server.getParam<std::string>(prefix_robot + "urdf");
 
   pinocchio::Model model;
-  pinocchio::urdf::buildModel(model_urdf_path, pinocchio::JointModelFreeFlyer(), model);
+  pinocchio::urdf::buildModel(robot_model_path_, pinocchio::JointModelFreeFlyer(), model);
   robot_model_ = boost::make_shared<pinocchio::Model>(model);
 
   platform_params_ = boost::make_shared<MultiCopterBaseParams>();
@@ -36,6 +35,19 @@ void Trajectory::autoSetup(const ParamsServer& server) {
   actuation_squash_ =
       boost::make_shared<crocoddyl::ActuationSquashingModel>(actuation_, squash_, actuation_->get_nu());
 
+  try {
+    initial_state_ = server.getParam<Eigen::VectorXd>("initial_state");
+  } catch (const std::exception& e) {
+    initial_state_ = robot_state_->zero();
+    MMPC_WARN << "Initial state not found, set to the zero state";
+  }
+
+  if (initial_state_.size() != robot_state_->get_nx()) {
+    throw std::runtime_error("The specified initial state has wrong dimension. Should be " +
+                             std::to_string(robot_state_->get_nx()) + " and it has " +
+                             std::to_string(initial_state_.size()));
+  }
+
   auto stages_params = server.getParam<std::vector<std::map<std::string, std::string>>>("stages");
   for (auto stage_param : stages_params) {
     boost::shared_ptr<Stage> stage = Stage::create(shared_from_this());
@@ -48,7 +60,6 @@ void Trajectory::autoSetup(const ParamsServer& server) {
 }
 
 boost::shared_ptr<crocoddyl::ShootingProblem> Trajectory::createProblem(const std::size_t& dt, const bool& squash,
-                                                                        const Eigen::VectorXd& x0,
                                                                         const std::string& integration_method) const {
   MMPC_INFO << "Creating problem for the given stages. Contact Trajectory = " << has_contact_;
   std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> running_models;
@@ -72,13 +83,19 @@ boost::shared_ptr<crocoddyl::ShootingProblem> Trajectory::createProblem(const st
   }
 
   boost::shared_ptr<crocoddyl::ShootingProblem> problem =
-      boost::make_shared<crocoddyl::ShootingProblem>(x0, running_models, terminal_model);
+      boost::make_shared<crocoddyl::ShootingProblem>(initial_state_, running_models, terminal_model);
 
   return problem;
 }
 
+void Trajectory::set_initial_state(const Eigen::VectorXd& initial_state) {
+  assert(initial_state.size() == robot_state_->get_nx());
+  initial_state_ = initial_state;
+}
+
 const std::vector<boost::shared_ptr<Stage>>& Trajectory::get_stages() const { return stages_; }
 const boost::shared_ptr<pinocchio::Model>& Trajectory::get_robot_model() const { return robot_model_; }
+const std::string& Trajectory::get_robot_model_path() const { return robot_model_path_; }
 const boost::shared_ptr<MultiCopterBaseParams>& Trajectory::get_platform_params() const { return platform_params_; }
 const boost::shared_ptr<crocoddyl::StateMultibody>& Trajectory::get_robot_state() const { return robot_state_; }
 const boost::shared_ptr<crocoddyl::ActuationModelMultiCopterBase>& Trajectory::get_actuation() const {
@@ -88,5 +105,6 @@ const boost::shared_ptr<crocoddyl::SquashingModelSmoothSat>& Trajectory::get_squ
 const boost::shared_ptr<crocoddyl::ActuationSquashingModel>& Trajectory::get_actuation_squash() const {
   return actuation_squash_;
 }
+const Eigen::VectorXd& Trajectory::get_initial_state() const { return initial_state_; }
 
 }  // namespace multicopter_mpc

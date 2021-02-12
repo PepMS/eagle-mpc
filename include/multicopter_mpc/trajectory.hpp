@@ -34,22 +34,26 @@ class IntegratedActionModelFactory;
 
 class Trajectory : public boost::enable_shared_from_this<Trajectory> {
  public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
   ~Trajectory();
   static boost::shared_ptr<Trajectory> create();
 
   void autoSetup(const ParamsServer& server);
   boost::shared_ptr<crocoddyl::ShootingProblem> createProblem(const std::size_t& dt, const bool& squash,
-                                                              const Eigen::VectorXd& x0,
                                                               const std::string& integration_method) const;
 
-  const std::vector<boost::shared_ptr<Stage>>& get_stages() const;
+  void set_initial_state(const Eigen::VectorXd& initial_state);
 
+  const std::vector<boost::shared_ptr<Stage>>& get_stages() const;
   const boost::shared_ptr<pinocchio::Model>& get_robot_model() const;
   const boost::shared_ptr<MultiCopterBaseParams>& get_platform_params() const;
   const boost::shared_ptr<crocoddyl::StateMultibody>& get_robot_state() const;
   const boost::shared_ptr<crocoddyl::ActuationModelMultiCopterBase>& get_actuation() const;
   const boost::shared_ptr<crocoddyl::SquashingModelSmoothSat>& get_squash() const;
   const boost::shared_ptr<crocoddyl::ActuationSquashingModel>& get_actuation_squash() const;
+  const std::string& get_robot_model_path() const;
+  const Eigen::VectorXd& get_initial_state() const;
 
  private:
   Trajectory();
@@ -57,11 +61,14 @@ class Trajectory : public boost::enable_shared_from_this<Trajectory> {
 
   boost::shared_ptr<pinocchio::Model> robot_model_;
   boost::shared_ptr<MultiCopterBaseParams> platform_params_;
+  std::string robot_model_path_;
 
   boost::shared_ptr<crocoddyl::StateMultibody> robot_state_;
   boost::shared_ptr<crocoddyl::ActuationModelMultiCopterBase> actuation_;
   boost::shared_ptr<crocoddyl::SquashingModelSmoothSat> squash_;
   boost::shared_ptr<crocoddyl::ActuationSquashingModel> actuation_squash_;
+
+  Eigen::VectorXd initial_state_;
 
   bool has_contact_;
 
