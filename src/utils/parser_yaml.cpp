@@ -200,6 +200,10 @@ void ParserYaml::parseFirstLevel(std::string file) {
   }
   robot_ = n_trajectory["robot"];
 
+  if (n_trajectory["initial_state"].Type() == YAML::NodeType::Sequence) {
+    insertRegister("initial_state", parseAtomicNode(n_trajectory["initial_state"]));
+  }
+
   std::vector<std::map<std::string, std::string>> map_container;
   try {
     for (auto stage : n_trajectory["stages"]) {
