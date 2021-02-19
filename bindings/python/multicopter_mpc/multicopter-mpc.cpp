@@ -2,24 +2,24 @@
 #define PYTHON_BINDINGS
 
 #include <Eigen/Dense>
-#include "pinocchio/fwd.hpp"
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/map_indexing_suite.hpp>
 #include <boost/python/enum.hpp>
-#include <eigenpy/eigenpy.hpp>
 
-#include "python/multicopter_mpc/waypoint.hpp"
+#include <eigenpy/eigenpy.hpp>
+#include "pinocchio/fwd.hpp"
+
+#include "python/multicopter_mpc/utils/vector-converter.hpp"
+#include "python/multicopter_mpc/utils/map-converter.hpp"
+
 #include "python/multicopter_mpc/multicopter-base-params.hpp"
-#include "python/multicopter_mpc/mission.hpp"
-#include "python/multicopter_mpc/ocp/trajectory-generator.hpp"
-#include "python/multicopter_mpc/ocp-base.hpp"
-#include "python/multicopter_mpc/main-mpc.hpp"
-#include "python/multicopter_mpc/ocp/mpc-base.hpp"
 #include "python/multicopter_mpc/sbfddp.hpp"
+#include "python/multicopter_mpc/stage.hpp"
 #include "python/multicopter_mpc/trajectory.hpp"
 #include "python/multicopter_mpc/utils/parser_yaml.hpp"
 #include "python/multicopter_mpc/utils/params_server.hpp"
-#include "python/multicopter_mpc/stage.hpp"
+
+
 
 namespace multicopter_mpc {
 namespace python {
@@ -27,15 +27,7 @@ namespace python {
 namespace bp = boost::python;
 
 BOOST_PYTHON_MODULE(libmulticopter_mpc_pywrap) {
-  // eigenpy::enableEigenPy();
-
-  exposeWayPoint();
   exposeMultiCopterBaseParams();
-  exposeMission();
-  exposeOcpAbstract();
-  exposeTrajectoryGenerator();
-  exposeMpcMain();
-  exposeMpcAbstract();
   exposeSolverSbFDDP();
   exposeTrajectory();
   exposeParamsServer();

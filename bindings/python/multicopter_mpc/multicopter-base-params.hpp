@@ -1,13 +1,14 @@
 #ifndef BINDINGS_PYTHON_MULTICOPTER_MPC_MULTICOPTER_BASE_PARAMS_HPP_
 #define BINDINGS_PYTHON_MULTICOPTER_MPC_MULTICOPTER_BASE_PARAMS_HPP_
 
-#include "multicopter_mpc/multicopter-base-params.hpp"
 
 #include <boost/python.hpp>
-
 #include <Eigen/Dense>
 
+#include "pinocchio/spatial/se3.hpp"
+
 #include "python/multicopter_mpc/utils/vector-converter.hpp"
+#include "multicopter_mpc/multicopter-base-params.hpp"
 
 namespace multicopter_mpc {
 namespace python {
@@ -58,14 +59,6 @@ void exposeMultiCopterBaseParams() {
           bp::make_setter(&MultiCopterBaseParams::min_torque_), "min torque for arm joints")
       .add_property("rotors_pose",
                     bp::make_getter(&MultiCopterBaseParams::rotors_pose_, bp::return_value_policy<bp::return_by_value>()));
-  // .add_property(
-  //     "max_torque",
-  //     bp::make_getter(&MultiCopterBaseParams::max_torque_, bp::return_value_policy<bp::return_by_value>()),
-  //     bp::make_setter(&MultiCopterBaseParams::max_torque_), "max torque")
-  // .add_property(
-  //     "min_torque",
-  //     bp::make_getter(&MultiCopterBaseParams::min_torque_, bp::return_value_policy<bp::return_by_value>()),
-  //     bp::make_setter(&MultiCopterBaseParams::min_torque_), "min torque");
 }
 }  // namespace python
 }  // namespace multicopter_mpc

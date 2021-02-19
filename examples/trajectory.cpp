@@ -17,12 +17,10 @@
 int main(void) {
   multicopter_mpc::ParserYaml parser_aux(
       "/home/pepms/robotics/libraries/multicopter-mpc/config/trajectory/trajectory.yaml", "", true);
-  
   multicopter_mpc::ParamsServer server_aux(parser_aux.get_params());
   std::string trajectory_yaml = server_aux.getParam<std::string>("trajectory_file");
 
   boost::shared_ptr<multicopter_mpc::Trajectory> trajectory = multicopter_mpc::Trajectory::create();
-
   multicopter_mpc::ParserYaml parser(trajectory_yaml,
                                      "/home/pepms/robotics/libraries/multicopter-mpc/config/trajectory");
   multicopter_mpc::ParamsServer server(parser.get_params());
@@ -34,7 +32,7 @@ int main(void) {
   // boost::shared_ptr<crocoddyl::SolverBoxFDDP> solver = boost::make_shared<crocoddyl::SolverBoxFDDP>(problem);
 
   boost::shared_ptr<crocoddyl::ShootingProblem> problem =
-      trajectory->createProblem(10, true, trajectory->get_robot_state()->zero(), "IntegratedActionModelEuler");
+      trajectory->createProblem(10, true, "IntegratedActionModelEuler");
   boost::shared_ptr<multicopter_mpc::SolverSbFDDP> solver =
       boost::make_shared<multicopter_mpc::SolverSbFDDP>(problem, trajectory->get_squash());
 
@@ -43,4 +41,11 @@ int main(void) {
   solver->setCallbacks(callbacks);
 
   solver->solve(crocoddyl::DEFAULT_VECTOR, crocoddyl::DEFAULT_VECTOR);
+
+  for (std::size_t i = 0; i < trajectory->get_stages().size(); ++i) {
+    for (auto cost = trajectory->get_stages()[i]->get_cost_types().begin();
+         cost != trajectory->get_stages()[i]->get_cost_types().end(); ++cost) {
+      std::cout << "Cost with name: " << cost->first << ". Enum type: " << int(cost->second) << std::endl;
+    }
+  }
 }

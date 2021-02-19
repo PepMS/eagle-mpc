@@ -10,13 +10,13 @@ WITHDISPLAY = 'display' in sys.argv
 
 trajectory = multicopter_mpc.Trajectory()
 
-parserYaml = multicopter_mpc.ParserYaml("quad_loop.yaml",
+parserYaml = multicopter_mpc.ParserYaml("am_eagle_catch.yaml",
                                         "/home/pepms/robotics/libraries/multicopter-mpc/config/trajectory")
 paramsServer = multicopter_mpc.ParamsServer(parserYaml.params())
 
 trajectory.autoSetup(paramsServer)
 x0 = trajectory.state.zero()
-problem = trajectory.createProblem(10, True, x0, "IntegratedActionModelEuler")
+problem = trajectory.createProblem(10, True, "IntegratedActionModelEuler")
 solver = multicopter_mpc.SolverSbFDDP(problem, trajectory.squash)
 
 # problem = trajectory.createProblem(10, False, x0, "IntegratedActionModelEuler")
@@ -38,7 +38,7 @@ for idx, ax in enumerate(axs):
 plt.show()
 
 print (solver.xs[-1])
-uav = example_robot_data.load('iris')
+uav = example_robot_data.load('hexarotor_370')
 
 if WITHDISPLAY:
     display = crocoddyl.GepettoDisplay(uav)

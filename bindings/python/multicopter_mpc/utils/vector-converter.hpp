@@ -13,6 +13,8 @@
 #include <vector>
 #include <boost/python/stl_iterator.hpp>
 #include <boost/python/to_python_converter.hpp>
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+
 namespace multicopter_mpc {
 namespace python {
 

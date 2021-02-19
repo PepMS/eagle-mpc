@@ -2,7 +2,9 @@ trajectory:
   robot:
     name: "hexarotor_370_flying_arm_3"
     urdf: "/home/pepms/robotics/libraries/example-robot-data/robots/hexarotor_370_description/urdf/hexarotor_370_flying_arm_3.urdf"
-    follow: "/home/pepms/robotics/libraries/multicopter-mpc/config/multicopter/hexarotor370.yaml"
+    follow: "/home/pepms/robotics/libraries/multicopter-mpc/config/multicopter/hexacopter370.yaml"
+
+  initial_state: [-5, 0, 1.5, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
   stages:
     - name: "approach"
