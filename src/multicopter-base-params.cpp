@@ -1,6 +1,7 @@
 #include "multicopter_mpc/multicopter-base-params.hpp"
 
 #include "multicopter_mpc/utils/log.hpp"
+
 namespace multicopter_mpc {
 
 MultiCopterBaseParams::MultiCopterBaseParams() {}
@@ -13,63 +14,20 @@ MultiCopterBaseParams::MultiCopterBaseParams(const double& cf, const double& cm,
       max_thrust_(max_th),
       min_thrust_(min_th),
       base_link_name_(base_link) {}
-
-// MultiCopterBaseParams::MultiCopterBaseParams(double cf, double cm, Eigen::MatrixXd tau_f, double max_th, double
-// min_th,
-//                                              Eigen::VectorXd max_torque, Eigen::VectorXd min_torque,
-//                                              const std::string& base_link)
-//     : cf_(cf),
-//       cm_(cm),
-//       n_rotors_(tau_f.cols()),
-//       tau_f_(tau_f),
-//       max_thrust_(max_th),
-//       min_thrust_(min_th),
-//       max_torque_(max_torque),
-//       min_torque_(min_torque),
-//       base_link_name_(base_link) {}
 MultiCopterBaseParams::~MultiCopterBaseParams() {}
 
-void MultiCopterBaseParams::fill(const std::string& yaml_path) {
-  yaml_parser::ParserYAML yaml_params(yaml_path, "", true);
-  yaml_parser::ParamsServer server(yaml_params.getParams());
-
-  cf_ = server.getParam<double>("multirotor/cf");
-  cm_ = server.getParam<double>("multirotor/cm");
-  max_thrust_ = server.getParam<double>("multirotor/max_thrust");
-  min_thrust_ = server.getParam<double>("multirotor/min_thrust");
-  base_link_name_ = server.getParam<std::string>("multirotor/base_link_name");
-
-  std::vector<std::string> rotors = server.getParam<std::vector<std::string>>("multirotor/rotors");
-
-  n_rotors_ = rotors.size();
-  Eigen::MatrixXd S = Eigen::MatrixXd::Zero(6, n_rotors_);
-
-  for (int ii = 0; ii < n_rotors_; ++ii) {
-    std::map<std::string, double> rotor = yaml_parser::converter<std::map<std::string, double>>::convert(rotors[ii]);
-
-    double x = rotor["x"];
-    double y = rotor["y"];
-    double z = rotor["z"];
-
-    S(2, ii) = 1.0;            // Thrust
-    S(3, ii) = y;              // Mx
-    S(4, ii) = -x;             // My
-    S(5, ii) = z * cm_ / cf_;  // Mz
-  }
-  tau_f_ = S;
-}
-
-void MultiCopterBaseParams::autoSetup(const std::string& path_to_platform, const ParamsServer& server) {
+void MultiCopterBaseParams::autoSetup(const std::string& path_to_platform,
+                                      const boost::shared_ptr<ParamsServer>& server) {
   try {
-    cf_ = server.getParam<double>(path_to_platform + "cf");
-    cm_ = server.getParam<double>(path_to_platform + "cm");
-    max_thrust_ = server.getParam<double>(path_to_platform + "max_thrust");
-    min_thrust_ = server.getParam<double>(path_to_platform + "min_thrust");
+    cf_ = server->getParam<double>(path_to_platform + "cf");
+    cm_ = server->getParam<double>(path_to_platform + "cm");
+    max_thrust_ = server->getParam<double>(path_to_platform + "max_thrust");
+    min_thrust_ = server->getParam<double>(path_to_platform + "min_thrust");
     // This parameter may be removed after refactor
-    base_link_name_ = server.getParam<std::string>(path_to_platform + "base_link_name");
-    n_rotors_ = server.getParam<int>(path_to_platform + "n_rotors");
-    MMPC_INFO << "Number of rotors: " <<  n_rotors_;
-    std::vector<std::string> rotors = server.getParam<std::vector<std::string>>(path_to_platform + "rotors");
+    base_link_name_ = server->getParam<std::string>(path_to_platform + "base_link_name");
+    n_rotors_ = server->getParam<int>(path_to_platform + "n_rotors");
+    MMPC_INFO << "Number of rotors: " << n_rotors_;
+    std::vector<std::string> rotors = server->getParam<std::vector<std::string>>(path_to_platform + "rotors");
     if (n_rotors_ != rotors.size()) {
       throw std::runtime_error("'n_rotors' field and the number of rotor poses specified must be the same.");
     }
@@ -78,7 +36,7 @@ void MultiCopterBaseParams::autoSetup(const std::string& path_to_platform, const
     Eigen::Quaterniond orientation;
     for (int i = 0; i < n_rotors_; ++i) {
       std::map<std::string, Eigen::VectorXd> rotor =
-          yaml_parser::converter<std::map<std::string, Eigen::VectorXd>>::convert(rotors[i]);
+          converter<std::map<std::string, Eigen::VectorXd>>::convert(rotors[i]);
 
       translation = rotor["translation"];
       orientation = Eigen::Quaterniond(Eigen::Vector4d(rotor["orientation"]));
@@ -107,7 +65,8 @@ void MultiCopterBaseParams::autoSetup(const std::string& path_to_platform, const
   }
 }
 
-void MultiCopterBaseParams::autoSetup(const std::string& path_to_platform, const ParamsServer& server,
+void MultiCopterBaseParams::autoSetup(const std::string& path_to_platform,
+                                      const boost::shared_ptr<ParamsServer>& server,
                                       const boost::shared_ptr<pinocchio::Model>& robot_model) {
   autoSetup(path_to_platform, server);
   setControlLimits(robot_model);

@@ -1,7 +1,6 @@
 #ifndef BINDINGS_PYTHON_MULTICOPTER_MPC_MULTICOPTER_BASE_PARAMS_HPP_
 #define BINDINGS_PYTHON_MULTICOPTER_MPC_MULTICOPTER_BASE_PARAMS_HPP_
 
-
 #include <boost/python.hpp>
 #include <Eigen/Dense>
 
@@ -20,13 +19,17 @@ void exposeMultiCopterBaseParams() {
 
   StdVectorPythonVisitor<pinocchio::SE3, std::allocator<pinocchio::SE3>, true>::expose("StdVec_Rotors");
 
+  void (MultiCopterBaseParams::*auto_setup)(const std::string&, const boost::shared_ptr<ParamsServer>&,
+                                            const boost::shared_ptr<pinocchio::Model>&) =
+      &MultiCopterBaseParams::autoSetup;
+
   bp::class_<MultiCopterBaseParams>(
       "MultiCopterBaseParams",
       bp::init<const double&, const double&, const Eigen::MatrixXd&, const double&, const double&, const std::string&>(
           bp::args("self", "cf", "cm", "torque_force", "max_th", "min_th", "base_link_name"),
           "Initialize multicopter params"))
       .def(bp::init<>(bp::args("self"), "Default initialization"))
-      .def("fill", &MultiCopterBaseParams::fill, bp::args("yaml_path"))
+      .def("autoSetup", auto_setup, bp::args("self", "a", "b", "c"))
       .add_property("cf", bp::make_getter(&MultiCopterBaseParams::cf_, bp::return_value_policy<bp::return_by_value>()),
                     bp::make_setter(&MultiCopterBaseParams::cf_), "cf coefficient")
       .add_property("cm", bp::make_getter(&MultiCopterBaseParams::cm_, bp::return_value_policy<bp::return_by_value>()),
@@ -57,8 +60,14 @@ void exposeMultiCopterBaseParams() {
           "min_torque",
           bp::make_getter(&MultiCopterBaseParams::min_torque_, bp::return_value_policy<bp::return_by_value>()),
           bp::make_setter(&MultiCopterBaseParams::min_torque_), "min torque for arm joints")
-      .add_property("rotors_pose",
-                    bp::make_getter(&MultiCopterBaseParams::rotors_pose_, bp::return_value_policy<bp::return_by_value>()));
+      .add_property("u_lb",
+                    bp::make_getter(&MultiCopterBaseParams::u_lb, bp::return_value_policy<bp::return_by_value>()),
+                    bp::make_setter(&MultiCopterBaseParams::u_lb), "u_lb")
+      .add_property("u_ub",
+                    bp::make_getter(&MultiCopterBaseParams::u_ub, bp::return_value_policy<bp::return_by_value>()),
+                    bp::make_setter(&MultiCopterBaseParams::u_ub), "u_ub")
+      .add_property("rotors_pose", bp::make_getter(&MultiCopterBaseParams::rotors_pose_,
+                                                   bp::return_value_policy<bp::return_by_value>()));
 }
 }  // namespace python
 }  // namespace multicopter_mpc
