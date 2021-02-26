@@ -42,7 +42,7 @@ void exposeTrajectory() {
                     bp::make_function(&Trajectory::get_initial_state, bp::return_internal_reference<>()),
                     &Trajectory::set_initial_state, "initial state")
       .def("createProblem", &Trajectory::createProblem, bp::args("self", "dt", "squash", "integration_method"))
-      .def("autoSetup", &Trajectory::autoSetup, bp::args("self", "server"));
+      .def("autoSetup", &Trajectory::autoSetup, bp::args("self", "yaml_path"));
 }
 }  // namespace python
 }  // namespace multicopter_mpc
