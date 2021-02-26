@@ -16,16 +16,19 @@ boost::shared_ptr<Trajectory> Trajectory::create() {
   return trajectory;
 }
 
-void Trajectory::autoSetup(const ParamsServer& server) {
+void Trajectory::autoSetup(const std::string& yaml_path) {
+  ParserYaml parser(yaml_path);
+  params_server_ = boost::make_shared<ParamsServer>(parser.get_params());
+
   std::string prefix_robot = "robot/";
-  robot_model_path_ = server.getParam<std::string>(prefix_robot + "urdf");
+  robot_model_path_ = params_server_->getParam<std::string>(prefix_robot + "urdf");
 
   pinocchio::Model model;
   pinocchio::urdf::buildModel(robot_model_path_, pinocchio::JointModelFreeFlyer(), model);
   robot_model_ = boost::make_shared<pinocchio::Model>(model);
 
   platform_params_ = boost::make_shared<MultiCopterBaseParams>();
-  platform_params_->autoSetup("robot/platform/", server, robot_model_);
+  platform_params_->autoSetup("robot/platform/", params_server_, robot_model_);
 
   robot_state_ = boost::make_shared<crocoddyl::StateMultibody>(robot_model_);
   actuation_ = boost::make_shared<crocoddyl::ActuationModelMultiCopterBase>(robot_state_, platform_params_->n_rotors_,
@@ -36,7 +39,7 @@ void Trajectory::autoSetup(const ParamsServer& server) {
       boost::make_shared<crocoddyl::ActuationSquashingModel>(actuation_, squash_, actuation_->get_nu());
 
   try {
-    initial_state_ = server.getParam<Eigen::VectorXd>("initial_state");
+    initial_state_ = params_server_->getParam<Eigen::VectorXd>("initial_state");
   } catch (const std::exception& e) {
     initial_state_ = robot_state_->zero();
     MMPC_WARN << "Initial state not found, set to the zero state";
@@ -48,10 +51,10 @@ void Trajectory::autoSetup(const ParamsServer& server) {
                              std::to_string(initial_state_.size()));
   }
 
-  auto stages_params = server.getParam<std::vector<std::map<std::string, std::string>>>("stages");
+  auto stages_params = params_server_->getParam<std::vector<std::map<std::string, std::string>>>("stages");
   for (auto stage_param : stages_params) {
     boost::shared_ptr<Stage> stage = Stage::create(shared_from_this());
-    stage->autoSetup("stages/", stage_param, server);
+    stage->autoSetup("stages/", stage_param, params_server_);
     stages_.push_back(stage);
     if (!has_contact_) {
       has_contact_ = stage->get_contacts()->get_contacts().size() != 0;
@@ -71,7 +74,13 @@ boost::shared_ptr<crocoddyl::ShootingProblem> Trajectory::createProblem(const st
 
     boost::shared_ptr<crocoddyl::ActionModelAbstract> iam = iam_factory_->create(integration_method, dt, dam);
 
-    std::size_t n_knots = (*stage)->get_duration() / dt;
+    std::size_t n_knots;
+    if ((*stage)->get_duration() / dt == 0 && std::next(stage) != stages_.end()) {
+      n_knots = 1;
+    } else {
+      n_knots = (*stage)->get_duration() / dt;
+    }
+
     MMPC_INFO << "Create Problem; " << (*stage)->get_name() << ", # Knots: " << n_knots;
 
     iam->set_u_lb(platform_params_->u_lb);
@@ -106,5 +115,6 @@ const boost::shared_ptr<crocoddyl::ActuationSquashingModel>& Trajectory::get_act
   return actuation_squash_;
 }
 const Eigen::VectorXd& Trajectory::get_initial_state() const { return initial_state_; }
+const boost::shared_ptr<ParamsServer>& Trajectory::get_params_server() const { return params_server_; }
 
 }  // namespace multicopter_mpc
