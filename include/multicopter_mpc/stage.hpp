@@ -31,7 +31,7 @@ class Stage : public boost::enable_shared_from_this<Stage> {
   ~Stage();
 
   void autoSetup(const std::string& path_to_stages, const std::map<std::string, std::string>& stage,
-                 const ParamsServer& server);
+                 const boost::shared_ptr<ParamsServer>& server);
 
   const boost::shared_ptr<Trajectory>& get_trajectory() const;
   const boost::shared_ptr<crocoddyl::CostModelSum>& get_costs() const;
@@ -40,6 +40,7 @@ class Stage : public boost::enable_shared_from_this<Stage> {
   const std::map<std::string, CostModelTypes>& get_cost_types() const;
   const std::map<std::string, ContactModelTypes>& get_contact_types() const;
   const std::size_t& get_duration() const;
+  const bool& get_is_transition() const;
   const bool& get_is_terminal() const;
   const std::string& get_name() const;
 
@@ -60,6 +61,7 @@ class Stage : public boost::enable_shared_from_this<Stage> {
   std::size_t duration_;
 
   bool is_terminal_;
+  bool is_transition_;
 };
 
 }  // namespace multicopter_mpc

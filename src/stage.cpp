@@ -21,11 +21,12 @@ boost::shared_ptr<Stage> Stage::create(const boost::shared_ptr<Trajectory>& traj
 }
 
 void Stage::autoSetup(const std::string& path_to_stages, const std::map<std::string, std::string>& stage,
-                      const ParamsServer& server) {
+                      const boost::shared_ptr<ParamsServer>& server) {
   std::string path_to_stage = path_to_stages + stage.at("name") + "/";
 
   name_ = stage.at("name");
   duration_ = std::size_t(converter<int>::convert(stage.at("duration")));
+  is_transition_ = converter<bool>::convert(stage.at("transition"));
 
   try {
     std::vector<std::string> contact_names = converter<std::vector<std::string>>::convert(stage.at("contacts"));
@@ -43,17 +44,18 @@ void Stage::autoSetup(const std::string& path_to_stages, const std::map<std::str
 
   std::vector<std::string> cost_names = converter<std::vector<std::string>>::convert(stage.at("costs"));
   for (auto cost_name : cost_names) {
-    double weight = server.getParam<double>(path_to_stage + "costs/" + cost_name + "/weight");
+    double weight = server->getParam<double>(path_to_stage + "costs/" + cost_name + "/weight");
     double active = false;
     try {
-      server.getParam<double>(path_to_stage + "costs/" + cost_name + "/active");
+      server->getParam<double>(path_to_stage + "costs/" + cost_name + "/active");
     } catch (const std::exception& e) {
       MMPC_WARN << e.what() << " Set to true.";
       active = true;
     }
     CostModelTypes cost_type;
     boost::shared_ptr<crocoddyl::CostModelAbstract> cost =
-        cost_factory_->create(path_to_stage + "costs/" + cost_name + "/", server, shared_from_this(), cost_type);
+        cost_factory_->create(path_to_stage + "costs/" + cost_name + "/", server, trajectory_->get_robot_state(),
+                              trajectory_->get_actuation()->get_nu(), cost_type);
     costs_->addCost(cost_name, cost, weight, active);
     cost_types_.insert({cost_name, cost_type});
 
@@ -71,5 +73,6 @@ const std::map<std::string, ContactModelTypes>& Stage::get_contact_types() const
 const std::size_t& Stage::get_duration() const { return duration_; }
 const std::string& Stage::get_name() const { return name_; };
 const bool& Stage::get_is_terminal() const { return is_terminal_; }
+const bool& Stage::get_is_transition() const { return is_transition_; }
 
 }  // namespace multicopter_mpc

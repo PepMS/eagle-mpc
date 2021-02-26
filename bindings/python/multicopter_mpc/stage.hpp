@@ -49,6 +49,9 @@ void exposeStage() {
       .add_property("is_terminal",
                     bp::make_function(&Stage::get_is_terminal, bp::return_value_policy<bp::return_by_value>()),
                     "true if the stage is terminal")
+      .add_property("is_transition",
+                    bp::make_function(&Stage::get_is_transition, bp::return_value_policy<bp::return_by_value>()),
+                    "true if the stage is terminal")
       .add_property("name", bp::make_function(&Stage::get_name, bp::return_value_policy<bp::return_by_value>()),
                     "name of the stage")
       .add_property("cost_types",
