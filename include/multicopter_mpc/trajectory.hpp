@@ -24,6 +24,7 @@
 #include "multicopter_mpc/multicopter-base-params.hpp"
 #include "multicopter_mpc/stage.hpp"
 #include "multicopter_mpc/utils/params_server.hpp"
+#include "multicopter_mpc/utils/parser_yaml.hpp"
 #include "multicopter_mpc/factory/diff-action.hpp"
 #include "multicopter_mpc/factory/int-action.hpp"
 
@@ -39,7 +40,7 @@ class Trajectory : public boost::enable_shared_from_this<Trajectory> {
   ~Trajectory();
   static boost::shared_ptr<Trajectory> create();
 
-  void autoSetup(const ParamsServer& server);
+  void autoSetup(const std::string& yaml_path);
   boost::shared_ptr<crocoddyl::ShootingProblem> createProblem(const std::size_t& dt, const bool& squash,
                                                               const std::string& integration_method) const;
 
@@ -54,6 +55,7 @@ class Trajectory : public boost::enable_shared_from_this<Trajectory> {
   const boost::shared_ptr<crocoddyl::ActuationSquashingModel>& get_actuation_squash() const;
   const std::string& get_robot_model_path() const;
   const Eigen::VectorXd& get_initial_state() const;
+  const boost::shared_ptr<ParamsServer>& get_params_server() const;
 
  private:
   Trajectory();
@@ -71,6 +73,8 @@ class Trajectory : public boost::enable_shared_from_this<Trajectory> {
   Eigen::VectorXd initial_state_;
 
   bool has_contact_;
+
+  boost::shared_ptr<ParamsServer> params_server_;
 
   boost::shared_ptr<DifferentialActionModelFactory> dam_factory_;
   boost::shared_ptr<IntegratedActionModelFactory> iam_factory_;

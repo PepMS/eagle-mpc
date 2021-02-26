@@ -21,11 +21,7 @@ int main(void) {
   std::string trajectory_yaml = server_aux.getParam<std::string>("trajectory_file");
 
   boost::shared_ptr<multicopter_mpc::Trajectory> trajectory = multicopter_mpc::Trajectory::create();
-  multicopter_mpc::ParserYaml parser(trajectory_yaml,
-                                     "/home/pepms/robotics/libraries/multicopter-mpc/config/trajectory");
-  multicopter_mpc::ParamsServer server(parser.get_params());
-
-  trajectory->autoSetup(server);
+  trajectory->autoSetup("/home/pepms/robotics/libraries/multicopter-mpc/config/trajectory/" + trajectory_yaml);
 
   // boost::shared_ptr<crocoddyl::ShootingProblem> problem =
   //     trajectory->createProblem(10, false, trajectory->get_robot_state()->zero(), "IntegratedActionModelEuler");

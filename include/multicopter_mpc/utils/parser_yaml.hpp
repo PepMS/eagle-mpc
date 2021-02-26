@@ -21,6 +21,9 @@ class ParserYaml {
   void parse();
   void parseFreely();
   void parseFirstLevel(std::string file_path);
+  void parseTrajectory(const YAML::Node& node, const std::string& file);
+  void parseMpcController(const YAML::Node& node, const std::string& file);
+  void parseMpcController();
 
   YAML::Node loadYaml(std::string file_path);
 
@@ -38,6 +41,7 @@ class ParserYaml {
   struct ParamsInitStage {
     std::string name;
     std::string duration;
+    std::string transition;
     YAML::Node stage;
     YAML::Node costs;
     YAML::Node contacts;
@@ -52,6 +56,8 @@ class ParserYaml {
   std::string active_name_;
 
   YAML::Node robot_;
+
+  bool is_trajectory_;
 };
 }  // namespace multicopter_mpc
 
