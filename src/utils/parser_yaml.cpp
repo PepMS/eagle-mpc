@@ -169,17 +169,20 @@ void ParserYaml::parse() {
     walkTreeRecursive(robot_, tags, "robot");
   }
 
-  for (auto stage : stages_) {
-    std::vector<std::string> tags = std::vector<std::string>();
-    insertRegister("stages/" + stage.name + "/name", stage.name);
-    insertRegister("stages/" + stage.name + "/duration", stage.duration);
-    for (auto cost : stage.costs) {
-      tags.push_back("stages/" + stage.name + "/costs");
-      walkTreeRecursive(cost, tags, "stages/" + stage.name + "/costs/" + cost["name"].Scalar());
-    }
-    for (auto contact : stage.contacts) {
-      tags.push_back("stages/" + stage.name + "/contacts");
-      walkTreeRecursive(contact, tags, "stages/" + stage.name + "/contacts/" + contact["name"].Scalar());
+  if (is_trajectory_) {
+    for (auto stage : stages_) {
+      std::vector<std::string> tags = std::vector<std::string>();
+      insertRegister("stages/" + stage.name + "/name", stage.name);
+      insertRegister("stages/" + stage.name + "/duration", stage.duration);
+      insertRegister("stages/" + stage.name + "/transition", stage.transition);
+      for (auto cost : stage.costs) {
+        tags.push_back("stages/" + stage.name + "/costs");
+        walkTreeRecursive(cost, tags, "stages/" + stage.name + "/costs/" + cost["name"].Scalar());
+      }
+      for (auto contact : stage.contacts) {
+        tags.push_back("stages/" + stage.name + "/contacts");
+        walkTreeRecursive(contact, tags, "stages/" + stage.name + "/contacts/" + contact["name"].Scalar());
+      }
     }
   }
 }
@@ -190,25 +193,48 @@ void ParserYaml::parseFirstLevel(std::string file) {
 
   YAML::Node n_trajectory = n["trajectory"];
   if (n_trajectory.Type() != YAML::NodeType::Map) {
-    throw std::runtime_error("Could not find trajectory node. Please make sure that your YAML file " +
-                             generatePath(file) + " starts with 'trajectory:'");
+    YAML::Node n_mpc_controller = n["mpc_controller"];
+    if (n_mpc_controller.Type() != YAML::NodeType::Map) {
+      throw std::runtime_error(
+          "Could not find neither a trajectory or an mpc_controller node. Please make sure that your YAML file " +
+          generatePath(file) + " starts with 'trajectory:' or 'mpc_controller'");
+    } else {
+      is_trajectory_ = false;
+      parseMpcController(n_mpc_controller, file);
+    }
+  } else {
+    is_trajectory_ = true;
+    parseTrajectory(n_trajectory, file);
   }
+}
 
-  if (n_trajectory["robot"].Type() != YAML::NodeType::Map) {
+void ParserYaml::parseTrajectory(const YAML::Node& node, const std::string& file) {
+  if (node["robot"].Type() != YAML::NodeType::Map) {
     throw std::runtime_error("Could not find robot node. Please make sure that the 'trajectory' node in YAML file " +
                              generatePath(file) + " has a 'robot' entry");
   }
-  robot_ = n_trajectory["robot"];
 
-  if (n_trajectory["initial_state"].Type() == YAML::NodeType::Sequence) {
-    insertRegister("initial_state", parseAtomicNode(n_trajectory["initial_state"]));
+  robot_ = node["robot"];
+
+  try {
+    if (node["initial_state"].Type() == YAML::NodeType::Sequence) {
+      insertRegister("initial_state", parseAtomicNode(node["initial_state"]));
+    }
+  } catch (const std::exception& e) {
   }
 
   std::vector<std::map<std::string, std::string>> map_container;
   try {
-    for (auto stage : n_trajectory["stages"]) {
-      ParamsInitStage p_stage = {stage["name"].Scalar(), stage["duration"].Scalar(), stage, stage["costs"],
-                                 stage["contacts"]};
+    for (auto stage : node["stages"]) {
+      std::string transition;
+      if (stage["transition"].Type() == YAML::NodeType::Undefined) {
+        transition = "false";
+      } else {
+        transition = "true";
+      }
+
+      ParamsInitStage p_stage = {stage["name"].Scalar(), stage["duration"].Scalar(), transition, stage,
+                                 stage["costs"],         stage["contacts"]};
 
       stages_.push_back(p_stage);
 
@@ -226,11 +252,13 @@ void ParserYaml::parseFirstLevel(std::string file) {
         map_container.push_back(
             std::map<std::string, std::string>({{"name", stage["name"].Scalar()},
                                                 {"duration", stage["duration"].Scalar()},
+                                                {"transition", transition},
                                                 {"costs", converter<std::string>::convert(cost_container)}}));
       } else {
         map_container.push_back(
             std::map<std::string, std::string>({{"name", stage["name"].Scalar()},
                                                 {"duration", stage["duration"].Scalar()},
+                                                {"transition", transition},
                                                 {"costs", converter<std::string>::convert(cost_container)},
                                                 {"contacts", converter<std::string>::convert(contact_container)}}));
       }
@@ -239,6 +267,22 @@ void ParserYaml::parseFirstLevel(std::string file) {
   } catch (const std::exception& e) {
     throw std::runtime_error("Error parsing stages @" + generatePath(file) +
                              ". Make sure every stage has a name, duration and, at least, one cost.");
+  }
+}
+
+void ParserYaml::parseMpcController(const YAML::Node& node, const std::string& file) {
+  if (node["robot"].Type() != YAML::NodeType::Map) {
+    throw std::runtime_error("Could not find robot node. Please make sure that the 'trajectory' node in YAML file " +
+                             generatePath(file) + " has a 'robot' entry");
+  }
+
+  std::string mpc_prefix = "mpc_controller/";
+  for (auto n = node.begin(); n != node.end(); ++n) {
+    if (n->first.as<std::string>() == "robot") {
+      robot_ = n->second.as<YAML::Node>();
+    } else {
+      insertRegister(mpc_prefix + n->first.as<std::string>(), parseAtomicNode(n->second));
+    }
   }
 }
 
