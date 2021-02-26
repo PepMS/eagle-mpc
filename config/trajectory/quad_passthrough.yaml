@@ -3,7 +3,7 @@ trajectory:
     name: "iris"
     urdf: "/home/pepms/robotics/libraries/example-robot-data/robots/iris_description/robots/iris_simple.urdf"
     follow: "/home/pepms/robotics/libraries/multicopter-mpc/config/multicopter/iris.yaml"
-
+  
   stages:
     - name: "nav_wp1"
       duration: 2000 #ms

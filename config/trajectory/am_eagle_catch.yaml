@@ -9,6 +9,7 @@ trajectory:
   stages:
     - name: "approach"
       duration: 1510 #ms
+      transition: true
       costs:
         - name: "state_reg"
           type: "CostModelState"
@@ -36,7 +37,7 @@ trajectory:
           weights: [1, 1, 1, 1, 1, 1, 10, 10, 10]
 
     - name: "pre_grasp"
-      duration: 10 #ms
+      duration: 0 #ms
       costs:
         - name: "state_reg"
           type: "CostModelState"
@@ -125,6 +126,7 @@ trajectory:
           gains: [0, 0]
     - name: "move_away"
       duration: 1510 #ms
+      transition: true
       costs:
         - name: "state_reg"
           type: "CostModelState"
