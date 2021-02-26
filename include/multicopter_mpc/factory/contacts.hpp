@@ -44,7 +44,7 @@ class ContactModelFactory {
   ~ContactModelFactory();
 
   boost::shared_ptr<crocoddyl::ContactModelAbstract> create(const std::string& path_to_contact,
-                                                            const ParamsServer& server,
+                                                            const boost::shared_ptr<ParamsServer>& server,
                                                             const boost::shared_ptr<Stage>& stage,
                                                             ContactModelTypes& contact_type) const;
 };

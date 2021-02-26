@@ -7,14 +7,13 @@ namespace multicopter_mpc {
 ActivationModelFactory::ActivationModelFactory() {}
 ActivationModelFactory::~ActivationModelFactory() {}
 
-boost::shared_ptr<crocoddyl::ActivationModelAbstract> ActivationModelFactory::create(const std::string& path_to_cost,
-                                                                                     const ParamsServer& server,
-                                                                                     const std::size_t& nr) const {
+boost::shared_ptr<crocoddyl::ActivationModelAbstract> ActivationModelFactory::create(
+    const std::string& path_to_cost, const boost::shared_ptr<ParamsServer>& server, const std::size_t& nr) const {
   boost::shared_ptr<crocoddyl::ActivationModelAbstract> activation;
 
   std::string name;
   try {
-    name = server.getParam<std::string>(path_to_cost + "activation");
+    name = server->getParam<std::string>(path_to_cost + "activation");
   } catch (const std::exception& e) {
     MMPC_WARN << e.what() << " Set to quadratic activation.";
     name = "ActivationModelQuad";
@@ -28,7 +27,7 @@ boost::shared_ptr<crocoddyl::ActivationModelAbstract> ActivationModelFactory::cr
     } break;
     case ActivationModelTypes::ActivationModelWeightedQuad: {
       try {
-        weights = converter<Eigen::VectorXd>::convert(server.getParam<std::string>(path_to_cost + "weights"));
+        weights = converter<Eigen::VectorXd>::convert(server->getParam<std::string>(path_to_cost + "weights"));
       } catch (const std::exception& e) {
         MMPC_WARN << e.what() << " Set to a unitary vector";
         weights = Eigen::VectorXd::Ones(nr);
@@ -42,8 +41,8 @@ boost::shared_ptr<crocoddyl::ActivationModelAbstract> ActivationModelFactory::cr
       activation = boost::make_shared<crocoddyl::ActivationModelWeightedQuad>(weights);
     } break;
     case ActivationModelTypes::ActivationModelQuadraticBarrier: {
-      Eigen::VectorXd lb = converter<Eigen::VectorXd>::convert(server.getParam<std::string>(path_to_cost + "l_bound"));
-      Eigen::VectorXd ub = converter<Eigen::VectorXd>::convert(server.getParam<std::string>(path_to_cost + "u_bound"));
+      Eigen::VectorXd lb = converter<Eigen::VectorXd>::convert(server->getParam<std::string>(path_to_cost + "l_bound"));
+      Eigen::VectorXd ub = converter<Eigen::VectorXd>::convert(server->getParam<std::string>(path_to_cost + "u_bound"));
 
       if (lb.size() != nr) {
         throw std::runtime_error("l_bound vector @" + path_to_cost + "l_bound has dimension " +
@@ -57,10 +56,10 @@ boost::shared_ptr<crocoddyl::ActivationModelAbstract> ActivationModelFactory::cr
       activation = boost::make_shared<crocoddyl::ActivationModelQuadraticBarrier>(bounds);
     } break;
     case ActivationModelTypes::ActivationModelWeightedQuadraticBarrier: {
-      Eigen::VectorXd lb = converter<Eigen::VectorXd>::convert(server.getParam<std::string>(path_to_cost + "l_bound"));
-      Eigen::VectorXd ub = converter<Eigen::VectorXd>::convert(server.getParam<std::string>(path_to_cost + "u_bound"));
+      Eigen::VectorXd lb = converter<Eigen::VectorXd>::convert(server->getParam<std::string>(path_to_cost + "l_bound"));
+      Eigen::VectorXd ub = converter<Eigen::VectorXd>::convert(server->getParam<std::string>(path_to_cost + "u_bound"));
       try {
-        weights = converter<Eigen::VectorXd>::convert(server.getParam<std::string>(path_to_cost + "weights"));
+        weights = converter<Eigen::VectorXd>::convert(server->getParam<std::string>(path_to_cost + "weights"));
       } catch (const std::exception& e) {
         MMPC_WARN << e.what() << " Set to a unitary vector";
         weights = Eigen::VectorXd::Ones(nr);

@@ -59,7 +59,7 @@ class ActivationModelFactory {
   ~ActivationModelFactory();
 
   boost::shared_ptr<crocoddyl::ActivationModelAbstract> create(const std::string& path_to_cost,
-                                                               const ParamsServer& server,
+                                                               const boost::shared_ptr<ParamsServer>& server,
                                                                const std::size_t& nr) const;
 };
 

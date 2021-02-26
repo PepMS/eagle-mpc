@@ -64,9 +64,10 @@ class CostModelFactory {
   explicit CostModelFactory();
   ~CostModelFactory();
 
-  boost::shared_ptr<crocoddyl::CostModelAbstract> create(const std::string& path_to_cost, const ParamsServer& server,
-                                                         const boost::shared_ptr<Stage>& stage,
-                                                         CostModelTypes& cost_type) const;
+  boost::shared_ptr<crocoddyl::CostModelAbstract> create(const std::string& path_to_cost,
+                                                         const boost::shared_ptr<ParamsServer>& server,
+                                                         const boost::shared_ptr<crocoddyl::StateMultibody>& state,
+                                                         const std::size_t& nu, CostModelTypes& cost_type) const;
 
   boost::shared_ptr<ActivationModelFactory> activation_factory_;
 };
