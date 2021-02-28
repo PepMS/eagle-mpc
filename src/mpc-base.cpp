@@ -9,6 +9,9 @@ MpcAbstract::MpcAbstract(const std::string& yaml_path) {
   initializeRobotObjects();
   loadParams();
 
+  int_models_.reserve(params_.knots);
+  dif_models_.reserve(params_.knots);
+
   cost_factory_ = boost::make_shared<CostModelFactory>();
 }
 
@@ -30,8 +33,6 @@ void MpcAbstract::initializeRobotObjects() {
                                                                    actuation_->get_nu());
   actuation_squash_ =
       boost::make_shared<crocoddyl::ActuationSquashingModel>(actuation_, squash_, actuation_->get_nu());
-
-  costs_ = boost::make_shared<crocoddyl::CostModelSum>(robot_state_, actuation_->get_nu());
 }
 
 void MpcAbstract::loadParams() {
@@ -57,6 +58,12 @@ const boost::shared_ptr<crocoddyl::SquashingModelSmoothSat>& MpcAbstract::get_sq
 const boost::shared_ptr<crocoddyl::ActuationSquashingModel>& MpcAbstract::get_actuation_squash() const {
   return actuation_squash_;
 }
-const boost::shared_ptr<crocoddyl::CostModelSum>& MpcAbstract::get_costs() const { return costs_; };
+const std::vector<boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract>>& MpcAbstract::get_dif_models() const {
+  return dif_models_;
+}
+const std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>>& MpcAbstract::get_int_models() const {
+  return int_models_;
+}
+const boost::shared_ptr<crocoddyl::ShootingProblem>& MpcAbstract::get_problem() const { return problem_; }
 
 }  // namespace multicopter_mpc

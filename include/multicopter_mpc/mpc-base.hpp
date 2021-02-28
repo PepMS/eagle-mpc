@@ -4,12 +4,13 @@
 #include "pinocchio/multibody/model.hpp"
 #include "pinocchio/parsers/urdf.hpp"
 
+#include "crocoddyl/core/action-base.hpp"
 #include "crocoddyl/core/actuation/squashing/smooth-sat.hpp"
 #include "crocoddyl/core/actuation/actuation-squashing.hpp"
 #include "crocoddyl/core/costs/cost-sum.hpp"
 #include "crocoddyl/core/cost-base.hpp"
-#include "crocoddyl/core/optctrl/shooting.hpp"
 #include "crocoddyl/core/diff-action-base.hpp"
+#include "crocoddyl/core/optctrl/shooting.hpp"
 
 #include "crocoddyl/multibody/actuations/multicopter-base.hpp"
 #include "crocoddyl/multibody/states/multibody.hpp"
@@ -44,7 +45,9 @@ class MpcAbstract {
   const boost::shared_ptr<crocoddyl::ActuationModelMultiCopterBase>& get_actuation() const;
   const boost::shared_ptr<crocoddyl::SquashingModelSmoothSat>& get_squash() const;
   const boost::shared_ptr<crocoddyl::ActuationSquashingModel>& get_actuation_squash() const;
-  const boost::shared_ptr<crocoddyl::CostModelSum>& get_costs() const;
+  const std::vector<boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract>>& get_dif_models() const;
+  const std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>>& get_int_models() const;
+  const boost::shared_ptr<crocoddyl::ShootingProblem>& get_problem() const;
   const std::string& get_robot_model_path() const;
 
  protected:
@@ -57,7 +60,9 @@ class MpcAbstract {
   boost::shared_ptr<crocoddyl::SquashingModelSmoothSat> squash_;
   boost::shared_ptr<crocoddyl::ActuationSquashingModel> actuation_squash_;
 
-  boost::shared_ptr<crocoddyl::CostModelSum> costs_;
+  std::vector<boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract>> dif_models_;
+  std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> int_models_;
+  boost::shared_ptr<crocoddyl::ShootingProblem> problem_;
 
   boost::shared_ptr<CostModelFactory> cost_factory_;
   boost::shared_ptr<ParamsServer> params_server_;
