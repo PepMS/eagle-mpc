@@ -12,6 +12,6 @@ solver = multicopter_mpc.SolverSbFDDP(problem, trajectory.squash)
 solver.setCallbacks([crocoddyl.CallbackVerbose()])
 solver.solve([], [], maxiter=400)
 
-mpcController = CarrotMpc(trajectory)
+mpcController = CarrotMpc(trajectory, "/home/pepms/robotics/libraries/multicopter-mpc/config/mpc/mpc.yaml")
 
 print()
