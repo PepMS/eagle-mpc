@@ -34,11 +34,20 @@ static const std::map<std::string, SolverTypes> SolverTypes_map = SolverTypes_in
 
 class MpcAbstract {
  public:
-  MpcAbstract(const boost::shared_ptr<ParamsServer>& server);
+  MpcAbstract(const std::string& yaml_path);
 
- protected:
   virtual void createProblem() = 0;
 
+  const boost::shared_ptr<pinocchio::Model>& get_robot_model() const;
+  const boost::shared_ptr<MultiCopterBaseParams>& get_platform_params() const;
+  const boost::shared_ptr<crocoddyl::StateMultibody>& get_robot_state() const;
+  const boost::shared_ptr<crocoddyl::ActuationModelMultiCopterBase>& get_actuation() const;
+  const boost::shared_ptr<crocoddyl::SquashingModelSmoothSat>& get_squash() const;
+  const boost::shared_ptr<crocoddyl::ActuationSquashingModel>& get_actuation_squash() const;
+  const boost::shared_ptr<crocoddyl::CostModelSum>& get_costs() const;
+  const std::string& get_robot_model_path() const;
+
+ protected:
   boost::shared_ptr<pinocchio::Model> robot_model_;
   boost::shared_ptr<MultiCopterBaseParams> platform_params_;
   std::string robot_model_path_;
@@ -51,6 +60,7 @@ class MpcAbstract {
   boost::shared_ptr<crocoddyl::CostModelSum> costs_;
 
   boost::shared_ptr<CostModelFactory> cost_factory_;
+  boost::shared_ptr<ParamsServer> params_server_;
 
   struct MpcParams {
     IntegratedActionModelTypes integrator_type;
@@ -60,8 +70,8 @@ class MpcAbstract {
   } params_;
 
  private:
-  void initializeRobotObjects(const boost::shared_ptr<ParamsServer>& server);
-  void loadParams(const boost::shared_ptr<ParamsServer>& server);
+  void initializeRobotObjects();
+  void loadParams();
 };
 }  // namespace multicopter_mpc
 
