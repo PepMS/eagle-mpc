@@ -23,7 +23,7 @@ class MpcAbstract_wrap : public MpcAbstract, public bp::wrapper<MpcAbstract> {
   // using MpcAbstract::costs_;
 
   // using MpcAbstract::createProblem;
-  void createProblem() { this->get_override("createProblem")();}
+  void createProblem() { this->get_override("createProblem")(); }
 };
 
 void exposeMpcAbstract() {
@@ -45,9 +45,16 @@ void exposeMpcAbstract() {
                                                           bp::return_value_policy<bp::return_by_value>()))
       .add_property("squash",
                     bp::make_function(&MpcAbstract_wrap::get_squash, bp::return_value_policy<bp::return_by_value>()))
-      .add_property("costs",
-                    bp::make_function(&MpcAbstract_wrap::get_costs, bp::return_value_policy<bp::return_by_value>()),
-                    "cost model sum for the given stage");
+      .add_property(
+          "dif_models",
+          bp::make_function(&MpcAbstract_wrap::get_dif_models, bp::return_value_policy<bp::return_by_value>()),
+          "return the problem differential models")
+      .add_property(
+          "int_models",
+          bp::make_function(&MpcAbstract_wrap::get_int_models, bp::return_value_policy<bp::return_by_value>()),
+          "return the problem integrated models")
+      .add_property("problem",
+                    bp::make_function(&MpcAbstract_wrap::get_problem, bp::return_value_policy<bp::return_by_value>()));
 }
 
 }  // namespace python
