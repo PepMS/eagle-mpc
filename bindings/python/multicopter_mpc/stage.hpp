@@ -46,6 +46,9 @@ void exposeStage() {
       .add_property("duration",
                     bp::make_function(&Stage::get_duration, bp::return_value_policy<bp::return_by_value>()),
                     "duration of the stage in ms")
+      .add_property("t_ini",
+                    bp::make_function(&Stage::get_t_ini, bp::return_value_policy<bp::return_by_value>()),
+                    "initial time of the stage in ms")
       .add_property("is_terminal",
                     bp::make_function(&Stage::get_is_terminal, bp::return_value_policy<bp::return_by_value>()),
                     "true if the stage is terminal")

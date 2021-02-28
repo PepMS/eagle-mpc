@@ -21,11 +21,12 @@ boost::shared_ptr<Stage> Stage::create(const boost::shared_ptr<Trajectory>& traj
 }
 
 void Stage::autoSetup(const std::string& path_to_stages, const std::map<std::string, std::string>& stage,
-                      const boost::shared_ptr<ParamsServer>& server) {
+                      const boost::shared_ptr<ParamsServer>& server, std::size_t t_ini) {
   std::string path_to_stage = path_to_stages + stage.at("name") + "/";
 
   name_ = stage.at("name");
   duration_ = std::size_t(converter<int>::convert(stage.at("duration")));
+  t_ini_ = t_ini;
   is_transition_ = converter<bool>::convert(stage.at("transition"));
 
   try {
@@ -69,8 +70,8 @@ const boost::shared_ptr<crocoddyl::ContactModelMultiple>& Stage::get_contacts() 
 
 const std::map<std::string, CostModelTypes>& Stage::get_cost_types() const { return cost_types_; }
 const std::map<std::string, ContactModelTypes>& Stage::get_contact_types() const { return contact_types_; }
-
 const std::size_t& Stage::get_duration() const { return duration_; }
+const std::size_t& Stage::get_t_ini() const { return t_ini_; }
 const std::string& Stage::get_name() const { return name_; };
 const bool& Stage::get_is_terminal() const { return is_terminal_; }
 const bool& Stage::get_is_transition() const { return is_transition_; }
