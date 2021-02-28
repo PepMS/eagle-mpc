@@ -1,10 +1,12 @@
 #include "multicopter_mpc/mpc-controllers/carrot-mpc.hpp"
 
+#include "multicopter_mpc/utils/log.hpp"
+
 namespace multicopter_mpc {
 
 CarrotMpc::CarrotMpc(const boost::shared_ptr<Trajectory>& trajectory,
-                     const boost::shared_ptr<ParamsServer>& params_server)
-    : MpcAbstract(params_server), trajectory_(trajectory) {
+                     const std::string& yaml_path)
+    : MpcAbstract(yaml_path), trajectory_(trajectory) {
   createProblem();
 }
 
@@ -24,4 +26,7 @@ void CarrotMpc::createProblem() {
     }
   }
 }
+
+const boost::shared_ptr<Trajectory>& CarrotMpc::get_trajectory() const { return trajectory_; }
+
 }  // namespace multicopter_mpc

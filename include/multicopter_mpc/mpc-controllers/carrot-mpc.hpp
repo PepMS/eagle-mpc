@@ -9,12 +9,13 @@ namespace multicopter_mpc {
 
 class CarrotMpc : public MpcAbstract {
  public:
-  CarrotMpc(const boost::shared_ptr<Trajectory>& trajectory, const boost::shared_ptr<ParamsServer>& params_server);
+  CarrotMpc(const boost::shared_ptr<Trajectory>& trajectory, const std::string& yaml_path);
 
   virtual ~CarrotMpc();
 
-  virtual void createProblem() override;
+  void createProblem() override;
 
+  const boost::shared_ptr<Trajectory>& get_trajectory() const;
  private:
   boost::shared_ptr<Trajectory> trajectory_;
 };
