@@ -1,58 +1,48 @@
-import numpy as np
-import math
-import copy
+# import numpy as np
+# import math
+# import copy
+import bisect
 
-import pinocchio
-import crocoddyl
-import example_robot_data
-
+# import pinocchio
+# import crocoddyl
+# import example_robot_data
 
 import multicopter_mpc
-
 
 
 def rev_enumerate(lname):
     return reversed(list(enumerate(lname)))
 
 
-class MpcBase():
-    def __init__(self):
-        parser = multicopter_mpc.ParserYaml("mpc.yaml", "/home/pepms/robotics/libraries/multicopter-mpc/config/mpc")
-        self.server = multicopter_mpc.ParamsServer(parser.get_params())
+class CarrotMpc(multicopter_mpc.CarrotMpc):
+    def __init__(self, trajectory, yaml_path):
+        multicopter_mpc.CarrotMpc.__init__(self, trajectory, yaml_path)
 
-        self.initializeRobotObjects()
-        self.loadParams()
-
-    def initializeRobotObjects(self):
-        self.robot = example_robot_data.load('hexarotor_370_flying_arm_3')
-        self.rModel = self.robot.model
-        self.platformParams = multicopter_mpc.MultiCopterBaseParams()
-        self.platformParams.autoSetup("robot/platform/", self.server, self.rModel)
-        self.rState = crocoddyl.StateMultibody(self.rModel)
-        self.actuation = crocoddyl.ActuationModelMultiCopterBase(self.rState, self.platformParams.n_rotors,
-                                                                 self.platformParams.tau_f)
-        self.squash = crocoddyl.SquashingModelSmoothSat(self.platformParams.u_lb, self.platformParams.u_ub,
-                                                        self.actuation.nu)
-        self.actSquash = crocoddyl.ActuationSquashingModel(self.actuation, self.squash, self.actuation.nu)
-
-    def loadParams(self):
-        self.integrationMethod = "Euler"
-        self.solver = "SbFDDP"
-        self.knots = 100
-        self.iters = 4
-
-
-class CarrotMpc(MpcBase):
-    def __init__(self, trajectory):
-        MpcBase.__init__(self)
-        self.trajectory = trajectory
-        self.createProblem()
-
-    def createProblem(self):
-        self.costs = crocoddyl.CostModelSum(self.rState, self.actuation.nu)
+    def createProblem_(self):
+        self.ts_ini = []
         for stage in self.trajectory.stages:
-            for cost_name in stage.costs.costs.todict():
-                cost = copy.deepcopy(stage.costs.costs[cost_name])
-                cost_cp = stage.costs.costs[cost_name]
-                print()
+            self.ts_ini.append(stage.t_ini)
 
+    def updateProblem(self, currentTime):
+        idxStage = self.getActiveStage(currentTime)
+        for idx, dam in enumerate(self.dif_models):
+            dt = 10
+            nodeTime = currentTime + idx * dt
+            idxStage = self.getActiveStage(nodeTime, idxStage)
+            nameStage = self.trajectory.stages[idxStage].name
+            for cost in dam.costs.costs.todict():
+                if cost[:len(nameStage)] == nameStage:
+                    dam.costs.costs[cost].active = True
+                else:
+                    dam.costs.costs[cost].active = False
+            # activate terminal node with reference
+
+    def getActiveStage(self, time, lastStage=None):
+        if lastStage is not None:
+            stage = bisect.bisect_right(self.ts_ini, time) - 1
+            if stage == lastStage + 2:
+                stage -= 1
+        else:
+            stage = bisect.bisect_right(self.ts_ini, time) - 1
+
+        return stage
