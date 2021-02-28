@@ -56,6 +56,7 @@ class Trajectory : public boost::enable_shared_from_this<Trajectory> {
   const std::string& get_robot_model_path() const;
   const Eigen::VectorXd& get_initial_state() const;
   const boost::shared_ptr<ParamsServer>& get_params_server() const;
+  const bool& get_has_contact() const;
 
  private:
   Trajectory();

@@ -52,9 +52,20 @@ void Trajectory::autoSetup(const std::string& yaml_path) {
   }
 
   auto stages_params = params_server_->getParam<std::vector<std::map<std::string, std::string>>>("stages");
+  std::size_t time = 0;
+  bool stage_duration_0 = false;
   for (auto stage_param : stages_params) {
     boost::shared_ptr<Stage> stage = Stage::create(shared_from_this());
-    stage->autoSetup("stages/", stage_param, params_server_);
+    stage->autoSetup("stages/", stage_param, params_server_, time);
+    if (!stage_duration_0 && stage->get_duration() == 0) {
+      stage_duration_0 = true;
+    } else if (stage_duration_0 && stage->get_duration() == 0) {
+      throw std::runtime_error(
+          "Two consecutives stages cannot have duration 0. Please, unify them in a single stage.");
+    } else {
+      stage_duration_0 = false;
+    }
+    time += stage->get_duration();
     stages_.push_back(stage);
     if (!has_contact_) {
       has_contact_ = stage->get_contacts()->get_contacts().size() != 0;
@@ -116,5 +127,6 @@ const boost::shared_ptr<crocoddyl::ActuationSquashingModel>& Trajectory::get_act
 }
 const Eigen::VectorXd& Trajectory::get_initial_state() const { return initial_state_; }
 const boost::shared_ptr<ParamsServer>& Trajectory::get_params_server() const { return params_server_; }
+const bool& Trajectory::get_has_contact() const { return has_contact_; }
 
 }  // namespace multicopter_mpc
