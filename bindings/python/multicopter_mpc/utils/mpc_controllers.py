@@ -33,7 +33,7 @@ class CarrotMpc(multicopter_mpc.CarrotMpc):
             idxStage = self.getActiveStage(nodeTime, idxStage)
             nameStage = self.trajectory.stages[idxStage].name
             for cost in dam.costs.costs.todict():
-                if cost[:len(nameStage)] == nameStage:
+                if cost[:len(nameStage)] == nameStage or cost == 'barrier':
                     dam.costs.costs[cost].active = True
                 else:
                     dam.costs.costs[cost].active = False
@@ -56,8 +56,7 @@ class CarrotMpc(multicopter_mpc.CarrotMpc):
     def getStateRef(self, time):
         nq = self.robot_model.nq
         idxState = bisect.bisect_right(self.t_ref, time)
-        alpha = 0.5
-        # alpha = (time - self.t_ref[idxState - 1]) / (self.t_ref[idxState] - self.t_ref[idxState - 1])
+        alpha = (time - self.t_ref[idxState - 1]) / (self.t_ref[idxState] - self.t_ref[idxState - 1])
         q0 = self.state_ref[idxState - 1][:nq]
         q1 = self.state_ref[idxState][:nq]
         qref = pinocchio.interpolate(self.robot_model, q0, q1, alpha)
