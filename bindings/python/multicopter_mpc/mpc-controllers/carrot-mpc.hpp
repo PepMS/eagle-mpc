@@ -10,11 +10,15 @@ namespace bp = boost::python;
 
 void exposeCarrotMpc() {
   bp::register_ptr_to_python<boost::shared_ptr<CarrotMpc>>();
-  bp::class_<CarrotMpc, bp::bases<MpcAbstract>>("CarrotMpc",
-                                                bp::init<const boost::shared_ptr<Trajectory>&, const std::string&>())
+  bp::class_<CarrotMpc, bp::bases<MpcAbstract>>(
+      "CarrotMpc", bp::init<const boost::shared_ptr<Trajectory>&, const std::vector<Eigen::VectorXd>&,
+                            const std::size_t, const std::string&>())
       .def("createProblem", &CarrotMpc::createProblem, bp::args("self"))
       .add_property("trajectory",
-                    bp::make_function(&CarrotMpc::get_trajectory, bp::return_value_policy<bp::return_by_value>()));
+                    bp::make_function(&CarrotMpc::get_trajectory, bp::return_value_policy<bp::return_by_value>()))
+      .add_property("state_ref",
+                    bp::make_function(&CarrotMpc::get_state_ref, bp::return_value_policy<bp::copy_const_reference>()),
+                    "state trajectory");
 }
 
 }  // namespace python
