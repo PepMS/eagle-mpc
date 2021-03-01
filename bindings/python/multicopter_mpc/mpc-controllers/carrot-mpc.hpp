@@ -18,7 +18,10 @@ void exposeCarrotMpc() {
                     bp::make_function(&CarrotMpc::get_trajectory, bp::return_value_policy<bp::return_by_value>()))
       .add_property("state_ref",
                     bp::make_function(&CarrotMpc::get_state_ref, bp::return_value_policy<bp::copy_const_reference>()),
-                    "state trajectory");
+                    "state trajectory")
+      .add_property("t_ref",
+                    bp::make_function(&CarrotMpc::get_t_ref, bp::return_value_policy<bp::copy_const_reference>()),
+                    "time trajectory");
 }
 
 }  // namespace python

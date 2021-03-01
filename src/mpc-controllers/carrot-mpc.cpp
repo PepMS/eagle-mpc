@@ -11,7 +11,9 @@ CarrotMpc::CarrotMpc(const boost::shared_ptr<Trajectory>& trajectory, const std:
 
   state_ref_ = std::vector<Eigen::VectorXd>(state_ref.size(), robot_state_->zero());
   std::copy(state_ref.begin(), state_ref.end(), state_ref_.begin());
-  dt_ref_ = dt_ref;
+  for (std::size_t i = 0; i < state_ref_.size(); ++i) {
+    t_ref_.push_back(dt_ref*i);
+  }
 }
 
 CarrotMpc::~CarrotMpc() {}
@@ -92,4 +94,6 @@ boost::shared_ptr<crocoddyl::CostModelSum> CarrotMpc::createCosts() const {
 
 const boost::shared_ptr<Trajectory>& CarrotMpc::get_trajectory() const { return trajectory_; }
 const std::vector<Eigen::VectorXd>& CarrotMpc::get_state_ref() const { return state_ref_; }
+const std::vector<std::size_t>& CarrotMpc::get_t_ref() const { return t_ref_; }
+
 }  // namespace multicopter_mpc

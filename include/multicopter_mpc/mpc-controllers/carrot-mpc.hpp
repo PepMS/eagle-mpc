@@ -21,13 +21,14 @@ class CarrotMpc : public MpcAbstract {
 
   const boost::shared_ptr<Trajectory>& get_trajectory() const;
   const std::vector<Eigen::VectorXd>& get_state_ref() const;
+  const std::vector<std::size_t>& get_t_ref() const;
 
  private:
   boost::shared_ptr<crocoddyl::CostModelSum> createCosts() const;
 
   boost::shared_ptr<Trajectory> trajectory_;
   std::vector<Eigen::VectorXd> state_ref_;
-  std::size_t dt_ref_;
+  std::vector<size_t> t_ref_;
 };
 }  // namespace multicopter_mpc
 
