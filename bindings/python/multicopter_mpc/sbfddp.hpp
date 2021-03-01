@@ -26,7 +26,7 @@ void exposeSolverSbFDDP() {
   const boost::shared_ptr<crocoddyl::ShootingProblem>& (SolverSbFDDP::*getProblem)() const =
       &SolverSbFDDP::get_problem;
 
-  bp::class_<SolverSbFDDP>(
+  bp::class_<SolverSbFDDP,bp::bases<crocoddyl::SolverFDDP>>(
       "SolverSbFDDP",
       "Box-constrained FDDP solver.\n\n"
       ":param shootingProblem: shooting problem (list of action models along trajectory.)",
