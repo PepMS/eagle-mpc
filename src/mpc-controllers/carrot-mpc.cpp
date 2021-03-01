@@ -144,7 +144,7 @@ void CarrotMpc::computeActiveStage(const std::size_t& current_time) {
       std::size_t(std::upper_bound(t_stages_.begin(), t_stages_.end(), current_time) - t_stages_.begin()) - 1;
 }
 
-void CarrotMpc::computeActiveStage(const std::size_t& current_time, const bool& last_stage) {
+void CarrotMpc::computeActiveStage(const std::size_t& current_time, const std::size_t& last_stage) {
   computeActiveStage(current_time);
   if (update_vars_.idx_stage == last_stage + 2) {
     update_vars_.idx_stage -= 1;
@@ -159,7 +159,7 @@ void CarrotMpc::updateFreeCosts(const std::size_t& idx) {
   for (auto cost = update_vars_.dif_free->get_costs()->get_costs().begin();
        cost != update_vars_.dif_free->get_costs()->get_costs().end(); cost++) {
     if (cost->first.compare(0, update_vars_.name_stage.size(), update_vars_.name_stage) == 0 ||
-        cost->first.compare(0, cost->first.size(), "barrier")) {
+        cost->first.compare(0, cost->first.size(), "barrier") == 0) {
       cost->second->active = true;
     } else {
       cost->second->active = false;

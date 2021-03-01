@@ -9,7 +9,7 @@ import example_robot_data
 WITHDISPLAY = 'display' in sys.argv
 
 trajectory = multicopter_mpc.Trajectory()
-trajectory.autoSetup("/home/pepms/robotics/libraries/multicopter-mpc/config/trajectory/quad_passthrough.yaml")
+trajectory.autoSetup("/home/pepms/robotics/libraries/multicopter-mpc/config/trajectory/am_hover.yaml")
 
 x0 = trajectory.state.zero()
 problem = trajectory.createProblem(10, True, "IntegratedActionModelEuler")
@@ -34,8 +34,8 @@ for idx, ax in enumerate(axs):
 plt.show()
 
 print (solver.xs[-1])
-# uav = example_robot_data.load('hexarotor_370_flying_arm_3')
-uav = example_robot_data.load('iris')
+uav = example_robot_data.load('hexarotor_370_flying_arm_3')
+# uav = example_robot_data.load('iris')
 
 if WITHDISPLAY:
     display = crocoddyl.GepettoDisplay(uav)

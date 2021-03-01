@@ -32,7 +32,7 @@ class CarrotMpc : public MpcAbstract {
   boost::shared_ptr<crocoddyl::CostModelSum> createCosts() const;
 
   void computeActiveStage(const std::size_t& current_time);
-  void computeActiveStage(const std::size_t& current_time, const bool& last_stage);
+  void computeActiveStage(const std::size_t& current_time, const std::size_t& last_stage);
   void computeStateReference(const std::size_t& time);
   void updateContactCosts(const std::size_t& idx);
   void updateFreeCosts(const std::size_t& idx);
