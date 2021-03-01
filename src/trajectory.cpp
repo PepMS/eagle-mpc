@@ -79,6 +79,7 @@ boost::shared_ptr<crocoddyl::ShootingProblem> Trajectory::createProblem(const st
   std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> running_models;
   boost::shared_ptr<crocoddyl::ActionModelAbstract> terminal_model;
 
+  bool last_duration0 = false;
   for (auto stage = stages_.begin(); stage != stages_.end(); ++stage) {
     boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract> dam =
         dam_factory_->create(has_contact_, squash, *stage);
@@ -88,8 +89,13 @@ boost::shared_ptr<crocoddyl::ShootingProblem> Trajectory::createProblem(const st
     std::size_t n_knots;
     if ((*stage)->get_duration() / dt == 0 && std::next(stage) != stages_.end()) {
       n_knots = 1;
+      last_duration0 = true;
     } else {
       n_knots = (*stage)->get_duration() / dt;
+      if (last_duration0) {
+        n_knots -= 1;
+      }
+      last_duration0 = false;
     }
 
     MMPC_INFO << "Create Problem; " << (*stage)->get_name() << ", # Knots: " << n_knots;
