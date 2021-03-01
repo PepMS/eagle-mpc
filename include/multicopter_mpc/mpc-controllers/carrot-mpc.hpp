@@ -29,6 +29,8 @@ class CarrotMpc : public MpcAbstract {
   boost::shared_ptr<Trajectory> trajectory_;
   std::vector<Eigen::VectorXd> state_ref_;
   std::vector<size_t> t_ref_;
+
+  double carrot_weight_;
 };
 }  // namespace multicopter_mpc
 

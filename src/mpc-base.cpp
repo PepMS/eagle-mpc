@@ -42,6 +42,7 @@ void MpcAbstract::loadParams() {
 
   params_.knots = params_server_->getParam<int>(prefix_controller + "knots");
   params_.iters = params_server_->getParam<int>(prefix_controller + "iters");
+  params_.dt = params_server_->getParam<int>(prefix_controller + "dt");
 
   std::string solver = params_server_->getParam<std::string>(prefix_controller + "solver");
   params_.solver_type = SolverTypes_map.at(solver);
@@ -65,5 +66,7 @@ const std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>>& MpcAbstrac
   return int_models_;
 }
 const boost::shared_ptr<crocoddyl::ShootingProblem>& MpcAbstract::get_problem() const { return problem_; }
+const std::size_t& MpcAbstract::get_dt() const { return params_.dt; }
+const std::size_t& MpcAbstract::get_knots() const { return params_.knots; }
 
 }  // namespace multicopter_mpc

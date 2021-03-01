@@ -54,7 +54,11 @@ void exposeMpcAbstract() {
           bp::make_function(&MpcAbstract_wrap::get_int_models, bp::return_value_policy<bp::return_by_value>()),
           "return the problem integrated models")
       .add_property("problem",
-                    bp::make_function(&MpcAbstract_wrap::get_problem, bp::return_value_policy<bp::return_by_value>()));
+                    bp::make_function(&MpcAbstract_wrap::get_problem, bp::return_value_policy<bp::return_by_value>()))
+      .add_property("knots",
+                    bp::make_function(&MpcAbstract_wrap::get_knots, bp::return_value_policy<bp::return_by_value>()))
+      .add_property("dt",
+                    bp::make_function(&MpcAbstract_wrap::get_dt, bp::return_value_policy<bp::return_by_value>()));
 }
 
 }  // namespace python

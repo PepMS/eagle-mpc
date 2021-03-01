@@ -7,13 +7,21 @@ namespace multicopter_mpc {
 CarrotMpc::CarrotMpc(const boost::shared_ptr<Trajectory>& trajectory, const std::vector<Eigen::VectorXd>& state_ref,
                      const std::size_t dt_ref, const std::string& yaml_path)
     : MpcAbstract(yaml_path), trajectory_(trajectory) {
-  createProblem();
 
   state_ref_ = std::vector<Eigen::VectorXd>(state_ref.size(), robot_state_->zero());
   std::copy(state_ref.begin(), state_ref.end(), state_ref_.begin());
   for (std::size_t i = 0; i < state_ref_.size(); ++i) {
-    t_ref_.push_back(dt_ref*i);
+    t_ref_.push_back(dt_ref * i);
   }
+
+  try {
+    carrot_weight_ = params_server_->getParam<double>("mpc_controller/carrot_weight");
+  } catch (const std::exception& e) {
+    MMPC_WARN << "The following key: 'mpc_controller/carrot_weight' has not been found in the parameters server. Set "
+                 "to 10.0";
+  }
+  
+  createProblem();
 }
 
 CarrotMpc::~CarrotMpc() {}
@@ -47,7 +55,7 @@ void CarrotMpc::createProblem() {
     }
 
     boost::shared_ptr<crocoddyl::ActionModelAbstract> iam;
-    double dt_s = double(10) / 1000.;
+    double dt_s = double(params_.dt) / 1000.;
     switch (params_.integrator_type) {
       case IntegratedActionModelTypes::IntegratedActionModelEuler:
         iam = boost::make_shared<crocoddyl::IntegratedActionModelEuler>(dam, dt_s);
@@ -87,7 +95,7 @@ boost::shared_ptr<crocoddyl::CostModelSum> CarrotMpc::createCosts() const {
 
   boost::shared_ptr<crocoddyl::CostModelState> carrot_cost =
       boost::make_shared<crocoddyl::CostModelState>(robot_state_, robot_state_->zero(), actuation_->get_nu());
-  costs->addCost("state", carrot_cost, 10, false);
+  costs->addCost("state", carrot_cost, carrot_weight_, false);
 
   return costs;
 }

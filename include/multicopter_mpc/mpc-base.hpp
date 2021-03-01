@@ -50,6 +50,9 @@ class MpcAbstract {
   const boost::shared_ptr<crocoddyl::ShootingProblem>& get_problem() const;
   const std::string& get_robot_model_path() const;
 
+  const std::size_t& get_dt() const;
+  const std::size_t& get_knots() const;
+
  protected:
   boost::shared_ptr<pinocchio::Model> robot_model_;
   boost::shared_ptr<MultiCopterBaseParams> platform_params_;
@@ -72,6 +75,7 @@ class MpcAbstract {
     SolverTypes solver_type;
     std::size_t knots;
     std::size_t iters;
+    std::size_t dt;
   } params_;
 
  private:
