@@ -10,6 +10,6 @@ mpc_controller:
   integration_method: "IntegratedActionModelEuler"
   knots: 101
   solver: "SolverSbFDDP"
-  iters: 4 ,
-  # weight for the carrot node
-  # dt
+  iters: 4
+  dt: 10
+  carrot_weight: 1000
