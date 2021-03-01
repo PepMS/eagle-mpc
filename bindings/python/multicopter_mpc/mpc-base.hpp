@@ -13,17 +13,8 @@ class MpcAbstract_wrap : public MpcAbstract, public bp::wrapper<MpcAbstract> {
  public:
   MpcAbstract_wrap(const std::string& yaml_path) : MpcAbstract(yaml_path), bp::wrapper<MpcAbstract>() {}
 
-  // using MpcAbstract::actuation_;
-  // using MpcAbstract::actuation_squash_;
-  // using MpcAbstract::platform_params_;
-  // using MpcAbstract::robot_model_;
-  // using MpcAbstract::robot_state_;
-  // using MpcAbstract::squash_;
-
-  // using MpcAbstract::costs_;
-
-  // using MpcAbstract::createProblem;
   void createProblem() { this->get_override("createProblem")(); }
+  void updateProblem(const std::size_t& current_time) { this->get_override("updateProblem")(); }
 };
 
 void exposeMpcAbstract() {
@@ -31,6 +22,7 @@ void exposeMpcAbstract() {
       "MpcAbstract", "Abstract class to generate an MPC Controller to run on multicopter or aerial manipulators",
       bp::init<const std::string&>(bp::args("self", "yaml_path"), "Initialize the MPC Controller abstract class"))
       .def("createProblem", bp::pure_virtual(&MpcAbstract::createProblem), bp::args("self"))
+      .def("updateProblem", bp::pure_virtual(&MpcAbstract::updateProblem), bp::args("self"))
       .add_property("robot_model", bp::make_function(&MpcAbstract_wrap::get_robot_model,
                                                      bp::return_value_policy<bp::return_by_value>()))
       .add_property("robot_model_path", bp::make_function(&MpcAbstract_wrap::get_robot_model_path,
@@ -55,10 +47,13 @@ void exposeMpcAbstract() {
           "return the problem integrated models")
       .add_property("problem",
                     bp::make_function(&MpcAbstract_wrap::get_problem, bp::return_value_policy<bp::return_by_value>()))
+      .add_property("solver",
+                    bp::make_function(&MpcAbstract_wrap::get_solver, bp::return_value_policy<bp::return_by_value>()))
       .add_property("knots",
                     bp::make_function(&MpcAbstract_wrap::get_knots, bp::return_value_policy<bp::return_by_value>()))
-      .add_property("dt",
-                    bp::make_function(&MpcAbstract_wrap::get_dt, bp::return_value_policy<bp::return_by_value>()));
+      .add_property("dt", bp::make_function(&MpcAbstract_wrap::get_dt, bp::return_value_policy<bp::return_by_value>()))
+      .add_property("iters",
+                    bp::make_function(&MpcAbstract_wrap::get_iters, bp::return_value_policy<bp::return_by_value>()));
 }
 
 }  // namespace python
