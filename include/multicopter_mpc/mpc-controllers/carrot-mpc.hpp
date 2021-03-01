@@ -1,6 +1,8 @@
 #ifndef MULTICOPTER_MPC_MPC_CONTROLLERS_CARROT_MPC_HPP_
 #define MULTICOPTER_MPC_MPC_CONTROLLERS_CARROT_MPC_HPP_
 
+// #include "pinocchio/algorithm/joint-configuration.hpp"
+
 #include "crocoddyl/core/costs/cost-sum.hpp"
 #include "crocoddyl/multibody/costs/state.hpp"
 
@@ -17,18 +19,41 @@ class CarrotMpc : public MpcAbstract {
 
   virtual ~CarrotMpc();
 
-  void createProblem() override;
+  virtual void createProblem() override;
+  virtual void updateProblem(const std::size_t& current_time) override;
 
   const boost::shared_ptr<Trajectory>& get_trajectory() const;
   const std::vector<Eigen::VectorXd>& get_state_ref() const;
+
+  const std::vector<std::size_t>& get_t_stages() const;
   const std::vector<std::size_t>& get_t_ref() const;
 
  private:
   boost::shared_ptr<crocoddyl::CostModelSum> createCosts() const;
 
+  void computeActiveStage(const std::size_t& current_time);
+  void computeActiveStage(const std::size_t& current_time, const bool& last_stage);
+  void computeStateReference(const std::size_t& time);
+  void updateContactCosts(const std::size_t& idx);
+  void updateFreeCosts(const std::size_t& idx);
   boost::shared_ptr<Trajectory> trajectory_;
+
+  std::vector<std::size_t> t_stages_;
+
   std::vector<Eigen::VectorXd> state_ref_;
-  std::vector<size_t> t_ref_;
+  std::vector<std::size_t> t_ref_;
+
+  struct updateVars {
+    std::size_t idx_stage;
+    std::size_t idx_last_stage;
+    std::size_t node_time;
+    std::string name_stage;
+    boost::shared_ptr<crocoddyl::DifferentialActionModelContactFwdDynamics> dif_contact;
+    boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> dif_free;
+    Eigen::VectorXd state_ref;
+    std::size_t idx_state;
+    double alpha;
+  } update_vars_;
 
   double carrot_weight_;
 };

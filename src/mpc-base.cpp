@@ -66,7 +66,10 @@ const std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>>& MpcAbstrac
   return int_models_;
 }
 const boost::shared_ptr<crocoddyl::ShootingProblem>& MpcAbstract::get_problem() const { return problem_; }
+const boost::shared_ptr<crocoddyl::SolverDDP>& MpcAbstract::get_solver() const { return solver_; }
+
 const std::size_t& MpcAbstract::get_dt() const { return params_.dt; }
 const std::size_t& MpcAbstract::get_knots() const { return params_.knots; }
+const std::size_t& MpcAbstract::get_iters() const { return params_.iters; }
 
 }  // namespace multicopter_mpc

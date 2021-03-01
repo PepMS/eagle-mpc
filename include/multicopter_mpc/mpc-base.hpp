@@ -11,6 +11,10 @@
 #include "crocoddyl/core/cost-base.hpp"
 #include "crocoddyl/core/diff-action-base.hpp"
 #include "crocoddyl/core/optctrl/shooting.hpp"
+#include "crocoddyl/core/solvers/fddp.hpp"
+#include "crocoddyl/core/solvers/box-ddp.hpp"
+#include "crocoddyl/core/solvers/box-fddp.hpp"
+#include "crocoddyl/core/utils/callbacks.hpp"
 
 #include "crocoddyl/multibody/actuations/multicopter-base.hpp"
 #include "crocoddyl/multibody/states/multibody.hpp"
@@ -18,6 +22,7 @@
 #include "multicopter_mpc/factory/cost.hpp"
 #include "multicopter_mpc/factory/int-action.hpp"
 #include "multicopter_mpc/utils/params_server.hpp"
+#include "multicopter_mpc/sbfddp.hpp"
 
 namespace multicopter_mpc {
 
@@ -38,6 +43,7 @@ class MpcAbstract {
   MpcAbstract(const std::string& yaml_path);
 
   virtual void createProblem() = 0;
+  virtual void updateProblem(const std::size_t& current_time) = 0;
 
   const boost::shared_ptr<pinocchio::Model>& get_robot_model() const;
   const boost::shared_ptr<MultiCopterBaseParams>& get_platform_params() const;
@@ -49,9 +55,11 @@ class MpcAbstract {
   const std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>>& get_int_models() const;
   const boost::shared_ptr<crocoddyl::ShootingProblem>& get_problem() const;
   const std::string& get_robot_model_path() const;
+  const boost::shared_ptr<crocoddyl::SolverDDP>& get_solver() const;
 
   const std::size_t& get_dt() const;
   const std::size_t& get_knots() const;
+  const std::size_t& get_iters() const;
 
  protected:
   boost::shared_ptr<pinocchio::Model> robot_model_;
@@ -66,6 +74,9 @@ class MpcAbstract {
   std::vector<boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract>> dif_models_;
   std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> int_models_;
   boost::shared_ptr<crocoddyl::ShootingProblem> problem_;
+  
+  std::vector<boost::shared_ptr<crocoddyl::CallbackAbstract>> solver_callbacks_;
+  boost::shared_ptr<crocoddyl::SolverDDP> solver_;
 
   boost::shared_ptr<CostModelFactory> cost_factory_;
   boost::shared_ptr<ParamsServer> params_server_;
