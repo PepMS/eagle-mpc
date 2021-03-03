@@ -17,18 +17,19 @@ def rev_enumerate(lname):
 class CarrotMpc(multicopter_mpc.CarrotMpc):
     def __init__(self, trajectory, stateRef, dtRef, yamlPath):
         multicopter_mpc.CarrotMpc.__init__(self, trajectory, stateRef, dtRef, yamlPath)
+        self.lastTime = 0
 
     def createProblem_(self):
         self.ts_ini = []
         for stage in self.trajectory.stages:
             self.ts_ini.append(stage.t_ini)
-        self.solver = multicopter_mpc.SolverSbFDDP(self.problem, self.squash)
-        self.solver.setCallbacks([crocoddyl.CallbackVerbose()])
+        # self.solver = multicopter_mpc.SolverSbFDDP(self.problem, self.squash)
+        # self.solver.setCallbacks([crocoddyl.CallbackVerbose()])
 
     def updateProblem(self, currentTime):
         idxStage = self.getActiveStage(currentTime)
         for idx, dam in enumerate(self.dif_models):
-            dt = 10
+            dt = self.dt
             nodeTime = currentTime + idx * dt
             idxStage = self.getActiveStage(nodeTime, idxStage)
             nameStage = self.trajectory.stages[idxStage].name
@@ -42,6 +43,7 @@ class CarrotMpc(multicopter_mpc.CarrotMpc):
                 dam.costs.costs["state"].active = True
                 state = self.getStateRef(nodeTime)
                 dam.costs.costs["state"].cost.reference = state
+        self.lastTime = currentTime
 
     def getActiveStage(self, time, lastStage=None):
         if lastStage is not None:
