@@ -1,7 +1,7 @@
 trajectory:
   robot:
     name: "iris"
-    urdf: "/home/pepms/robotics/libraries/example-robot-data/robots/iris_description/robots/iris_simple.urdf"
+    urdf: "/home/pepms/robotics/libraries/example-robot-data/robots/iris_description/robots/iris.urdf"
     follow: "/home/pepms/robotics/libraries/multicopter-mpc/config/multicopter/iris.yaml"
   
   stages:
@@ -43,14 +43,14 @@ trajectory:
         - name: "placement_base_link"
           type: "CostModelFramePlacement"
           weight: 1000
-          link_name: "base_link"
+          link_name: "iris__base_link"
           position: [0, 0, 2.5]
           orientation: [0, 0, 0, 1] # x,y,z,w
 
         - name: "motion_base_link"
           type: "CostModelFrameVelocity"
           weight: 1000
-          link_name: "base_link"
+          link_name: "iris__base_link"
           linear: [0, 0, 0]
           angular: [0, 0, 0]
 
@@ -92,14 +92,14 @@ trajectory:
         - name: "placement_base_link"
           type: "CostModelFramePlacement"
           weight: 1000
-          link_name: "base_link"
+          link_name: "iris__base_link"
           position: [6.0, 0, 2.0]
           orientation: [1, 0, 0, 1] # x,y,z,w
 
         - name: "motion_base_link"
           type: "CostModelFrameVelocity"
           weight: 1000
-          link_name: "base_link"
+          link_name: "iris__base_link"
           linear: [5.0, 0, 0]
           angular: [0, 0, 0]
     
@@ -141,13 +141,13 @@ trajectory:
         - name: "placement_base_link"
           type: "CostModelFramePlacement"
           weight: 2000
-          link_name: "base_link"
+          link_name: "iris__base_link"
           position: [11.0, 0, 2.0]
           orientation: [0, 0, 0, 1] # x,y,z,w
 
         - name: "motion_base_link"
           type: "CostModelFrameVelocity"
           weight: 1000
-          link_name: "base_link"
+          link_name: "iris__base_link"
           linear: [0, 0, 0]
           angular: [0, 0, 0]

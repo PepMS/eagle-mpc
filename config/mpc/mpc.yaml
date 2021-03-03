@@ -8,8 +8,8 @@ mpc_controller:
     follow: "/home/pepms/robotics/libraries/multicopter-mpc/config/multicopter/iris.yaml"
 
   integration_method: "IntegratedActionModelEuler"
-  knots: 101
+  knots: 51
   solver: "SolverSbFDDP"
-  iters: 4
+  iters: 3
   dt: 10
   carrot_weight: 1000

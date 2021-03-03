@@ -1,12 +1,13 @@
 trajectory:
   robot:
     name: "hexarotor_370_flying_arm_3"
-    urdf: "/home/pepms/robotics/libraries/example-robot-data/robots/hexarotor_370_description/urdf/hexarotor_370_flying_arm_3.urdf"
-    follow: "/home/pepms/robotics/libraries/multicopter-mpc/config/multicopter/hexarotor370.yaml"
+    urdf: "/home/pepms/robotics/libraries/example-robot-data/robots/hexacopter370_description/urdf/hexacopter370_flying_arm_3.urdf"
+    follow: "/home/pepms/robotics/libraries/multicopter-mpc/config/multicopter/hexacopter370.yaml"
 
   stages:
     - name: "navigation"
       duration: 1500 #ms
+      transition: true
       costs:
         - name: "state_reg"
           type: "CostModelState"
@@ -27,7 +28,7 @@ trajectory:
 
         - name: "control_reg"
           type: "CostModelControl"
-          weight: 5e-2
+          weight: 1e-1
           reference: [0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
           weights: [1, 1, 1, 1, 1, 1, 1000, 1000, 1000]
@@ -45,13 +46,13 @@ trajectory:
         - name: "placement_base_link"
           type: "CostModelFramePlacement"
           weight: 2000
-          link_name: "base_link"
+          link_name: "hexacopter370__base_link"
           position: [1, 0, 2]
           orientation: [0, 0, 0, 1] # x,y,z,w
 
         - name: "motion_base_link"
           type: "CostModelFrameVelocity"
           weight: 2000
-          link_name: "base_link"
+          link_name: "hexacopter370__base_link"
           linear: [0, 0, 0]
           angular: [0, 0, 0]
