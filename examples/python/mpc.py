@@ -4,17 +4,22 @@ import time
 import crocoddyl
 
 import multicopter_mpc
-from mpc_controllers import CarrotMpc
 from simulator import AerialSimulator
 
 # Trajectory
-dt = 10
+dt = 10  # ms
+useSquash = True
+trajectoryName = 'quad_passthrough'
+
 trajectory = multicopter_mpc.Trajectory()
-trajectory.autoSetup("/home/pepms/robotics/libraries/multicopter-mpc/config/trajectory/am_hover.yaml")
+trajectory.autoSetup("/home/pepms/robotics/libraries/multicopter-mpc/config/trajectory/" + trajectoryName + ".yaml")
 
-problem = trajectory.createProblem(dt, True, "IntegratedActionModelEuler")
+problem = trajectory.createProblem(dt, useSquash, "IntegratedActionModelEuler")
+if useSquash:
+    solver = multicopter_mpc.SolverSbFDDP(problem, trajectory.squash)
+else:
+    solver = crocoddyl.SolverBoxFDDP(problem)
 
-solver = multicopter_mpc.SolverSbFDDP(problem, trajectory.squash)
 solver.setCallbacks([crocoddyl.CallbackVerbose()])
 solver.solve([], [], maxiter=400)
 

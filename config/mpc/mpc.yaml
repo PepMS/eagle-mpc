@@ -4,12 +4,12 @@ mpc_controller:
     # urdf: "/home/pepms/robotics/libraries/example-robot-data/robots/hexarotor_370_description/urdf/hexarotor_370_flying_arm_3.urdf"
     # follow: "/home/pepms/robotics/libraries/multicopter-mpc/config/multicopter/hexacopter370.yaml"
     name: "iris"
-    urdf: "/home/pepms/robotics/libraries/example-robot-data/robots/iris_description/robots/iris_simple.urdf"
+    urdf: "/home/pepms/robotics/libraries/example-robot-data/robots/iris_description/robots/iris.urdf"
     follow: "/home/pepms/robotics/libraries/multicopter-mpc/config/multicopter/iris.yaml"
 
   integration_method: "IntegratedActionModelEuler"
-  knots: 51
+  knots: 101
   solver: "SolverSbFDDP"
-  iters: 3
+  iters: 2
   dt: 10
   carrot_weight: 1000
