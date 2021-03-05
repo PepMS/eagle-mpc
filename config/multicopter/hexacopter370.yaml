@@ -1,31 +1,38 @@
 platform:
   cf: 4.138394792004922e-06
   cm: 6.991478005829954e-08 
-  max_thrust: 20.6991 
+  # max_thrust: 20.6991 
+  max_thrust: 15 
   min_thrust: 0.0
-  base_link_name: "base_link"
+  base_link_name: "hexacopter370__base_link"
   n_rotors: 6
   $rotors:
     - translation: [0.1602147, 0.0925, 0.0]
-      orientation: [0, 0, 0.258819, 0.965926] # x, y, z, w
+      # orientation: [0, 0, 0.258819, 0.965926] # x, y, z, w
+      orientation: [0, 0, 0, 1] # x, y, z, w
       spin_direction: [1]
 
     - translation: [0.0, 0.185, 0.0]
-      orientation: [0, 0, 0.707107, 0.707107]
+      # orientation: [0, 0, 0.707107, 0.707107]
+      orientation: [0, 0, 0, 1] # x, y, z, w
       spin_direction: [-1]
 
     - translation: [-0.1602147, 0.0925, 0.0]
-      orientation: [0, 0, 0.965926, 0.258819]
+      # orientation: [0, 0, 0.965926, 0.258819]
+      orientation: [0, 0, 0, 1]
       spin_direction: [1]
 
     - translation: [-0.1602147, -0.0925, 0.0]
-      orientation: [0, 0, 0.965926, -0.258819]
+      # orientation: [0, 0, 0.965926, -0.258819]
+      orientation: [0, 0, 0, 1]
       spin_direction: [-1]
 
     - translation: [0.0, -0.185, 0.0]
-      orientation: [0, 0, -0.707107, 0.707107]
+      # orientation: [0, 0, -0.707107, 0.707107]
+      orientation: [0, 0, 0, 1]
       spin_direction: [1]
 
     - translation: [0.1602147, -0.0925, 0.0]
-      orientation: [0, 0, -0.258819, 0.965926]
+      # orientation: [0, 0, -0.258819, 0.965926]
+      orientation: [0, 0, 0, 1]
       spin_direction: [-1]

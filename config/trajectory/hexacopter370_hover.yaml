@@ -1,12 +1,13 @@
 trajectory:
   robot:
-    name: "iris"
+    name: "hexacopter370"
     urdf: "/home/pepms/robotics/libraries/example-robot-data/robots/hexacopter370_description/urdf/hexacopter370.urdf"
     follow: "/home/pepms/robotics/libraries/multicopter-mpc/config/multicopter/hexacopter370.yaml"
 
   stages:
     - name: "navigation"
       duration: 1100 #ms
+      transition: true
       costs:
         - name: "state_reg"
           type: "CostModelState"
@@ -17,7 +18,7 @@ trajectory:
 
         - name: "control_reg"
           type: "CostModelControl"
-          weight: 5e-2
+          weight: 1e-1
           reference: [0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
           weights: [1, 1, 1, 1, 1, 1]
@@ -25,6 +26,13 @@ trajectory:
     - name: "hover"
       duration: 0 #ms
       costs:
+        - name: "control_reg"
+          type: "CostModelControl"
+          weight: 1e-1
+          reference: [0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 1, 1, 1]
+
         - name: "placement_base_link"
           type: "CostModelFramePlacement"
           weight: 2000
