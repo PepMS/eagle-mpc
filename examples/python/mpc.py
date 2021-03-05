@@ -10,7 +10,7 @@ from multicopter_mpc.utils.simulator import AerialSimulator
 dt = 10  # ms
 useSquash = True
 robotName = 'hexacopter370'
-trajectoryName = 'hover'
+trajectoryName = 'passthrough'
 
 trajectory = multicopter_mpc.Trajectory()
 trajectory.autoSetup("/home/pepms/robotics/libraries/multicopter-mpc/config/trajectory/" + robotName + '_' +
@@ -42,7 +42,6 @@ for i in range(0, problem.T * 2):
     updateTime.append(end - start)
     start = time.time()
     mpcController.solver.solve(mpcController.solver.xs, mpcController.solver.us, mpcController.iters)
-    print(mpcController.solver.us_squash[21])
     end = time.time()
     solveTime.append(end - start)
     control = np.copy(mpcController.solver.us_squash[0])
