@@ -3,7 +3,7 @@ platform:
     cm: 1.3677728e-7 # (from Gazebo plugin: 1.6e-2*cf)
     max_thrust: 10.3437818 # (1100 rad/s)
     min_thrust: 0.0854858 # (100 rad/s)
-    base_link_name: "base_link"
+    base_link_name: "iris__base_link"
     n_rotors: 4
     $rotors:
         - translation: [0.13, -0.22, 0.023]
