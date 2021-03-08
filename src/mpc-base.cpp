@@ -71,5 +71,6 @@ const boost::shared_ptr<crocoddyl::SolverDDP>& MpcAbstract::get_solver() const {
 const std::size_t& MpcAbstract::get_dt() const { return params_.dt; }
 const std::size_t& MpcAbstract::get_knots() const { return params_.knots; }
 const std::size_t& MpcAbstract::get_iters() const { return params_.iters; }
+const SolverTypes& MpcAbstract::get_solver_type() const { return params_.solver_type; }
 
 }  // namespace multicopter_mpc

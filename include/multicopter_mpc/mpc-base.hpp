@@ -60,6 +60,7 @@ class MpcAbstract {
   const std::size_t& get_dt() const;
   const std::size_t& get_knots() const;
   const std::size_t& get_iters() const;
+  const SolverTypes& get_solver_type() const;
 
  protected:
   boost::shared_ptr<pinocchio::Model> robot_model_;
