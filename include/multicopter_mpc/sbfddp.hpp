@@ -37,6 +37,9 @@ class SolverSbFDDP : public crocoddyl::SolverFDDP {
 
   const std::vector<Eigen::VectorXd>& getSquashControls() const;
 
+  void set_convergence_init(const double& convergence_init);
+  const double& get_convergence_init() const;
+
  private:
   void barrierInit();
   void squashingUpdate();

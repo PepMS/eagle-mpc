@@ -457,4 +457,8 @@ void SolverSbFDDP::fillSquashedOutputs() {
 }
 const std::vector<Eigen::VectorXd>& SolverSbFDDP::getSquashControls() const { return us_squash_; }
 
+const double& SolverSbFDDP::get_convergence_init() const { return convergence_init_; }
+
+void SolverSbFDDP::set_convergence_init(const double& convergence_init) { convergence_init_ = convergence_init; }
+
 }  // namespace multicopter_mpc
