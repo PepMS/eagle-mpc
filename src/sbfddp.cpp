@@ -454,7 +454,6 @@ void SolverSbFDDP::fillSquashedOutputs() {
         getActuationDataFromDifferential(getDifferentialDataFromIntegrated(problem_->get_runningDatas()[i])));
     us_squash_[i] = actuation_squashing_d_->squashing->u;
   }
-  std::cout << "Control command, us_squash: \n" << us_squash_[0] << std::endl;
 }
 const std::vector<Eigen::VectorXd>& SolverSbFDDP::getSquashControls() const { return us_squash_; }
 
