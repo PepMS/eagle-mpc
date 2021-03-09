@@ -175,7 +175,7 @@ void SolverSbFDDP::barrierInit() {
 }
 
 bool SolverSbFDDP::solve(const std::vector<Eigen::VectorXd>& init_xs, const std::vector<Eigen::VectorXd>& init_us,
-                         const std::size_t& maxiter, const bool& is_feasible, const double& reginit) {
+                         const std::size_t maxiter, const bool is_feasible, const double regInit) {
   xs_try_[0] = problem_->get_x0();  // it is needed in case that init_xs[0] is infeasible
   setCandidate(init_xs, init_us, is_feasible);
 
@@ -209,8 +209,8 @@ bool SolverSbFDDP::solve(const std::vector<Eigen::VectorXd>& init_xs, const std:
 bool SolverSbFDDP::solveFDDP(const std::size_t& maxiter, const bool& is_feasible, const double& reginit) {
   is_feasible_ = is_feasible;
   if (std::isnan(reginit)) {
-    xreg_ = regmin_;
-    ureg_ = regmin_;
+    xreg_ = reg_min_;
+    ureg_ = reg_min_;
   } else {
     xreg_ = reginit;
     ureg_ = reginit;
@@ -225,7 +225,7 @@ bool SolverSbFDDP::solveFDDP(const std::size_t& maxiter, const bool& is_feasible
       } catch (std::exception& e) {
         recalcDiff = false;
         increaseRegularization();
-        if (xreg_ == regmax_) {
+        if (xreg_ == reg_max_) {
           return false;
         } else {
           continue;
@@ -274,7 +274,7 @@ bool SolverSbFDDP::solveFDDP(const std::size_t& maxiter, const bool& is_feasible
     }
     if (steplength_ <= th_stepinc_) {
       increaseRegularization();
-      if (xreg_ == regmax_) {
+      if (xreg_ == reg_max_) {
         return false;
       }
     }
@@ -295,8 +295,8 @@ bool SolverSbFDDP::solveFDDP(const std::size_t& maxiter, const bool& is_feasible
 
 bool SolverSbFDDP::solveDDP(const std::size_t& maxiter, const bool& is_feasible, const double& reginit) {
   if (std::isnan(reginit)) {
-    xreg_ = regmin_;
-    ureg_ = regmin_;
+    xreg_ = reg_min_;
+    ureg_ = reg_min_;
   } else {
     xreg_ = reginit;
     ureg_ = reginit;
@@ -311,7 +311,7 @@ bool SolverSbFDDP::solveDDP(const std::size_t& maxiter, const bool& is_feasible,
       } catch (std::exception& e) {
         recalcDiff = false;
         increaseRegularization();
-        if (xreg_ == regmax_) {
+        if (xreg_ == reg_max_) {
           return false;
         } else {
           continue;
@@ -350,7 +350,7 @@ bool SolverSbFDDP::solveDDP(const std::size_t& maxiter, const bool& is_feasible,
     }
     if (steplength_ <= th_stepinc_) {
       increaseRegularization();
-      if (xreg_ == regmax_) {
+      if (xreg_ == reg_max_) {
         return false;
       }
     }
@@ -454,6 +454,7 @@ void SolverSbFDDP::fillSquashedOutputs() {
         getActuationDataFromDifferential(getDifferentialDataFromIntegrated(problem_->get_runningDatas()[i])));
     us_squash_[i] = actuation_squashing_d_->squashing->u;
   }
+  std::cout << "Control command, us_squash: \n" << us_squash_[0] << std::endl;
 }
 const std::vector<Eigen::VectorXd>& SolverSbFDDP::getSquashControls() const { return us_squash_; }
 

@@ -22,7 +22,7 @@ void exposeSolverSbFDDP() {
   const std::vector<Eigen::VectorXd>& (SolverSbFDDP::*get_controls)() const = &SolverSbFDDP::get_us;
   const std::vector<Eigen::VectorXd>& (SolverSbFDDP::*get_controls_squash)() const = &SolverSbFDDP::getSquashControls;
   const std::vector<Eigen::VectorXd>& (SolverSbFDDP::*get_states)() const = &SolverSbFDDP::get_xs;
-  const std::size_t& (SolverSbFDDP::*get_iter)() const = &SolverSbFDDP::get_iter;
+  std::size_t (SolverSbFDDP::*get_iter)() const = &SolverSbFDDP::get_iter;
   const boost::shared_ptr<crocoddyl::ShootingProblem>& (SolverSbFDDP::*getProblem)() const =
       &SolverSbFDDP::get_problem;
 
