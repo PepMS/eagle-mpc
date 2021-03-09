@@ -1,0 +1,58 @@
+trajectory:
+  robot:
+    name: "hexarotor_370_flying_arm_3"
+    urdf: "/home/pepms/robotics/libraries/example-robot-data/robots/hexacopter370_description/urdf/hexacopter370_flying_arm_3.urdf"
+    follow: "/home/pepms/robotics/libraries/multicopter-mpc/config/multicopter/hexacopter370.yaml"
+
+  stages:
+    - name: "navigation"
+      duration: 1500 #ms
+      transition: true
+      costs:
+        - name: "state_reg"
+          type: "CostModelState"
+          weight: 1e-4
+          reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 100, 100, 100]
+
+        - name: "state_limits"
+          type: "CostModelState"
+          weight: 10
+          reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuadraticBarrier"
+          weights: [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1]
+          u_bound: [0, 0, 0, 0, 0, 0, 1.9, 1.9, 1.9, 0, 0, 0, 0, 0, 0, 3, 3, 3]
+          l_bound:
+            [0, 0, 0, 0, 0, 0, -1.9, -1.9, -1.9, 0, 0, 0, 0, 0, 0, -3, -3, -3]
+
+        - name: "control_reg"
+          type: "CostModelControl"
+          weight: 1e-1
+          reference: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 1, 1, 1, 1000, 1000, 1000]
+
+    - name: "hover"
+      duration: 0 #ms
+      costs:
+        - name: "state_arm"
+          type: "CostModelState"
+          weight: 2000
+          reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights: [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1]
+
+        - name: "placement_base_link"
+          type: "CostModelFramePlacement"
+          weight: 2000
+          link_name: "hexacopter370__base_link"
+          position: [1, 0, 2]
+          orientation: [0, 0, 0, 1] # x,y,z,w
+
+        - name: "motion_base_link"
+          type: "CostModelFrameVelocity"
+          weight: 2000
+          link_name: "hexacopter370__base_link"
+          linear: [0, 0, 0]
+          angular: [0, 0, 0]

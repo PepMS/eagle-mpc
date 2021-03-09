@@ -16,10 +16,13 @@
 #include "crocoddyl/core/integrator/rk4.hpp"
 
 #include "crocoddyl/multibody/actions/free-fwddyn.hpp"
+#include "crocoddyl/multibody/actions/contact-fwddyn.hpp"
 
+#include "multicopter_mpc/factory/diff-action.hpp"
 #include "multicopter_mpc/utils/log.hpp"
 
 namespace multicopter_mpc {
+
 class SolverSbFDDP : public crocoddyl::SolverFDDP {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -34,6 +37,9 @@ class SolverSbFDDP : public crocoddyl::SolverFDDP {
 
   const std::vector<Eigen::VectorXd>& getSquashControls() const;
 
+  void set_convergence_init(const double& convergence_init);
+  const double& get_convergence_init() const;
+
  private:
   void barrierInit();
   void squashingUpdate();
@@ -44,6 +50,24 @@ class SolverSbFDDP : public crocoddyl::SolverFDDP {
   const Eigen::Vector2d& expectedImprovementDDP();
   double tryStepDDP(const double& steplength = 1);
   void forwardPassDDP(const double& steplength);
+
+  IntegratedActionModelTypes getIntegratedModelType(boost::shared_ptr<crocoddyl::ActionModelAbstract> int_action);
+  DifferentialActionModelTypes getDifferentialModelType(
+      boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract> diff_action);
+  boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract> getDifferentialModelFromIntegrated(
+      boost::shared_ptr<crocoddyl::ActionModelAbstract> int_action);
+  boost::shared_ptr<crocoddyl::CostModelSum> getCostsFromDifferentialModel(
+      boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract> diff_action);
+
+  IntegratedActionModelTypes getIntegratedDataType(boost::shared_ptr<crocoddyl::ActionDataAbstract> int_action);
+  DifferentialActionModelTypes getDifferentialDataType(
+      boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> diff_action);
+  boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> getDifferentialDataFromIntegrated(
+      boost::shared_ptr<crocoddyl::ActionDataAbstract> int_action);
+  boost::shared_ptr<crocoddyl::ActuationDataAbstract> getActuationDataFromDifferential(
+      boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> diff_action);
+
+  void fillSquashedOutputs();
 
   boost::shared_ptr<crocoddyl::SquashingModelSmoothSat> squashing_model_;
   boost::shared_ptr<crocoddyl::ActuationSquashingModel> actuation_;
@@ -56,11 +80,15 @@ class SolverSbFDDP : public crocoddyl::SolverFDDP {
   // models
   boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> euler_;
   boost::shared_ptr<crocoddyl::IntegratedActionModelRK4> rk4_;
-  boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> differential_;
+  boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> free_;
+  boost::shared_ptr<crocoddyl::DifferentialActionModelContactFwdDynamics> contact_;
+  boost::shared_ptr<crocoddyl::CostModelSum> costs_;
+
   // datas
   boost::shared_ptr<crocoddyl::IntegratedActionDataEuler> euler_d_;
   boost::shared_ptr<crocoddyl::IntegratedActionDataRK4> rk4_d_;
-  boost::shared_ptr<crocoddyl::DifferentialActionDataFreeFwdDynamics> differential_d_;
+  boost::shared_ptr<crocoddyl::DifferentialActionDataFreeFwdDynamics> free_d_;
+  boost::shared_ptr<crocoddyl::DifferentialActionDataContactFwdDynamics> contact_d_;
   boost::shared_ptr<crocoddyl::ActuationSquashingData> actuation_squashing_d_;
 
   double smooth_;
@@ -82,9 +110,9 @@ class SolverSbFDDP : public crocoddyl::SolverFDDP {
 
   std::vector<Eigen::VectorXd> us_squash_;  //!< Control trajectory
 
-
-  double th_acceptnegstep_; // FDDP solver
+  double th_acceptnegstep_;  // FDDP solver
 };
+
 }  // namespace multicopter_mpc
 
 #endif

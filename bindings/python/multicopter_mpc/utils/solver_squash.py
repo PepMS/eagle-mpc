@@ -84,8 +84,7 @@ class SolverSquashFDDP():
     def barrierUpdate(self):
         self.barrierQuadraticWeights = 1.0 / np.power(self.squashingSmooth * (self.squashingUb - self.squashingLb), 2)
         for m in self.problem.runningModels:
-            m.differential.costs.costs[
-                'sBarrier'].cost.activation.weights = self.barrierQuadraticWeights
+            m.differential.costs.costs['sBarrier'].cost.activation.weights = self.barrierQuadraticWeights
             m.differential.costs.costs['sBarrier'].weight = self.barrierWeight
         # self.problem.runningModels[0].differential.costs.costs[
         #     'sBarrier'].cost.activation.weights = self.barrierQuadraticWeights
