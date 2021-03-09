@@ -420,7 +420,7 @@ void ParserYaml::walkTree(std::string file, std::vector<std::string>& root, std:
 void ParserYaml::insertRegister(std::string key, std::string value) {
   if (key.substr(0, 1) == "/") key = key.substr(1, key.size() - 1);
   auto inserted_it = params_.insert(std::pair<std::string, std::string>(key, value));
-  std::cout << "Inserted: " << key << " :: " << value << std::endl;
+  // std::cout << "Inserted: " << key << " :: " << value << std::endl;
   if (not inserted_it.second)
     std::cout << "Skipping key '" << key << "' with value '" << value << "'. There already exists the register: ("
               << inserted_it.first->first << "," << inserted_it.first->second << ")" << std::endl;
