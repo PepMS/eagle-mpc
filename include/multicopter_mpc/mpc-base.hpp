@@ -38,6 +38,18 @@ static std::map<std::string, SolverTypes> SolverTypes_init_map() {
 }
 static const std::map<std::string, SolverTypes> SolverTypes_map = SolverTypes_init_map();
 
+enum class MpcTypes { Carrot, Rail, Weighted };
+
+static std::map<std::string, MpcTypes> MpcTypes_init_map() {
+  std::map<std::string, MpcTypes> m;
+  m.clear();
+  m.insert({"Carrot", MpcTypes::Carrot});
+  m.insert({"Rail", MpcTypes::Rail});
+  m.insert({"Weighted", MpcTypes::Weighted});
+  return m;
+}
+static const std::map<std::string, MpcTypes> MpcTypes_map = MpcTypes_init_map();
+
 class MpcAbstract {
  public:
   MpcAbstract(const std::string& yaml_path);
@@ -75,7 +87,7 @@ class MpcAbstract {
   std::vector<boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract>> dif_models_;
   std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> int_models_;
   boost::shared_ptr<crocoddyl::ShootingProblem> problem_;
-  
+
   std::vector<boost::shared_ptr<crocoddyl::CallbackAbstract>> solver_callbacks_;
   boost::shared_ptr<crocoddyl::SolverDDP> solver_;
 
