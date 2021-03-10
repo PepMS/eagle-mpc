@@ -18,6 +18,11 @@ class MpcAbstract_wrap : public MpcAbstract, public bp::wrapper<MpcAbstract> {
 };
 
 void exposeMpcAbstract() {
+  bp::enum_<MpcTypes>("MpcTypes")
+      .value("Carrot", MpcTypes::Carrot)
+      .value("Rail", MpcTypes::Rail)
+      .value("Weighted", MpcTypes::Weighted);
+
   bp::class_<MpcAbstract_wrap, boost::noncopyable>(
       "MpcAbstract", "Abstract class to generate an MPC Controller to run on multicopter or aerial manipulators",
       bp::init<const std::string&>(bp::args("self", "yaml_path"), "Initialize the MPC Controller abstract class"))
