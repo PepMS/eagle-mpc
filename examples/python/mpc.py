@@ -11,6 +11,7 @@ dt = 20  # ms
 useSquash = True
 robotName = 'hexacopter370'
 trajectoryName = 'passthrough'
+mpcName = 'rail'
 
 trajectory = multicopter_mpc.Trajectory()
 trajectory.autoSetup("/home/pepms/robotics/libraries/multicopter-mpc/config/trajectory/" + robotName + '_' +
@@ -25,8 +26,13 @@ else:
 solver.setCallbacks([crocoddyl.CallbackVerbose()])
 solver.solve([], [], maxiter=400)
 
-mpcController = multicopter_mpc.CarrotMpc(
-    trajectory, solver.xs, dt, "/home/pepms/robotics/libraries/multicopter-mpc/config/mpc/" + robotName + "_mpc.yaml")
+if mpcName == 'rail':
+    mpcController = multicopter_mpc.RailMpc(
+        solver.xs, dt, "/home/pepms/robotics/libraries/multicopter-mpc/config/mpc/" + robotName + "_mpc.yaml")
+else:
+    mpcController = multicopter_mpc.CarrotMpc(
+        trajectory, solver.xs, dt,
+        "/home/pepms/robotics/libraries/multicopter-mpc/config/mpc/" + robotName + "_mpc.yaml")
 mpcController.updateProblem(0)
 mpcController.solver.solve(solver.xs[:mpcController.problem.T + 1], solver.us[:mpcController.problem.T])
 
@@ -35,7 +41,7 @@ simulator = AerialSimulator(mpcController.robot_model, mpcController.platform_pa
 t = 0
 updateTime = []
 solveTime = []
-for i in range(0, problem.T * dt):
+for i in range(0, problem.T * dt * 2):
     mpcController.problem.x0 = simulator.states[-1]
     start = time.time()
     mpcController.updateProblem(int(t))

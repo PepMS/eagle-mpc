@@ -19,6 +19,7 @@ CarrotMpc::CarrotMpc(const boost::shared_ptr<Trajectory>& trajectory, const std:
   } catch (const std::exception& e) {
     MMPC_WARN << "The following key: 'mpc_controller/carrot_weight' has not been found in the parameters server. Set "
                  "to 10.0";
+    carrot_weight_ = 10.0;
   }
 
   t_stages_.reserve(trajectory_->get_stages().size());
@@ -118,7 +119,7 @@ boost::shared_ptr<crocoddyl::CostModelSum> CarrotMpc::createCosts() const {
 
   boost::shared_ptr<crocoddyl::CostModelState> carrot_cost =
       boost::make_shared<crocoddyl::CostModelState>(robot_state_, robot_state_->zero(), actuation_->get_nu());
-  costs->addCost("state", carrot_cost, carrot_weight_, false);
+  costs->addCost("carrot_state", carrot_cost, carrot_weight_, false);
 
   return costs;
 }
@@ -167,23 +168,28 @@ void CarrotMpc::updateFreeCosts(const std::size_t& idx) {
   }
 
   if (idx == dif_models_.size() - 1 && trajectory_->get_stages()[update_vars_.idx_stage]->get_is_transition()) {
-    update_vars_.dif_free->get_costs()->get_costs().at("state")->active = true;
+    update_vars_.dif_free->get_costs()->get_costs().at("carrot_state")->active = true;
     computeStateReference(update_vars_.node_time);
-    update_vars_.dif_free->get_costs()->get_costs().at("state")->cost->set_reference(update_vars_.state_ref);
+    update_vars_.dif_free->get_costs()->get_costs().at("carrot_state")->cost->set_reference(update_vars_.state_ref);
   }
 }
 
 void CarrotMpc::computeStateReference(const std::size_t& time) {
   update_vars_.idx_state = std::size_t(std::upper_bound(t_ref_.begin(), t_ref_.end(), time) - t_ref_.begin());
-  update_vars_.alpha = (time - t_ref_[update_vars_.idx_state - 1]) /
-                       (t_ref_[update_vars_.idx_state] - t_ref_[update_vars_.idx_state - 1]);
-  update_vars_.state_ref.head(robot_model_->nq) =
-      pinocchio::interpolate(*robot_model_, state_ref_[update_vars_.idx_state - 1].head(robot_model_->nq),
-                             state_ref_[update_vars_.idx_state].head(robot_model_->nq), update_vars_.alpha);
-  update_vars_.state_ref.tail(robot_model_->nv) =
-      state_ref_[update_vars_.idx_state - 1].tail(robot_model_->nv) +
-      update_vars_.alpha * (state_ref_[update_vars_.idx_state].tail(robot_model_->nv) -
-                            state_ref_[update_vars_.idx_state - 1].tail(robot_model_->nv));
+  if (update_vars_.idx_state >= state_ref_.size()) {
+    update_vars_.state_ref.head(robot_state_->get_nx()) = state_ref_.back().head(robot_state_->get_nx());
+
+  } else {
+    update_vars_.alpha = (time - t_ref_[update_vars_.idx_state - 1]) /
+                         (t_ref_[update_vars_.idx_state] - t_ref_[update_vars_.idx_state - 1]);
+    update_vars_.state_ref.head(robot_model_->nq) =
+        pinocchio::interpolate(*robot_model_, state_ref_[update_vars_.idx_state - 1].head(robot_model_->nq),
+                               state_ref_[update_vars_.idx_state].head(robot_model_->nq), update_vars_.alpha);
+    update_vars_.state_ref.tail(robot_model_->nv) =
+        state_ref_[update_vars_.idx_state - 1].tail(robot_model_->nv) +
+        update_vars_.alpha * (state_ref_[update_vars_.idx_state].tail(robot_model_->nv) -
+                              state_ref_[update_vars_.idx_state - 1].tail(robot_model_->nv));
+  }
 }
 
 const boost::shared_ptr<Trajectory>& CarrotMpc::get_trajectory() const { return trajectory_; }

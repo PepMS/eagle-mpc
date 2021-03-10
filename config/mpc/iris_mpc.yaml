@@ -8,4 +8,9 @@ mpc_controller:
   solver: "SolverSbFDDP"
   iters: 5
   dt: 20
+  
   carrot_weight: 1000
+
+  rail_weight: 1000
+  rail_activation_weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+  rail_control_weight: 1e-1
