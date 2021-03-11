@@ -41,8 +41,12 @@ void exposeTrajectory() {
       .add_property("initial_state",
                     bp::make_function(&Trajectory::get_initial_state, bp::return_internal_reference<>()),
                     &Trajectory::set_initial_state, "initial state")
+      .add_property("duration",
+                    bp::make_function(&Trajectory::get_duration, bp::return_value_policy<bp::return_by_value>()),
+                    "duration of the trajectory")
       .def("createProblem", &Trajectory::createProblem, bp::args("self", "dt", "squash", "integration_method"))
-      .def("autoSetup", &Trajectory::autoSetup, bp::args("self", "yaml_path"));
+      .def("autoSetup", &Trajectory::autoSetup, bp::args("self", "yaml_path"))
+      .def("removeStage", &Trajectory::removeStage, bp::args("self", "idx_stage"));
 }
 }  // namespace python
 }  // namespace multicopter_mpc
