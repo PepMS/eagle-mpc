@@ -33,13 +33,16 @@ class Stage : public boost::enable_shared_from_this<Stage> {
   void autoSetup(const std::string& path_to_stages, const std::map<std::string, std::string>& stage,
                  const boost::shared_ptr<ParamsServer>& server, std::size_t t_ini);
 
+  void set_t_ini(const std::size_t& t_ini);
+  void set_duration(const std::size_t& duration);
+
   const boost::shared_ptr<Trajectory>& get_trajectory() const;
   const boost::shared_ptr<crocoddyl::CostModelSum>& get_costs() const;
   const boost::shared_ptr<crocoddyl::ContactModelMultiple>& get_contacts() const;
 
   const std::map<std::string, CostModelTypes>& get_cost_types() const;
   const std::map<std::string, ContactModelTypes>& get_contact_types() const;
-  
+
   const std::size_t& get_t_ini() const;
   
   const std::size_t& get_duration() const;

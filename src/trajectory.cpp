@@ -71,6 +71,7 @@ void Trajectory::autoSetup(const std::string& yaml_path) {
       has_contact_ = stage->get_contacts()->get_contacts().size() != 0;
     }
   }
+  duration_ = time;
 }
 
 boost::shared_ptr<crocoddyl::ShootingProblem> Trajectory::createProblem(const std::size_t& dt, const bool& squash,
@@ -114,6 +115,12 @@ boost::shared_ptr<crocoddyl::ShootingProblem> Trajectory::createProblem(const st
   return problem;
 }
 
+void Trajectory::removeStage(const std::size_t& idx_stage) {
+  assert(idx_stage < stages_.size());
+
+  stages_.erase(stages_.begin() + idx_stage);
+}
+
 void Trajectory::set_initial_state(const Eigen::VectorXd& initial_state) {
   assert(initial_state.size() == robot_state_->get_nx());
   initial_state_ = initial_state;
@@ -134,5 +141,5 @@ const boost::shared_ptr<crocoddyl::ActuationSquashingModel>& Trajectory::get_act
 const Eigen::VectorXd& Trajectory::get_initial_state() const { return initial_state_; }
 const boost::shared_ptr<ParamsServer>& Trajectory::get_params_server() const { return params_server_; }
 const bool& Trajectory::get_has_contact() const { return has_contact_; }
-
+const std::size_t& Trajectory::get_duration() const { return duration_; }
 }  // namespace multicopter_mpc

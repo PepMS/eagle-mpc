@@ -14,9 +14,8 @@ robotName = 'hexacopter370'
 trajectoryName = 'hover'
 
 trajectory = multicopter_mpc.Trajectory()
-trajectory.autoSetup("/home/pepms/robotics/libraries/multicopter-mpc/config/trajectory/" + robotName + "_" +
-                     trajectoryName + ".yaml")
-
+trajectory.autoSetup("/home/pepms/wsros/mpc-ws/src/multicopter_mpc/multicopter_mpc_yaml/trajectories/" + robotName +
+                     '_' + trajectoryName + ".yaml")
 problem = trajectory.createProblem(dt, useSquash, "IntegratedActionModelEuler")
 
 if useSquash:

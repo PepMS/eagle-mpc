@@ -44,6 +44,8 @@ class Trajectory : public boost::enable_shared_from_this<Trajectory> {
   boost::shared_ptr<crocoddyl::ShootingProblem> createProblem(const std::size_t& dt, const bool& squash,
                                                               const std::string& integration_method) const;
 
+  void removeStage(const std::size_t& idx_stage);
+
   void set_initial_state(const Eigen::VectorXd& initial_state);
 
   const std::vector<boost::shared_ptr<Stage>>& get_stages() const;
@@ -57,6 +59,7 @@ class Trajectory : public boost::enable_shared_from_this<Trajectory> {
   const Eigen::VectorXd& get_initial_state() const;
   const boost::shared_ptr<ParamsServer>& get_params_server() const;
   const bool& get_has_contact() const;
+  const std::size_t& get_duration() const;
 
  private:
   Trajectory();
@@ -74,6 +77,7 @@ class Trajectory : public boost::enable_shared_from_this<Trajectory> {
   Eigen::VectorXd initial_state_;
 
   bool has_contact_;
+  std::size_t duration_;
 
   boost::shared_ptr<ParamsServer> params_server_;
 

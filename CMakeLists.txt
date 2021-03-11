@@ -22,15 +22,15 @@ option(WITH_BENCHMARK "Compile benchmarks" OFF)
 option(WITH_UNITTEST "Compile unittest" OFF)
 
 # Testing purposes
-set(MULTICOPTER_MPC_CONFIG_DIR ${PROJECT_BINARY_DIR}/other/multicopter_mpc)
-set(MULTICOPTER_MPC_ROOT_DIR ${CMAKE_SOURCE_DIR})
-set(MULTICOPTER_MPC_MULTIROTOR_DIR ${CMAKE_INSTALL_PREFIX}/share/multicopter_mpc/multicopter)
+# set(MULTICOPTER_MPC_CONFIG_DIR ${PROJECT_BINARY_DIR}/other/multicopter_mpc)
+# set(MULTICOPTER_MPC_ROOT_DIR ${CMAKE_SOURCE_DIR})
+# set(MULTICOPTER_MPC_MULTIROTOR_DIR ${CMAKE_INSTALL_PREFIX}/share/multicopter_mpc/multicopter)
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config/other/path.h "${MULTICOPTER_MPC_CONFIG_DIR}/path.h")
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config/other/path.py.in ${MULTICOPTER_MPC_CONFIG_DIR}/path.py)
-message("CONFIG ${MULTICOPTER_MPC_CONFIG_DIR}/config.h")
-message("CONFIG DIRECTORY ${PROJECT_BINARY_DIR}")
-include_directories("${PROJECT_BINARY_DIR}/other")
+# configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config/other/path.h "${MULTICOPTER_MPC_CONFIG_DIR}/path.h")
+# configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config/other/path.py.in ${MULTICOPTER_MPC_CONFIG_DIR}/path.py)
+# message("CONFIG ${MULTICOPTER_MPC_CONFIG_DIR}/config.h")
+# message("CONFIG DIRECTORY ${PROJECT_BINARY_DIR}")
+# include_directories("${PROJECT_BINARY_DIR}/other")
 
 find_package(Eigen3 3.3 REQUIRED)
 find_package(eigenpy REQUIRED)

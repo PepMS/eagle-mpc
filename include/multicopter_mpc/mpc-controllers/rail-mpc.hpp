@@ -40,10 +40,7 @@ class RailMpc : public MpcAbstract {
   double control_weight_;
 
   struct UpdateVars {
-    std::size_t idx_stage;
-    std::size_t idx_last_stage;
     std::size_t node_time;
-    std::string name_stage;
     boost::shared_ptr<crocoddyl::DifferentialActionModelContactFwdDynamics> dif_contact;
     boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> dif_free;
     Eigen::VectorXd state_ref;

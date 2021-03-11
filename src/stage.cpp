@@ -64,6 +64,9 @@ void Stage::autoSetup(const std::string& path_to_stages, const std::map<std::str
   }
 }
 
+void Stage::set_t_ini(const std::size_t& t_ini) { t_ini_ = t_ini; }
+void Stage::set_duration(const std::size_t& duration) { duration_ = duration; }
+
 const boost::shared_ptr<Trajectory>& Stage::get_trajectory() const { return trajectory_; }
 const boost::shared_ptr<crocoddyl::CostModelSum>& Stage::get_costs() const { return costs_; }
 const boost::shared_ptr<crocoddyl::ContactModelMultiple>& Stage::get_contacts() const { return contacts_; }

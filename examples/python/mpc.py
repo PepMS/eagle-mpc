@@ -11,11 +11,11 @@ dt = 20  # ms
 useSquash = True
 robotName = 'hexacopter370'
 trajectoryName = 'passthrough'
-mpcName = 'rail'
+mpcName = 'weighted'
 
 trajectory = multicopter_mpc.Trajectory()
-trajectory.autoSetup("/home/pepms/robotics/libraries/multicopter-mpc/config/trajectory/" + robotName + '_' +
-                     trajectoryName + ".yaml")
+trajectory.autoSetup("/home/pepms/wsros/mpc-ws/src/multicopter_mpc/multicopter_mpc_yaml/trajectories/" + robotName +
+                     '_' + trajectoryName + ".yaml")
 
 problem = trajectory.createProblem(dt, useSquash, "IntegratedActionModelEuler")
 if useSquash:
@@ -28,20 +28,27 @@ solver.solve([], [], maxiter=400)
 
 if mpcName == 'rail':
     mpcController = multicopter_mpc.RailMpc(
-        solver.xs, dt, "/home/pepms/robotics/libraries/multicopter-mpc/config/mpc/" + robotName + "_mpc.yaml")
+        solver.xs, dt,
+        "/home/pepms/wsros/mpc-ws/src/multicopter_mpc/multicopter_mpc_yaml/mpc/" + robotName + "_mpc.yaml")
+elif mpcName == 'weighted':
+    mpcController = multicopter_mpc.WeightedMpc(
+        trajectory, dt,
+        "/home/pepms/wsros/mpc-ws/src/multicopter_mpc/multicopter_mpc_yaml/mpc/" + robotName + "_mpc.yaml")
 else:
     mpcController = multicopter_mpc.CarrotMpc(
         trajectory, solver.xs, dt,
-        "/home/pepms/robotics/libraries/multicopter-mpc/config/mpc/" + robotName + "_mpc.yaml")
+        "/home/pepms/wsros/mpc-ws/src/multicopter_mpc/multicopter_mpc_yaml/mpc/" + robotName + "_mpc.yaml")
+
 mpcController.updateProblem(0)
 mpcController.solver.solve(solver.xs[:mpcController.problem.T + 1], solver.us[:mpcController.problem.T])
 
-dtSimulator = 2.5
+dtSimulator = 2
 simulator = AerialSimulator(mpcController.robot_model, mpcController.platform_params, dtSimulator, solver.xs[0])
 t = 0
 updateTime = []
 solveTime = []
-for i in range(0, problem.T * dt * 2):
+# for i in range(0, problem.T * dt * 2):
+for i in range(0, problem.T * dt):
     mpcController.problem.x0 = simulator.states[-1]
     start = time.time()
     mpcController.updateProblem(int(t))
@@ -55,5 +62,6 @@ for i in range(0, problem.T * dt * 2):
     simulator.simulateStep(control)
     t += dtSimulator
 
+print(simulator.states[-1])
 print("Average update time: ", sum(updateTime) / len(updateTime))
 print("Average solving time: ", sum(solveTime) / len(solveTime))

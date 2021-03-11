@@ -18,6 +18,7 @@
 #include "python/multicopter_mpc/mpc-base.hpp"
 #include "python/multicopter_mpc/mpc-controllers/carrot-mpc.hpp"
 #include "python/multicopter_mpc/mpc-controllers/rail-mpc.hpp"
+#include "python/multicopter_mpc/mpc-controllers/weighted-mpc.hpp"
 #include "python/multicopter_mpc/sbfddp.hpp"
 #include "python/multicopter_mpc/stage.hpp"
 #include "python/multicopter_mpc/trajectory.hpp"
@@ -33,6 +34,7 @@ BOOST_PYTHON_MODULE(libmulticopter_mpc_pywrap) {
   exposeMpcAbstract();
   exposeCarrotMpc();
   exposeRailMpc();
+  exposeWeightedMpc();
   exposeMultiCopterBaseParams();
   exposeSolverSbFDDP();
   exposeTrajectory();
