@@ -1,6 +1,5 @@
 import numpy as np
 import time
-import copy
 
 import pinocchio
 import crocoddyl
@@ -20,7 +19,16 @@ def rotationMatrixFromTwoVectors(a, b):
 
 
 class MulticopterMpcDisplay(crocoddyl.GepettoDisplay):
-    def __init__(self, robot, baseParams, rate=-1, freq=1, cameraTF=None, floor=True, frameNames=[], visibility=False):
+    def __init__(self,
+                 robot,
+                 baseParams,
+                 rate=-1,
+                 freq=1,
+                 cameraTF=None,
+                 floor=True,
+                 frameNames=[],
+                 visibility=False,
+                 payload=''):
         crocoddyl.GepettoDisplay.__init__(self, robot, rate, freq, cameraTF, floor, frameNames, visibility)
 
         self.baseParams = baseParams
@@ -34,7 +42,16 @@ class MulticopterMpcDisplay(crocoddyl.GepettoDisplay):
         self.robot.viewer.gui.createGroup(self.thrustGroup)
         self._addThrustArrows()
 
-    def display(self, xs, us=[], fs=[], ps=[], dts=[], factor=1.):
+        self.payload = payload
+        self.payloadGroup = "world/payload"
+        self.payloadBoxSize = [0.25, 0.15, 0.1]
+        self.payloadSphereSize = 0.05
+        self.payloadColor = [153. / 255., 0., 153. / 255., 1.]
+
+        if self.payload != '':
+            self._addPayload(self.payload)
+
+    def display(self, xs, us=[], fs=[], ps=[], dts=[], payloads=[], factor=1.):
         if ps:
             for key, p in ps.items():
                 self.robot.viewer.gui.setCurvePoints(self.frameTrajGroup + "/" + key, p)
@@ -85,6 +102,10 @@ class MulticopterMpcDisplay(crocoddyl.GepettoDisplay):
                         self.robot.viewer.gui.setVisibility(thrustName, "ON")
                         self.robot.viewer.gui.resizeArrow(thrustName, self.thrustArrowRadius,
                                                           thrustMagnitude * self.thrustArrowLength)
+
+                if (self.payload == 'box' or self.payload == 'sphere') and payloads:
+                    self.robot.viewer.gui.applyConfiguration(self.payloadGroup, payloads[i])
+
                 self.robot.display(x[:self.robot.nq])
                 time.sleep(dts[i] * factor)
 
@@ -96,3 +117,10 @@ class MulticopterMpcDisplay(crocoddyl.GepettoDisplay):
             self.robot.viewer.gui.setFloatProperty(thrustName, "Alpha", 1.)
         if self.fullVisibility:
             self.robot.viewer.gui.setVisibility(self.thrustGroup, "ALWAYS_ON_TOP")
+
+    def _addPayload(self, type):
+        if type == 'box':
+            self.robot.viewer.gui.addBox(self.payloadGroup, self.payloadBoxSize[0], self.payloadBoxSize[1],
+                                         self.payloadBoxSize[2], self.payloadColor)
+        elif type == 'sphere':
+            self.robot.viewer.gui.addSphere(self.payloadGroup, self.payloadSphereSize, self.payloadColor)
