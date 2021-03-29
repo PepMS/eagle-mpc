@@ -172,6 +172,7 @@ void SolverSbFDDP::barrierInit() {
     }
     problem_->updateModel(i, problem_->get_runningModels()[i]);
   }
+  problem_->updateModel(problem_->get_T(), problem_->get_terminalModel());
 }
 
 bool SolverSbFDDP::solve(const std::vector<Eigen::VectorXd>& init_xs, const std::vector<Eigen::VectorXd>& init_us,
