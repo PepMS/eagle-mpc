@@ -1,6 +1,6 @@
-import multicopter_mpc
 import numpy as np
 import pinocchio
+import crocoddyl
 
 
 def wayPointListToStateArray(wp_list):
@@ -34,8 +34,8 @@ def computeMissionStateError(xs, wp_list):
                     e_rot = pinocchio.log3(np.matmul(M.rotation.T, wp.pose.rotation))
                     e_vlin = wp.velocity.linear - xs_[7:10, traj_idx + i]
                     e_vang = wp.velocity.angular - xs_[10:13, traj_idx + i]
-                    e = np.vstack((np.linalg.norm(e_pos), np.linalg.norm(e_rot),
-                                   np.linalg.norm(e_vlin), np.linalg.norm(e_vang)))
+                    e = np.vstack(
+                        (np.linalg.norm(e_pos), np.linalg.norm(e_rot), np.linalg.norm(e_vlin), np.linalg.norm(e_vang)))
                     error = np.hstack((error, e)) if 'error' in locals() else e
 
                 traj_idx += knots
@@ -56,8 +56,8 @@ def computeMissionStateError(xs, wp_list):
                 e_rot = pinocchio.log3(np.matmul(M.rotation.T, wp.pose.rotation))
                 e_vlin = wp.velocity.linear - xs[7:10, traj_idx + i]
                 e_vang = wp.velocity.angular - xs[10:13, traj_idx + i]
-                e = np.vstack((np.linalg.norm(e_pos), np.linalg.norm(e_rot),
-                               np.linalg.norm(e_vlin), np.linalg.norm(e_vang)))
+                e = np.vstack(
+                    (np.linalg.norm(e_pos), np.linalg.norm(e_rot), np.linalg.norm(e_vlin), np.linalg.norm(e_vang)))
                 errors = np.hstack((errors, e)) if 'errors' in locals() else e
 
             traj_idx += knots
@@ -65,11 +65,24 @@ def computeMissionStateError(xs, wp_list):
     return errors
 
 
-def saveLogfile(filename, log, dt):
+class CallbackLogger(crocoddyl.CallbackLogger):
+    def __init__(self):
+        super().__init__()
+        self.us_squash = []
+
+    def __call__(self, solver):
+        import copy
+        super().__call__(solver)
+        if hasattr(solver, "us_squash"):
+            self.us_squash = copy.copy(solver.us_squash)
+
+
+def saveLogfile(filename, log, dt, forces=[]):
     import pickle
     data = {
         "xs": log.xs,
         "us": log.us,
+        "us_squash": log.us_squash,
         "fs": log.fs,
         "steps": log.steps,
         "iters": log.iters,
@@ -78,7 +91,8 @@ def saveLogfile(filename, log, dt):
         "muV": log.x_regs,
         "stops": log.stops,
         "grads": log.grads,
-        "dt": dt
+        "dt": dt,
+        "forces": forces
     }
     with open(filename, "wb") as f:
         pickle.dump(data, f)
