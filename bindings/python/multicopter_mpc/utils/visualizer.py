@@ -85,19 +85,24 @@ class MulticopterMpcDisplay(crocoddyl.GepettoDisplay):
                         self.robot.viewer.gui.setVisibility(frictionName, "ON")
                         self.activeContacts[key] = True
                 for key, c in self.activeContacts.items():
-                    if c == False:
+                    if c is False:
                         self.robot.viewer.gui.setVisibility(self.forceGroup + "/" + key, "OFF")
                         self.robot.viewer.gui.setVisibility(self.frictionGroup + "/" + key, "OFF")
                 puav = x[:3]
                 quav = pinocchio.Quaternion(x[3:7].reshape(4, 1))
                 Muav = pinocchio.SE3(quav, puav)
-                if us and i < len(us):
+                if us:
+                    if i < len(us):
+                        u = us[i]
+                    else:
+                        u = us[-1]
+
                     for ir, rotor in enumerate(self.baseParams.rotors_pose):
                         R = np.array([[0, 0, -1], [0, 1, 0], [1, 0, 0]])
                         rotor.rotation = R
                         thrustPose = pinocchio.SE3ToXYZQUAT(Muav * rotor).tolist()
                         thrustName = self.thrustGroup + "/" + self.thrusts[ir]
-                        thrustMagnitude = float(us[i][ir]) / self.thrustRange
+                        thrustMagnitude = float(u[ir]) / self.thrustRange
                         self.robot.viewer.gui.applyConfiguration(thrustName, thrustPose)
                         self.robot.viewer.gui.setVisibility(thrustName, "ON")
                         self.robot.viewer.gui.resizeArrow(thrustName, self.thrustArrowRadius,
@@ -108,6 +113,73 @@ class MulticopterMpcDisplay(crocoddyl.GepettoDisplay):
 
                 self.robot.display(x[:self.robot.nq])
                 time.sleep(dts[i] * factor)
+
+    def getForceTrajectoryFromSolver(self, solver):
+        if len(self.frameTrajNames) == 0:
+            return None
+        fs = []
+        models = solver.problem.runningModels.tolist() + [solver.problem.terminalModel]
+        datas = solver.problem.runningDatas.tolist() + [solver.problem.terminalData]
+        for i, data in enumerate(datas):
+            model = models[i]
+            if hasattr(data, "differential"):
+                if isinstance(data.differential,
+                              crocoddyl.libcrocoddyl_pywrap.DifferentialActionDataContactFwdDynamics):
+                    fc = []
+                    for key, contact in data.differential.multibody.contacts.contacts.todict().items():
+                        if model.differential.contacts.contacts[key].active:
+                            oMf = contact.pinocchio.oMi[contact.joint] * contact.jMf
+                            fiMo = pinocchio.SE3(contact.pinocchio.oMi[contact.joint].rotation.T,
+                                                 contact.jMf.translation)
+                            force = fiMo.actInv(contact.f)
+                            R = np.eye(3)
+                            mu = 0.7
+                            for k, c in model.differential.costs.costs.todict().items():
+                                if isinstance(c.cost, crocoddyl.libcrocoddyl_pywrap.CostModelContactFrictionCone):
+                                    if contact.joint == self.robot.model.frames[c.cost.reference.id].parent:
+                                        R = c.cost.reference.cone.R
+                                        mu = c.cost.reference.cone.mu
+                                        continue
+                            fc.append({"key": str(contact.joint), "oMf": oMf, "f": force, "R": R, "mu": mu})
+                    fs.append(fc)
+                elif isinstance(data.differential, crocoddyl.libcrocoddyl_pywrap.StdVec_DiffActionData):
+                    if isinstance(data.differential[0],
+                                  crocoddyl.libcrocoddyl_pywrap.DifferentialActionDataContactFwdDynamics):
+                        fc = []
+                        for key, contact in data.differential[0].multibody.contacts.contacts.todict().items():
+                            if model.differential.contacts.contacts[key].active:
+                                oMf = contact.pinocchio.oMi[contact.joint] * contact.jMf
+                                fiMo = pinocchio.SE3(contact.pinocchio.oMi[contact.joint].rotation.T,
+                                                     contact.jMf.translation)
+                                force = fiMo.actInv(contact.f)
+                                R = np.eye(3)
+                                mu = 0.7
+                                for k, c in model.differential.costs.costs.todict().items():
+                                    if isinstance(c.cost, crocoddyl.libcrocoddyl_pywrap.CostModelContactFrictionCone):
+                                        if contact.joint == self.robot.model.frames[c.cost.reference.id].parent:
+                                            R = c.cost.reference.cone.R
+                                            mu = c.cost.reference.cone.mu
+                                            continue
+                                fc.append({"key": str(contact.joint), "oMf": oMf, "f": force, "R": R, "mu": mu})
+                        fs.append(fc)
+            elif isinstance(data, crocoddyl.libcrocoddyl_pywrap.ActionDataImpulseFwdDynamics):
+                fc = []
+                for key, impulse in data.multibody.impulses.impulses.todict().items():
+                    if model.impulses.impulses[key].active:
+                        oMf = impulse.pinocchio.oMi[impulse.joint] * impulse.jMf
+                        fiMo = pinocchio.SE3(impulse.pinocchio.oMi[impulse.joint].rotation.T, impulse.jMf.translation)
+                        force = fiMo.actInv(impulse.f)
+                        R = np.eye(3)
+                        mu = 0.7
+                        for k, c in model.costs.costs.todict().items():
+                            if isinstance(c.cost, crocoddyl.libcrocoddyl_pywrap.CostModelContactFrictionCone):
+                                if impulse.joint == self.robot.model.frames[c.cost.id].parent:
+                                    R = c.cost.cone.R
+                                    mu = c.cost.cone.mu
+                                    continue
+                        fc.append({"key": str(impulse.joint), "oMf": oMf, "f": force, "R": R, "mu": mu})
+                fs.append(fc)
+        return fs
 
     def _addThrustArrows(self):
         for thrust in self.thrusts:
