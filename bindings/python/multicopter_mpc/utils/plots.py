@@ -1,10 +1,19 @@
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
-
 
 from multicopter_mpc.utils.tools import wayPointListToStateArray
 
-colors = ['tab:blue', 'tab:orange', 'tab:red', 'tab:green']
+matplotlib.rcParams['mathtext.fontset'] = 'stix'
+matplotlib.rcParams['font.family'] = 'STIXGeneral'
+matplotlib.rcParams['font.size'] = 18
+# matplotlib.rc('text', usetex=True)
+
+colors = [
+    'tab:blue', 'tab:orange', 'tab:red', 'tab:green', 'tab:purple', 'tab:brown', 'tab:pink', 'tab:gray', 'tab:olive',
+    'tab:cyan'
+]
+markers = ['^', 's', 'o', '.', '*', 'D']
 
 
 def PlotStates(xs, time, wp_list=None, legend=None):
@@ -61,21 +70,29 @@ def Plot3DTrajectory(xs, wp_list=None, subplot_axis=0, elev=None, azim=None):
         plt.gca().set_aspect('equal', adjustable='datalim')
 
 
-def PlotControls(us, time, wp_list=None, legend=None):
-    if isinstance(us, list):
-        n_subplots = us[0].shape[0]
-    else:
-        n_subplots = us.shape[0]
+def PlotControls(us, time, nRotors, wp_list=None, legend=None):
 
-    fig, axs = plt.subplots(n_subplots, 1, figsize=(15, 10), sharex=True)
-    plotTrajectory(us,
-                   time,
-                   axs,
-                   0,
-                   4,
-                   names=['Rotor 1', 'Rotor 2', 'Rotor3', 'Rotor4'],
-                   wp_list=wp_list,
-                   legend=legend)
+    fig1, axs1 = plt.subplots(nRotors, 1, figsize=(15, 10), sharex=True)
+    names1 = ['Rotor ' + str(i) for i in range(nRotors)]
+    plotTrajectory(us, time, axs1, 0, nRotors, names=names1, legend=legend)
+
+    if isinstance(us, list):
+        nJoints = np.size(us[0], 0) - nRotors
+    else:
+        nJoints = np.size(us, 0) - nRotors
+
+    fig2, axs2 = plt.subplots(nJoints, 1, figsize=(15, 10), sharex=True)
+    names2 = ['Joint ' + str(i) for i in range(nJoints)]
+    plotTrajectory(us, time, axs2, nRotors, nRotors + nJoints, names=names2, legend=legend)
+
+
+def PlotControlsGroup(us, time, nRotors, wp_list=None, legend=None):
+    fig, axs = plt.subplots(2, 1, figsize=(15, 10), sharex=True)
+
+    groupIdx = [nRotors]
+    plotTrajectoryGroup(us, time, axs, groupIdx, legend=legend)
+
+    return fig, axs
 
 
 def PlotStateErrors(errors, time, wp_list, fig_title='', legend=None):
@@ -131,10 +148,9 @@ def PlotMotorSpeed(us, time, wp_list=None):
     plotTrajectory(us, time, axs, 0, 4)
 
 
-def plotTrajectory(data, time, axs, row_init, row_end, names=None, wp_list=None, legend=None):
+def plotTrajectory(data, time, axs, row_init, row_end, names=None, legend=None):
     if isinstance(data, list):
         for idx, d in enumerate(data):
-            knots = np.size(d, 1)
             if isinstance(time, list):
                 time_ = time[idx]
             else:
@@ -144,21 +160,22 @@ def plotTrajectory(data, time, axs, row_init, row_end, names=None, wp_list=None,
                 # Inneficient search for min
                 y_min = min([np.amin(arr[row_init + i, :]) for arr in data])
                 y_max = max([np.amax(arr[row_init + i, :]) for arr in data])
-                # axs[i].plot(t, d[row_init + i, :], color=colors[idx], marker='v')
                 axs[i].plot(time_, d[row_init + i, :], color=colors[idx])
-                if names is not None:
-                    axs[i].set_title(names[i])
-                if wp_list is not None:
-                    wp_array, time_array = wayPointListToStateArray(wp_list)
-                    axs[i].plot(time_array, wp_array[row_init + i, :], 'r+', label='_nolegend_')
                 axs[i].grid(linestyle='--', linewidth=0.5)
                 axs[i].margins(x=0, y=0)
                 axs[i].set_ylim(y_min - 0.1, y_max + 0.1)
+                if names is not None:
+                    axs[i].set_title(names[i])
         if legend is not None:
             axs[0].legend(legend)
     else:
         if row_end - row_init == 1:
-            axs.plot(time, data[0, :], 'v')
+            y_min = np.amin(data[0, :])
+            y_max = np.amax(data[0, :])
+            axs.plot(time, data[0, :], marker=markers[0], color=colors[0])
+            axs.grid(linestyle='--', linewidth=0.5)
+            axs.margins(x=0, y=0)
+            axs.set_ylim(y_min * 1.1, y_max * 1.1)
             if names is not None:
                 axs.set_title(names[0])
         else:
@@ -168,12 +185,39 @@ def plotTrajectory(data, time, axs, row_init, row_end, names=None, wp_list=None,
                 axs[i].plot(time, data[row_init + i, :])
                 if names is not None:
                     axs[i].set_title(names[i])
-                if wp_list is not None:
-                    wp_array, time_array = wayPointListToStateArray(wp_list)
-                    axs[i].plot(time_array, wp_array[row_init + i, :], 'r+')
                 axs[i].grid(linestyle='--', linewidth=0.5)
-                axs[i].margins(x=0, y=0, z=0)
+                axs[i].margins(x=0, y=0)
                 axs[i].set_ylim(y_min * 1.1, y_max * 1.1)
+
+
+def plotTrajectoryGroup(data, time, axs, groupIdx, names=None, legend=None):
+    firstIdx = 0
+    i = 0
+    for lastIdx in groupIdx:
+        j = firstIdx
+        while (j < lastIdx):
+            axs[i].plot(time, data[j, :], color=colors[j % len(colors)], marker=markers[j % len(markers)], markevery=5)
+            j += 1
+        if names is not None:
+            axs[i].set_title(names[i])
+        axs[i].grid(linestyle='--', linewidth=0.5)
+        axs[i].margins(x=0, y=0)
+        firstIdx = lastIdx
+        i += 1
+
+    lastIdx = np.size(data, 0)
+    j = firstIdx
+    while (j < lastIdx):
+        axs[i].plot(time,
+                    data[j, :],
+                    color=colors[(j - firstIdx) % len(colors)],
+                    marker=markers[(j - firstIdx) % len(markers)],
+                    markevery=5)
+        j += 1
+    if names is not None:
+        axs[i].set_title(names[i])
+    axs[i].grid(linestyle='--', linewidth=0.5)
+    axs[i].margins(x=0, y=0)
 
 
 def plotWpReferenceFrame(ax, wp, wp_number=None):
