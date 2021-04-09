@@ -46,12 +46,19 @@ class MulticopterMpcDisplay(crocoddyl.GepettoDisplay):
         self.payloadGroup = "world/payload"
         self.payloadBoxSize = [0.25, 0.15, 0.1]
         self.payloadSphereSize = 0.05
-        self.payloadColor = [153. / 255., 0., 153. / 255., 1.]
+        self.payloadColor = [51. / 255., 51. / 255., 255. / 255., 1.]
 
         if self.payload != '':
             self._addPayload(self.payload)
 
-    def display(self, xs, us=[], fs=[], ps=[], dts=[], payloads=[], factor=1.):
+        self.frameAxisGroup = "world/robot/frame_axis"
+        self.frameAxisNames = []
+        for n in frameNames:
+            self.frameAxisNames.append(str(robot.model.getFrameId(n)))
+        self.robot.viewer.gui.createGroup(self.frameAxisGroup)
+        self._addFrameAxis()
+
+    def display(self, xs, us=[], fs=[], ps=[], se3s=[], dts=[], payloads=[], factor=1.):
         if ps:
             for key, p in ps.items():
                 self.robot.viewer.gui.setCurvePoints(self.frameTrajGroup + "/" + key, p)
@@ -99,7 +106,7 @@ class MulticopterMpcDisplay(crocoddyl.GepettoDisplay):
 
                     for ir, rotor in enumerate(self.baseParams.rotors_pose):
                         R = np.array([[0, 0, -1], [0, 1, 0], [1, 0, 0]])
-                        rotor.rotation = R
+                        rotor.rotation = np.dot(rotor.rotation, R)
                         thrustPose = pinocchio.SE3ToXYZQUAT(Muav * rotor).tolist()
                         thrustName = self.thrustGroup + "/" + self.thrusts[ir]
                         thrustMagnitude = float(u[ir]) / self.thrustRange
@@ -107,6 +114,10 @@ class MulticopterMpcDisplay(crocoddyl.GepettoDisplay):
                         self.robot.viewer.gui.setVisibility(thrustName, "ON")
                         self.robot.viewer.gui.resizeArrow(thrustName, self.thrustArrowRadius,
                                                           thrustMagnitude * self.thrustArrowLength)
+
+                if se3s:
+                    for key, se3 in se3s[i].items():
+                        self.robot.viewer.gui.applyConfiguration(self.frameAxisGroup + "/" + str(key), se3)
 
                 if (self.payload == 'box' or self.payload == 'sphere') and payloads:
                     self.robot.viewer.gui.applyConfiguration(self.payloadGroup, payloads[i])
@@ -181,6 +192,34 @@ class MulticopterMpcDisplay(crocoddyl.GepettoDisplay):
                 fs.append(fc)
         return fs
 
+    def getFramePoseTrajectoryFromSolver(self, solver):
+        if len(self.frameTrajNames) == 0:
+            return None
+        se3s = []
+        # {fr: [] for fr in self.frameTrajNames}
+        models = solver.problem.runningModels.tolist() + [solver.problem.terminalModel]
+        datas = solver.problem.runningDatas.tolist() + [solver.problem.terminalData]
+        for i, data in enumerate(datas):
+            model = models[i]
+            if hasattr(data, "differential"):
+                if isinstance(data.differential, crocoddyl.libcrocoddyl_pywrap.StdVec_DiffActionData):
+                    dataDiff = data.differential[0]
+                else:
+                    dataDiff = data.differential
+                if hasattr(dataDiff, "pinocchio"):
+                    se3 = {}
+                    for frameId in self.frameAxisNames:
+                        pinocchio.updateFramePlacement(model.differential.pinocchio, dataDiff.pinocchio, int(frameId))
+                        pose = dataDiff.pinocchio.oMf[int(frameId)]
+                        se3[frameId] = pinocchio.SE3ToXYZQUATtuple(pose)
+                    se3s.append(se3)
+
+            elif isinstance(data, libcrocoddyl_pywrap.ActionDataImpulseFwdDynamics):
+                if hasattr(data, "pinocchio"):
+                    pose = data.pinocchio.oMf[frameId]
+                    p.append(np.asarray(pose.translation.T).reshape(-1).tolist())
+        return se3s
+
     def _addThrustArrows(self):
         for thrust in self.thrusts:
             thrustName = self.thrustGroup + "/" + thrust
@@ -196,3 +235,7 @@ class MulticopterMpcDisplay(crocoddyl.GepettoDisplay):
                                          self.payloadBoxSize[2], self.payloadColor)
         elif type == 'sphere':
             self.robot.viewer.gui.addSphere(self.payloadGroup, self.payloadSphereSize, self.payloadColor)
+
+    def _addFrameAxis(self):
+        for frame in self.frameAxisNames:
+            self.robot.viewer.gui.addXYZaxis(self.frameAxisGroup + "/" + frame, [1., 0., 0., 1.], .01, 0.1)
