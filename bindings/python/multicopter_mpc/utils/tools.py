@@ -65,24 +65,12 @@ def computeMissionStateError(xs, wp_list):
     return errors
 
 
-class CallbackLogger(crocoddyl.CallbackLogger):
-    def __init__(self):
-        super().__init__()
-        self.us_squash = []
-
-    def __call__(self, solver):
-        import copy
-        super().__call__(solver)
-        if hasattr(solver, "us_squash"):
-            self.us_squash = copy.copy(solver.us_squash)
-
-
-def saveLogfile(filename, log, dt, forces=[]):
+def saveLogfile(filename, log, dt, us_squash=[], forces=[]):
     import pickle
     data = {
         "xs": log.xs,
         "us": log.us,
-        "us_squash": log.us_squash,
+        "us_squash": us_squash,
         "fs": log.fs,
         "steps": log.steps,
         "iters": log.iters,
