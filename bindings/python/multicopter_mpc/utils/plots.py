@@ -172,7 +172,7 @@ def plotTrajectory(data, time, axs, row_init, row_end, names=None, legend=None):
         if row_end - row_init == 1:
             y_min = np.amin(data[0, :])
             y_max = np.amax(data[0, :])
-            axs.plot(time, data[0, :], marker=markers[0], color=colors[0])
+            axs.plot(time, data[0, :], marker=markers[0], color=colors[0], markevery=5)
             axs.grid(linestyle='--', linewidth=0.5)
             axs.margins(x=0, y=0)
             axs.set_ylim(y_min * 1.1, y_max * 1.1)
