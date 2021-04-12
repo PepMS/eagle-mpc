@@ -65,7 +65,7 @@ def computeMissionStateError(xs, wp_list):
     return errors
 
 
-def saveLogfile(filename, log, dt, us_squash=[], forces=[]):
+def saveLogfile(filename, log, dt, us_squash=[], forces=[], frame_poses=[], cogs=[]):
     import pickle
     data = {
         "xs": log.xs,
@@ -80,7 +80,9 @@ def saveLogfile(filename, log, dt, us_squash=[], forces=[]):
         "stops": log.stops,
         "grads": log.grads,
         "dt": dt,
-        "forces": forces
+        "forces": forces,
+        "frame_poses": frame_poses,
+        "cogs": cogs
     }
     with open(filename, "wb") as f:
         pickle.dump(data, f)

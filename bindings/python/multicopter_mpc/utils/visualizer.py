@@ -28,7 +28,8 @@ class MulticopterMpcDisplay(crocoddyl.GepettoDisplay):
                  floor=True,
                  frameNames=[],
                  visibility=False,
-                 payload=''):
+                 payload='',
+                 cog=False):
         crocoddyl.GepettoDisplay.__init__(self, robot, rate, freq, cameraTF, floor, frameNames, visibility)
 
         self.baseParams = baseParams
@@ -58,7 +59,15 @@ class MulticopterMpcDisplay(crocoddyl.GepettoDisplay):
         self.robot.viewer.gui.createGroup(self.frameAxisGroup)
         self._addFrameAxis()
 
-    def display(self, xs, us=[], fs=[], ps=[], se3s=[], dts=[], payloads=[], factor=1.):
+        self.cog = cog
+        self.cogRadius = 0.02
+        self.cogGroup = "world/robot/cog"
+        self.cogColor = [1 / 255, 1 / 255, 1 / 255, 1]
+        if self.cog:
+            self.robot.viewer.gui.createGroup(self.cogGroup)
+            self._addCog()
+
+    def display(self, xs, us=[], fs=[], ps=[], se3s=[], dts=[], payloads=[], cogs=[], factor=1.):
         if ps:
             for key, p in ps.items():
                 self.robot.viewer.gui.setCurvePoints(self.frameTrajGroup + "/" + key, p)
@@ -121,6 +130,9 @@ class MulticopterMpcDisplay(crocoddyl.GepettoDisplay):
 
                 if (self.payload == 'box' or self.payload == 'sphere') and payloads:
                     self.robot.viewer.gui.applyConfiguration(self.payloadGroup, payloads[i])
+
+                if cogs and self.cog:
+                    self.robot.viewer.gui.applyConfiguration(self.cogGroup + "/ball", cogs[i])
 
                 self.robot.display(x[:self.robot.nq])
                 time.sleep(dts[i] * factor)
@@ -220,6 +232,24 @@ class MulticopterMpcDisplay(crocoddyl.GepettoDisplay):
                     p.append(np.asarray(pose.translation.T).reshape(-1).tolist())
         return se3s
 
+    def getCogTrajectoryFromSolver(self, solver):
+        cogs = []
+        models = solver.problem.runningModels.tolist() + [solver.problem.terminalModel]
+        datas = solver.problem.runningDatas.tolist() + [solver.problem.terminalData]
+        for i, data in enumerate(datas):
+            model = models[i]
+            q = solver.xs[i][:model.differential.pinocchio.nq]
+            if hasattr(data, "differential"):
+                if isinstance(data.differential, crocoddyl.libcrocoddyl_pywrap.StdVec_DiffActionData):
+                    dataDiff = data.differential[0]
+                else:
+                    dataDiff = data.differential
+                if hasattr(dataDiff, "pinocchio"):
+                    cog = pinocchio.centerOfMass(model.differential.pinocchio, data.differential.pinocchio, q, False)
+                    cogs.append(cog.tolist() + [0, 0, 0, 1])
+
+        return cogs
+
     def _addThrustArrows(self):
         for thrust in self.thrusts:
             thrustName = self.thrustGroup + "/" + thrust
@@ -239,3 +269,6 @@ class MulticopterMpcDisplay(crocoddyl.GepettoDisplay):
     def _addFrameAxis(self):
         for frame in self.frameAxisNames:
             self.robot.viewer.gui.addXYZaxis(self.frameAxisGroup + "/" + frame, [1., 0., 0., 1.], .01, 0.1)
+
+    def _addCog(self):
+        self.robot.viewer.gui.addSphere(self.cogGroup + "/ball", self.cogRadius, self.cogColor)
