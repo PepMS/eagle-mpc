@@ -77,6 +77,23 @@ boost::shared_ptr<crocoddyl::CostModelAbstract> CostModelFactory::create(
       crocoddyl::FramePlacement frame(state->get_pinocchio()->getFrameId(link_name), m_ref);
       cost = boost::make_shared<crocoddyl::CostModelFramePlacement>(state, activation, frame, nu);
     } break;
+    case CostModelTypes::CostModelFrameRotation: {
+      activation = activation_factory_->create(path_to_cost, server, 3);
+
+      Eigen::Vector4d orientation =
+          converter<Eigen::VectorXd>::convert(server->getParam<std::string>(path_to_cost + "orientation"));
+
+      std::string link_name = server->getParam<std::string>(path_to_cost + "link_name");
+      std::size_t link_id = state->get_pinocchio()->getFrameId(link_name);
+      if (link_id == state->get_pinocchio()->frames.size()) {
+        throw std::runtime_error("Link " + link_name + "does no exists");
+      }
+
+      Eigen::Quaterniond quat(orientation);
+      quat.normalize();
+      crocoddyl::FrameRotation frame(state->get_pinocchio()->getFrameId(link_name), quat.toRotationMatrix());
+      cost = boost::make_shared<crocoddyl::CostModelFrameRotation>(state, activation, frame, nu);
+    } break;
     case CostModelTypes::CostModelFrameVelocity: {
       activation = activation_factory_->create(path_to_cost, server, 6);
 

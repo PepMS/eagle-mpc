@@ -18,6 +18,7 @@ void exposeTrajectory() {
       "StdVec_Stages");
 
   bp::register_ptr_to_python<boost::shared_ptr<crocoddyl::StateMultibody>>();
+  bp::register_ptr_to_python<boost::shared_ptr<crocoddyl::ActuationModelMultiCopterBase>>();
   bp::register_ptr_to_python<boost::shared_ptr<pinocchio::Model>>();
 
   bp::class_<Trajectory, boost::shared_ptr<Trajectory>>("Trajectory", bp::no_init)
