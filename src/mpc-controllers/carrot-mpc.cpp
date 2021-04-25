@@ -14,40 +14,7 @@ CarrotMpc::CarrotMpc(const boost::shared_ptr<Trajectory>& trajectory, const std:
     t_ref_.push_back(dt_ref * i);
   }
 
-  std::cout << "Here 1!" << std::endl;
-  try {
-    carrot_weight_ = params_server_->getParam<double>("mpc_controller/carrot_weight");
-  } catch (const std::exception& e) {
-    MMPC_WARN << "The following key: 'mpc_controller/carrot_weight' has not been found in the parameters server. Set "
-                 "to 10.0";
-    carrot_weight_ = 10.0;
-  }
-
-  try {
-    carrot_tail_weight_ = params_server_->getParam<double>("mpc_controller/carrot_tail_weight");
-  } catch (const std::exception& e) {
-    MMPC_WARN
-        << "The following key: 'mpc_controller/carrot_tail_weight' has not been found in the parameters server. Set "
-           "to 5.0";
-    carrot_tail_weight_ = 5.0;
-  }
-
-  try {
-    carrot_tail_act_weights_ = converter<Eigen::VectorXd>::convert(
-        params_server_->getParam<std::string>("mpc_controller/carrot_tail_act_weights"));
-  } catch (const std::exception& e) {
-    MMPC_WARN << "The following key: 'mpc_controller/carrot_tail_act_weights' has not been found in the parameters "
-                 "server. Set "
-                 "to unitary vector";
-    carrot_tail_act_weights_ = Eigen::VectorXd::Ones(robot_state_->get_ndx());
-  }
-  if (carrot_tail_act_weights_.size() != robot_state_->get_ndx()) {
-    std::runtime_error("CarrotMPC: the dimension for the tail activation weights vector is " +
-                       std::to_string(carrot_tail_act_weights_.size()) + ", should be " +
-                       std::to_string(robot_state_->get_ndx()));
-  }
-
-  std::cout << "Here 2!" << std::endl;
+  loadCostParams();
 
   t_stages_.reserve(trajectory_->get_stages().size() + 1);
   t_stages_.push_back(0);
@@ -66,16 +33,128 @@ CarrotMpc::CarrotMpc(const boost::shared_ptr<Trajectory>& trajectory, const std:
   t_ini = t_stages_.back() + duration;
   t_stages_.push_back(t_ini);
 
-  std::cout << "Here 3!" << std::endl;
-
   createProblem();
-
-  std::cout << "Here 4!" << std::endl;
 
   update_vars_.state_ref = robot_state_->zero();
 }
 
 CarrotMpc::~CarrotMpc() {}
+
+void CarrotMpc::loadCostParams() {
+  try {
+    carrot_weight_ = params_server_->getParam<double>("mpc_controller/carrot_weight");
+  } catch (const std::exception& e) {
+    MMPC_WARN << "The following key: 'mpc_controller/carrot_weight' has not been found in the parameters server. Set "
+                 "to 10.0";
+    carrot_weight_ = 10.0;
+  }
+
+  try {
+    carrot_tail_weight_ = params_server_->getParam<double>("mpc_controller/carrot_tail_weight");
+  } catch (const std::exception& e) {
+    MMPC_WARN
+        << "The following key: 'mpc_controller/carrot_tail_weight' has not been found in the parameters server. Set "
+           "to 5.0";
+    carrot_tail_weight_ = 5.0;
+  }
+  try {
+    carrot_tail_act_weights_ = converter<Eigen::VectorXd>::convert(
+        params_server_->getParam<std::string>("mpc_controller/carrot_tail_act_weights"));
+  } catch (const std::exception& e) {
+    MMPC_WARN << "The following key: 'mpc_controller/carrot_tail_act_weights' has not been found in the parameters "
+                 "server. Set "
+                 "to unitary vector";
+    carrot_tail_act_weights_ = Eigen::VectorXd::Ones(robot_state_->get_ndx());
+  }
+  if (carrot_tail_act_weights_.size() != robot_state_->get_ndx()) {
+    std::runtime_error("CarrotMPC: the dimension for the tail activation weights vector is " +
+                       std::to_string(carrot_tail_act_weights_.size()) + ", should be " +
+                       std::to_string(robot_state_->get_ndx()));
+  }
+
+  try {
+    control_reg_weight_ = params_server_->getParam<double>("mpc_controller/carrot_control_reg_weight");
+  } catch (const std::exception& e) {
+    MMPC_WARN << "The following key: 'mpc_controller/carrot_control_reg_weight' has not been found in the parameters "
+                 "server. Set "
+                 "to 1e-2";
+    control_reg_weight_ = 1e-2;
+  }
+  try {
+    control_reg_act_weights_ = converter<Eigen::VectorXd>::convert(
+        params_server_->getParam<std::string>("mpc_controller/carrot_control_reg_act_weights"));
+  } catch (const std::exception& e) {
+    MMPC_WARN << "The following key: 'mpc_controller/carrot_control_reg_act_weights' has not been found in the parameters "
+                 "server. Set "
+                 "to unitary vector";
+    control_reg_act_weights_ = Eigen::VectorXd::Ones(actuation_->get_nu());
+  }
+  if (control_reg_act_weights_.size() != actuation_->get_nu()) {
+    std::runtime_error("CarrotMPC: the dimension for the control regularization activation weights vector is " +
+                       std::to_string(control_reg_act_weights_.size()) + ", should be " +
+                       std::to_string(actuation_->get_nu()));
+  }
+
+  try {
+    state_reg_weight_ = params_server_->getParam<double>("mpc_controller/carrot_state_reg_weight");
+  } catch (const std::exception& e) {
+    MMPC_WARN << "The following key: 'mpc_controller/carrot_state_reg_weight' has not been found in the parameters "
+                 "server. Set to 1e-3";
+    state_reg_weight_ = 1e-3;
+  }
+  try {
+    state_ref_act_weights_ = converter<Eigen::VectorXd>::convert(
+        params_server_->getParam<std::string>("mpc_controller/carrot_state_ref_act_weights"));
+  } catch (const std::exception& e) {
+    MMPC_WARN
+        << "The following key: 'mpc_controller/carrot_state_ref_act_weights' has not been found in the parameters "
+           "server. Set to unitary vector";
+    state_ref_act_weights_ = Eigen::VectorXd::Ones(robot_state_->get_ndx());
+  }
+  if (state_ref_act_weights_.size() != robot_state_->get_ndx()) {
+    std::runtime_error("CarrotMPC: the dimension for the state regularization activation weights vector is " +
+                       std::to_string(state_ref_act_weights_.size()) + ", should be " +
+                       std::to_string(robot_state_->get_ndx()));
+  }
+
+  try {
+    state_limits_weight_ = params_server_->getParam<double>("mpc_controller/carrot_state_limits_weight");
+  } catch (const std::exception& e) {
+    MMPC_WARN << "The following key: 'mpc_controller/carrot_state_limits_weight' has not been found in the parameters "
+                 "server. Set to 100";
+    state_limits_weight_ = 100;
+  }
+  try {
+    state_limits_act_weights_ = converter<Eigen::VectorXd>::convert(
+        params_server_->getParam<std::string>("mpc_controller/carrot_state_limits_act_weights"));
+  } catch (const std::exception& e) {
+    MMPC_WARN
+        << "The following key: 'mpc_controller/carrot_state_limits_act_weights' has not been found in the parameters "
+           "server. Set to unitary vector";
+    state_limits_act_weights_ = Eigen::VectorXd::Ones(robot_state_->get_ndx());
+  }
+  if (state_limits_act_weights_.size() != robot_state_->get_ndx()) {
+    std::runtime_error("CarrotMPC: the dimension for the state limits activation weights vector is " +
+                       std::to_string(state_limits_act_weights_.size()) + ", should be " +
+                       std::to_string(robot_state_->get_ndx()));
+  }
+
+  state_limits_l_bound_ = converter<Eigen::VectorXd>::convert(
+      params_server_->getParam<std::string>("mpc_controller/carrot_state_limits_l_bound"));
+  if (state_limits_l_bound_.size() != robot_state_->get_ndx()) {
+    std::runtime_error("CarrotMPC: the dimension for the lower limits vector is " +
+                       std::to_string(state_limits_l_bound_.size()) + ", should be " +
+                       std::to_string(robot_state_->get_ndx()));
+  }
+
+  state_limits_u_bound_ = converter<Eigen::VectorXd>::convert(
+      params_server_->getParam<std::string>("mpc_controller/carrot_state_limits_u_bound"));
+  if (state_limits_u_bound_.size() != robot_state_->get_ndx()) {
+    std::runtime_error("CarrotMPC: the dimension for the upper limits vector is " +
+                       std::to_string(state_limits_u_bound_.size()) + ", should be " +
+                       std::to_string(robot_state_->get_ndx()));
+  }
+}
 
 void CarrotMpc::createProblem() {
   DifferentialActionModelTypes dif_type;
@@ -159,15 +238,25 @@ boost::shared_ptr<crocoddyl::CostModelSum> CarrotMpc::createCosts() const {
   //                    (*stage)->get_costs()->get_costs().at(cost_name)->weight, false);
   //   }
   // }
-  boost::shared_ptr<crocoddyl::ActivationModelWeightedQuad> activation =
-      boost::make_shared<crocoddyl::ActivationModelWeightedQuad>(state_activation_weights_);
-  boost::shared_ptr<crocoddyl::CostModelState> rail_cost = boost::make_shared<crocoddyl::CostModelState>(
-      robot_state_, activation, robot_state_->zero(), actuation_->get_nu());
-  costs->addCost("rail_state", rail_cost, state_weight_, true);
+  boost::shared_ptr<crocoddyl::ActivationModelWeightedQuad> state_activation =
+      boost::make_shared<crocoddyl::ActivationModelWeightedQuad>(state_ref_act_weights_);
+  boost::shared_ptr<crocoddyl::CostModelState> state_reg_cost = boost::make_shared<crocoddyl::CostModelState>(
+      robot_state_, state_activation, robot_state_->zero(), actuation_->get_nu());
+  costs->addCost("state_reg", state_reg_cost, state_reg_weight_, true);
 
+  boost::shared_ptr<crocoddyl::ActivationModelWeightedQuad> control_activation =
+      boost::make_shared<crocoddyl::ActivationModelWeightedQuad>(control_reg_act_weights_);
   boost::shared_ptr<crocoddyl::CostModelControl> control_cost =
-      boost::make_shared<crocoddyl::CostModelControl>(robot_state_, actuation_->get_nu());
-  costs->addCost("control", control_cost, control_weight_, true);
+      boost::make_shared<crocoddyl::CostModelControl>(robot_state_, control_activation, actuation_->get_nu());
+  costs->addCost("control_reg", control_cost, control_reg_weight_, true);
+
+  crocoddyl::ActivationBounds state_limit_bounds(state_limits_l_bound_, state_limits_u_bound_, 1);
+  boost::shared_ptr<crocoddyl::ActivationModelWeightedQuadraticBarrier> state_limits_activation =
+      boost::make_shared<crocoddyl::ActivationModelWeightedQuadraticBarrier>(state_limit_bounds,
+                                                                             state_limits_act_weights_);
+  boost::shared_ptr<crocoddyl::CostModelState> state_limit_cost = boost::make_shared<crocoddyl::CostModelState>(
+      robot_state_, state_limits_activation, robot_state_->zero(), actuation_->get_nu());
+  costs->addCost("state_limits", state_limit_cost, state_limits_weight_, true);
 
   boost::shared_ptr<crocoddyl::CostModelState> carrot_cost =
       boost::make_shared<crocoddyl::CostModelState>(robot_state_, robot_state_->zero(), actuation_->get_nu());
@@ -178,10 +267,6 @@ boost::shared_ptr<crocoddyl::CostModelSum> CarrotMpc::createCosts() const {
   boost::shared_ptr<crocoddyl::CostModelState> carrot_tail_cost = boost::make_shared<crocoddyl::CostModelState>(
       robot_state_, activation, robot_state_->zero(), actuation_->get_nu());
   costs->addCost("carrot_tail", carrot_tail_cost, carrot_tail_weight_, false);
-
-  costs->get_costs().at("approach/control_reg")->active = true;
-  costs->get_costs().at("approach/state_reg")->active = true;
-  costs->get_costs().at("approach/state_limits")->active = true;
 
   return costs;
 }
