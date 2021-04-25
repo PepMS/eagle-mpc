@@ -16,8 +16,8 @@ namespace bp = boost::python;
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SolverSbFDDP_solves, SolverSbFDDP::solve, 0, 5)
 
 void exposeSolverSbFDDP() {
-  bp::register_ptr_to_python<boost::shared_ptr<SolverSbFDDP> >();
-  bp::register_ptr_to_python<boost::shared_ptr<crocoddyl::SquashingModelSmoothSat> >();
+  bp::register_ptr_to_python<boost::shared_ptr<SolverSbFDDP>>();
+  bp::register_ptr_to_python<boost::shared_ptr<crocoddyl::SquashingModelSmoothSat>>();
 
   const std::vector<Eigen::VectorXd>& (SolverSbFDDP::*get_controls)() const = &SolverSbFDDP::get_us;
   const std::vector<Eigen::VectorXd>& (SolverSbFDDP::*get_controls_squash)() const = &SolverSbFDDP::getSquashControls;
@@ -26,11 +26,11 @@ void exposeSolverSbFDDP() {
   const boost::shared_ptr<crocoddyl::ShootingProblem>& (SolverSbFDDP::*getProblem)() const =
       &SolverSbFDDP::get_problem;
 
-  bp::class_<SolverSbFDDP,bp::bases<crocoddyl::SolverFDDP>>(
+  bp::class_<SolverSbFDDP, bp::bases<crocoddyl::SolverFDDP>>(
       "SolverSbFDDP",
       "Box-constrained FDDP solver.\n\n"
       ":param shootingProblem: shooting problem (list of action models along trajectory.)",
-      bp::init<boost::shared_ptr<crocoddyl::ShootingProblem>, boost::shared_ptr<crocoddyl::SquashingModelSmoothSat> >(
+      bp::init<boost::shared_ptr<crocoddyl::ShootingProblem>, boost::shared_ptr<crocoddyl::SquashingModelSmoothSat>>(
           bp::args("self", "problem", "squashing"),
           "Initialize the vector dimension.\n\n"
           ":param problem: shooting problem."))
@@ -62,7 +62,11 @@ void exposeSolverSbFDDP() {
       .add_property("problem", bp::make_function(getProblem, bp::return_value_policy<bp::copy_const_reference>()),
                     "shooting problem")
       .add_property("iter", bp::make_function(get_iter, bp::return_value_policy<bp::return_by_value>()),
-                    "number of iterations runned in solve()");
+                    "number of iterations runned in solve()")
+      .add_property(
+          "convergence_init",
+          bp::make_function(&SolverSbFDDP::get_convergence_init, bp::return_value_policy<bp::return_by_value>()),
+          bp::make_function(&SolverSbFDDP::set_convergence_init), "initial time of the stage in ms");
 }  // namespace python
 }  // namespace python
 
