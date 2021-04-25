@@ -58,7 +58,8 @@ class CarrotMpc : public MpcAbstract {
   } update_vars_;
 
   double carrot_weight_;
-  double carrot_weight_end_;
+  double carrot_tail_weight_;
+  Eigen::VectorXd carrot_tail_act_weights_;
 };
 }  // namespace multicopter_mpc
 
