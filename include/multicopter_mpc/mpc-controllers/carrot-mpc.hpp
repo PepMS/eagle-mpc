@@ -35,7 +35,8 @@ class CarrotMpc : public MpcAbstract {
   void computeActiveStage(const std::size_t& current_time, const std::size_t& last_stage);
   void computeStateReference(const std::size_t& time);
   void updateContactCosts(const std::size_t& idx);
-  void updateFreeCosts(const std::size_t& idx);
+  void updateFreeCostsTasks(const std::size_t& idx);
+  void updateFreeCosts(const std::size_t& idx, const std::size_t& current_time);
   boost::shared_ptr<Trajectory> trajectory_;
 
   std::vector<std::size_t> t_stages_;
@@ -51,11 +52,13 @@ class CarrotMpc : public MpcAbstract {
     boost::shared_ptr<crocoddyl::DifferentialActionModelContactFwdDynamics> dif_contact;
     boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> dif_free;
     Eigen::VectorXd state_ref;
+    Eigen::Quaterniond quat_hover;
     std::size_t idx_state;
     double alpha;
   } update_vars_;
 
   double carrot_weight_;
+  double carrot_weight_end_;
 };
 }  // namespace multicopter_mpc
 

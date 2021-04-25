@@ -22,6 +22,15 @@ CarrotMpc::CarrotMpc(const boost::shared_ptr<Trajectory>& trajectory, const std:
     carrot_weight_ = 10.0;
   }
 
+  try {
+    carrot_weight_end_ = params_server_->getParam<double>("mpc_controller/carrot_weight_end");
+  } catch (const std::exception& e) {
+    MMPC_WARN
+        << "The following key: 'mpc_controller/carrot_weight_end' has not been found in the parameters server. Set "
+           "to 5.0";
+    carrot_weight_end_ = 5.0;
+  }
+
   t_stages_.reserve(trajectory_->get_stages().size());
   for (std::size_t i = 0; i < trajectory_->get_stages().size(); ++i) {
     t_stages_.push_back(trajectory_->get_stages()[i]->get_t_ini());
@@ -121,6 +130,10 @@ boost::shared_ptr<crocoddyl::CostModelSum> CarrotMpc::createCosts() const {
       boost::make_shared<crocoddyl::CostModelState>(robot_state_, robot_state_->zero(), actuation_->get_nu());
   costs->addCost("carrot_state", carrot_cost, carrot_weight_, false);
 
+  costs->get_costs().at("approach/control_reg")->active = true;
+  costs->get_costs().at("approach/state_reg")->active = true;
+  costs->get_costs().at("approach/state_limits")->active = true;
+
   return costs;
 }
 
@@ -130,14 +143,15 @@ void CarrotMpc::updateProblem(const std::size_t& current_time) {
   for (std::size_t i = 0; i < dif_models_.size(); ++i) {
     update_vars_.node_time = current_time + i * params_.dt;
     computeActiveStage(update_vars_.node_time, update_vars_.idx_last_stage);
-    update_vars_.name_stage = trajectory_->get_stages()[update_vars_.idx_stage]->get_name();
+    update_vars_.name_stage = trajectory_->get_stages()[update_vars_.idx_stage]->get_name() + "/";
     if (trajectory_->get_has_contact()) {
       updateContactCosts(i);
     } else {
-      updateFreeCosts(i);
+      updateFreeCosts(i, current_time);
     }
     update_vars_.idx_last_stage = update_vars_.idx_stage;
   }
+  // std::cout << "This is the current time: " << current_time << std::endl;
 }
 
 void CarrotMpc::computeActiveStage(const std::size_t& current_time) {
@@ -154,7 +168,50 @@ void CarrotMpc::computeActiveStage(const std::size_t& current_time, const std::s
 
 void CarrotMpc::updateContactCosts(const std::size_t& idx) {}
 
-void CarrotMpc::updateFreeCosts(const std::size_t& idx) {
+void CarrotMpc::updateFreeCosts(const std::size_t& idx, const std::size_t& current_time) {
+  update_vars_.dif_free =
+      boost::static_pointer_cast<crocoddyl::DifferentialActionModelFreeFwdDynamics>(dif_models_[idx]);
+
+  if (!trajectory_->get_stages()[update_vars_.idx_stage]->get_is_transition() || (idx == dif_models_.size() - 1)) {
+    update_vars_.dif_free->get_costs()->get_costs().at("carrot_state")->active = true;
+    computeStateReference(update_vars_.node_time);
+    update_vars_.dif_free->get_costs()->get_costs().at("carrot_state")->cost->set_reference(update_vars_.state_ref);
+
+    if (current_time <=
+            trajectory_->get_stages().back()->get_t_ini() + trajectory_->get_stages().back()->get_duration() &&
+        update_vars_.node_time >
+            trajectory_->get_stages().back()->get_t_ini() + trajectory_->get_stages().back()->get_duration()) {
+      
+      std::cout << "It was: " << update_vars_.dif_free->get_costs()->get_costs().at("carrot_state")->active
+                << std::endl;
+      
+      // if (last stage node counter > 1 then false carrot)
+      update_vars_.dif_free->get_costs()->get_costs().at("carrot_state")->active = false;
+      
+      std::cout << "Node idx: " << idx << std::endl;
+      std::cout << "Node time: " << update_vars_.node_time << std::endl;
+      std::cout << "Trajectory ending: "
+                << trajectory_->get_stages().back()->get_t_ini() + trajectory_->get_stages().back()->get_duration()
+                << std::endl;
+    } else if (current_time >
+                   trajectory_->get_stages().back()->get_t_ini() + trajectory_->get_stages().back()->get_duration() &&
+               update_vars_.node_time >
+                   trajectory_->get_stages().back()->get_t_ini() + trajectory_->get_stages().back()->get_duration()) {
+      update_vars_.dif_free->get_costs()->get_costs().at("carrot_state")->active = true;
+      update_vars_.dif_free->get_costs()->get_costs().at("carrot_state")->weight = carrot_weight_end_;
+      update_vars_.dif_free->get_costs()->get_costs().at("approach/state_reg")->active = false;
+      // std::cout << "Current time: " << current_time << std::endl;
+      // std::cout << "Finish time: "
+      //           << trajectory_->get_stages().back()->get_t_ini() + trajectory_->get_stages().back()->get_duration()
+      //           << std::endl;
+      // std::cout << "node time: " << update_vars_.node_time << std::endl;
+    }
+  } else {
+    update_vars_.dif_free->get_costs()->get_costs().at("carrot_state")->active = false;
+  }
+}
+
+void CarrotMpc::updateFreeCostsTasks(const std::size_t& idx) {
   update_vars_.dif_free =
       boost::static_pointer_cast<crocoddyl::DifferentialActionModelFreeFwdDynamics>(dif_models_[idx]);
   for (auto cost = update_vars_.dif_free->get_costs()->get_costs().begin();
@@ -177,8 +234,14 @@ void CarrotMpc::updateFreeCosts(const std::size_t& idx) {
 void CarrotMpc::computeStateReference(const std::size_t& time) {
   update_vars_.idx_state = std::size_t(std::upper_bound(t_ref_.begin(), t_ref_.end(), time) - t_ref_.begin());
   if (update_vars_.idx_state >= state_ref_.size()) {
-    update_vars_.state_ref.head(robot_state_->get_nx()) = state_ref_.back().head(robot_state_->get_nx());
-
+    update_vars_.state_ref = robot_state_->zero();
+    update_vars_.state_ref.head(robot_state_->get_nq()) = state_ref_.back().head(robot_state_->get_nq());
+    update_vars_.quat_hover = Eigen::Quaterniond(state_ref_.back()(6), 0.0, 0.0, state_ref_.back()(5));
+    update_vars_.quat_hover.normalize();
+    update_vars_.state_ref(3) = update_vars_.quat_hover.x();
+    update_vars_.state_ref(4) = update_vars_.quat_hover.y();
+    update_vars_.state_ref(5) = update_vars_.quat_hover.z();
+    update_vars_.state_ref(6) = update_vars_.quat_hover.w();
   } else {
     update_vars_.alpha = (time - t_ref_[update_vars_.idx_state - 1]) /
                          (t_ref_[update_vars_.idx_state] - t_ref_[update_vars_.idx_state - 1]);
