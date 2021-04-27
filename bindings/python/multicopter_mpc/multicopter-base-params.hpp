@@ -23,13 +23,17 @@ void exposeMultiCopterBaseParams() {
                                             const boost::shared_ptr<pinocchio::Model>&) =
       &MultiCopterBaseParams::autoSetup;
 
+  void (MultiCopterBaseParams::*auto_setup_nomodel)(const std::string&, const boost::shared_ptr<ParamsServer>&) =
+      &MultiCopterBaseParams::autoSetup;
+
   bp::class_<MultiCopterBaseParams>(
       "MultiCopterBaseParams",
       bp::init<const double&, const double&, const Eigen::MatrixXd&, const double&, const double&, const std::string&>(
           bp::args("self", "cf", "cm", "torque_force", "max_th", "min_th", "base_link_name"),
           "Initialize multicopter params"))
       .def(bp::init<>(bp::args("self"), "Default initialization"))
-      .def("autoSetup", auto_setup, bp::args("self", "a", "b", "c"))
+      .def("autoSetup", auto_setup, bp::args("self", "path_to_platform", "params_server", "robot_model"))
+      .def("autoSetup", auto_setup_nomodel, bp::args("self", "path_to_platform", "params_server"))
       .add_property("cf", bp::make_getter(&MultiCopterBaseParams::cf_, bp::return_value_policy<bp::return_by_value>()),
                     bp::make_setter(&MultiCopterBaseParams::cf_), "cf coefficient")
       .add_property("cm", bp::make_getter(&MultiCopterBaseParams::cm_, bp::return_value_policy<bp::return_by_value>()),
