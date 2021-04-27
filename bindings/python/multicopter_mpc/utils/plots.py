@@ -108,10 +108,10 @@ def PlotStateErrors(errors, time, wp_list, fig_title='', legend=None):
                    legend=legend)
 
 
-def PlotPosition(xs, time, wp_list=None, fig_title='', legend=None):
+def PlotPosition(xs, time, fig_title='', legend=None):
     fig, axs = plt.subplots(3, 1, figsize=(15, 10), sharex=True)
     fig.suptitle(fig_title)
-    plotTrajectory(xs, time, axs, 0, 3, names=['X pos', 'Y pos', 'Z pos'], wp_list=wp_list, legend=legend)
+    plotTrajectory(xs, time, axs, 0, 3, names=['X pos', 'Y pos', 'Z pos'], legend=legend)
 
 
 def PlotAttitude(xs, time, wp_list=None, legend=None):
@@ -148,7 +148,7 @@ def PlotMotorSpeed(us, time, wp_list=None):
     plotTrajectory(us, time, axs, 0, 4)
 
 
-def plotTrajectory(data, time, axs, row_init, row_end, names=None, legend=None):
+def plotTrajectory(data, time, axs, row_init, row_end, names=None, legend=None, markevery=5):
     if isinstance(data, list):
         for idx, d in enumerate(data):
             if isinstance(time, list):
@@ -160,7 +160,7 @@ def plotTrajectory(data, time, axs, row_init, row_end, names=None, legend=None):
                 # Inneficient search for min
                 y_min = min([np.amin(arr[row_init + i, :]) for arr in data])
                 y_max = max([np.amax(arr[row_init + i, :]) for arr in data])
-                axs[i].plot(time_, d[row_init + i, :], color=colors[idx])
+                axs[i].plot(time_, d[row_init + i, :], marker=markers[idx], color=colors[idx], markevery=markevery)
                 axs[i].grid(linestyle='--', linewidth=0.5)
                 axs[i].margins(x=0, y=0)
                 axs[i].set_ylim(y_min - 0.1, y_max + 0.1)
@@ -172,7 +172,7 @@ def plotTrajectory(data, time, axs, row_init, row_end, names=None, legend=None):
         if row_end - row_init == 1:
             y_min = np.amin(data[0, :])
             y_max = np.amax(data[0, :])
-            axs.plot(time, data[0, :], marker=markers[0], color=colors[0], markevery=5)
+            axs.plot(time, data[0, :], marker=markers[0], color=colors[0], markevery=markevery)
             axs.grid(linestyle='--', linewidth=0.5)
             axs.margins(x=0, y=0)
             axs.set_ylim(y_min * 1.1, y_max * 1.1)
