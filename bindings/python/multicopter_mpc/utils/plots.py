@@ -148,7 +148,16 @@ def PlotMotorSpeed(us, time, wp_list=None):
     plotTrajectory(us, time, axs, 0, 4)
 
 
-def plotTrajectory(data, time, axs, row_init, row_end, names=None, legend=None, markevery=5):
+def plotTrajectory(data,
+                   time,
+                   axs,
+                   row_init,
+                   row_end,
+                   names=None,
+                   legend=None,
+                   markevery=5,
+                   markersize=10,
+                   linewidth=1):
     if isinstance(data, list):
         for idx, d in enumerate(data):
             if isinstance(time, list):
@@ -160,7 +169,13 @@ def plotTrajectory(data, time, axs, row_init, row_end, names=None, legend=None, 
                 # Inneficient search for min
                 y_min = min([np.amin(arr[row_init + i, :]) for arr in data])
                 y_max = max([np.amax(arr[row_init + i, :]) for arr in data])
-                axs[i].plot(time_, d[row_init + i, :], marker=markers[idx], color=colors[idx], markevery=markevery)
+                axs[i].plot(time_,
+                            d[row_init + i, :],
+                            marker=markers[idx],
+                            color=colors[idx],
+                            markevery=markevery,
+                            markersize=markersize,
+                            linewidth=linewidth)
                 axs[i].grid(linestyle='--', linewidth=0.5)
                 axs[i].margins(x=0, y=0)
                 axs[i].set_ylim(y_min - 0.1, y_max + 0.1)
@@ -172,7 +187,13 @@ def plotTrajectory(data, time, axs, row_init, row_end, names=None, legend=None, 
         if row_end - row_init == 1:
             y_min = np.amin(data[0, :])
             y_max = np.amax(data[0, :])
-            axs.plot(time, data[0, :], marker=markers[0], color=colors[0], markevery=markevery)
+            axs.plot(time,
+                     data[0, :],
+                     marker=markers[0],
+                     color=colors[0],
+                     markevery=markevery,
+                     markersize=markersize,
+                     linewidth=linewidth)
             axs.grid(linestyle='--', linewidth=0.5)
             axs.margins(x=0, y=0)
             axs.set_ylim(y_min * 1.1, y_max * 1.1)
@@ -182,7 +203,13 @@ def plotTrajectory(data, time, axs, row_init, row_end, names=None, legend=None, 
             for i in range(row_end - row_init):
                 y_min = np.amin(data[row_init + i, :])
                 y_max = np.amax(data[row_init + i, :])
-                axs[i].plot(time, data[row_init + i, :])
+                axs[i].plot(time,
+                            data[row_init + i, :],
+                            marker=markers[0],
+                            color=colors[0],
+                            markevery=markevery,
+                            markersize=markersize,
+                            linewidth=linewidth)
                 if names is not None:
                     axs[i].set_title(names[i])
                 axs[i].grid(linestyle='--', linewidth=0.5)
@@ -190,13 +217,19 @@ def plotTrajectory(data, time, axs, row_init, row_end, names=None, legend=None, 
                 axs[i].set_ylim(y_min * 1.1, y_max * 1.1)
 
 
-def plotTrajectoryGroup(data, time, axs, groupIdx, names=None, legend=None):
+def plotTrajectoryGroup(data, time, axs, groupIdx, names=None, legend=None, markevery=5, markersize=10, linewidth=1):
     firstIdx = 0
     i = 0
     for lastIdx in groupIdx:
         j = firstIdx
         while (j < lastIdx):
-            axs[i].plot(time, data[j, :], color=colors[j % len(colors)], marker=markers[j % len(markers)], markevery=5)
+            axs[i].plot(time,
+                        data[j, :],
+                        linewidth=linewidth,
+                        color=colors[j % len(colors)],
+                        marker=markers[j % len(markers)],
+                        markevery=markevery,
+                        markersize=markersize)
             j += 1
         if names is not None:
             axs[i].set_title(names[i])
@@ -212,7 +245,9 @@ def plotTrajectoryGroup(data, time, axs, groupIdx, names=None, legend=None):
                     data[j, :],
                     color=colors[(j - firstIdx) % len(colors)],
                     marker=markers[(j - firstIdx) % len(markers)],
-                    markevery=5)
+                    linewidth=linewidth,
+                    markevery=markevery,
+                    markersize=markersize)
         j += 1
     if names is not None:
         axs[i].set_title(names[i])
