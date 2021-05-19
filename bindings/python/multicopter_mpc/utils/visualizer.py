@@ -33,7 +33,7 @@ class MulticopterMpcDisplay(crocoddyl.GepettoDisplay):
         crocoddyl.GepettoDisplay.__init__(self, robot, rate, freq, cameraTF, floor, frameNames, visibility)
 
         self.baseParams = baseParams
-        self.thrustGroup = "world/robot/thrusts"
+        self.thrustGroup = "world/" + self.robotName + "/thrusts"
         self.thrusts = ["rotor" + str(i) for i in range(self.baseParams.n_rotors)]
         self.thrustRange = self.baseParams.max_thrust - self.baseParams.min_thrust
         self.thrustArrowRadius = 0.01
@@ -52,7 +52,7 @@ class MulticopterMpcDisplay(crocoddyl.GepettoDisplay):
         if self.payload != '':
             self._addPayload(self.payload)
 
-        self.frameAxisGroup = "world/robot/frame_axis"
+        self.frameAxisGroup = "world/" + self.robotName + "/frame_axis"
         self.frameAxisNames = []
         for n in frameNames:
             self.frameAxisNames.append(str(robot.model.getFrameId(n)))
@@ -61,7 +61,7 @@ class MulticopterMpcDisplay(crocoddyl.GepettoDisplay):
 
         self.cog = cog
         self.cogRadius = 0.02
-        self.cogGroup = "world/robot/cog"
+        self.cogGroup = "world/" + self.robotName + "/cog"
         self.cogColor = [1 / 255, 1 / 255, 1 / 255, 1]
         if self.cog:
             self.robot.viewer.gui.createGroup(self.cogGroup)
