@@ -86,7 +86,7 @@ void WeightedMpc::createProblem() {
         dam = boost::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(robot_state_, actuation, costs);
         break;
       case DifferentialActionModelTypes::DifferentialActionModelContactFwdDynamics:
-        MMPC_ERROR << "Carrot with contact has not been implemented";
+        MMPC_ERROR << "Weighted with contact has not been implemented";
         break;
     }
 
@@ -191,7 +191,13 @@ void WeightedMpc::updateFreeCosts(const std::size_t& idx) {
       if (cost->first.compare(update_vars_.name_stage.size(), 4, "/reg") != 0 &&
           cost->first.compare(update_vars_.name_stage.size(), 7, "/limits") != 0) {
         computeWeight(update_vars_.node_time);
-        cost->second->weight = update_vars_.weight;
+        // cost->second->weight = update_vars_.weight;
+        cost->second->weight = trajectory_->get_stages()[update_vars_.idx_stage]
+                                   ->get_costs()
+                                   ->get_costs()
+                                   .at(cost->first.substr(update_vars_.name_stage.size() + 1))
+                                   ->weight *
+                               update_vars_.weight * beta_;
       }
     } else {
       if (cost->first.compare(0, cost->first.size(), "barrier") != 0) {
@@ -204,20 +210,14 @@ void WeightedMpc::updateFreeCosts(const std::size_t& idx) {
 void WeightedMpc::computeWeight(const std::size_t& time) {
   // Saturate the weight once the nodes are beyond the end of the trajectory
   if (time > trajectory_->get_duration()) {
-    update_vars_.weight_time = (trajectory_->get_duration() - t_stages_[update_vars_.idx_stage]) / 1000.0;
+    update_vars_.weight_time = 0.0;
   } else {
-    update_vars_.weight_time = (time - t_stages_[update_vars_.idx_stage]) / 1000.0;
+    update_vars_.weight_time = update_vars_.weight_time =
+        ((int)time - ((int)trajectory_->get_stages()[update_vars_.idx_stage]->get_t_ini() +
+                      (int)trajectory_->get_stages()[update_vars_.idx_stage]->get_duration())) /
+        1000.0;
   }
-  // update_vars_.weight = 1 / alpha * (math.exp(alpha * (time + dt - beta)) - math.exp(alpha * (time - beta)))
-  update_vars_.exp_1 = exp(alpha_ * (update_vars_.weight_time + params_.dt / 1000.0 - beta_));
-  update_vars_.exp_2 = exp(alpha_ * (update_vars_.weight_time - beta_));
-  update_vars_.weight = 1 / alpha_ * (update_vars_.exp_1 - update_vars_.exp_2);
-  // std::cout << "weight time: " << update_vars_.weight_time << std::endl;
-  // std::cout << "exp 1: " << update_vars_.exp_1 << std::endl;
-  // std::cout << "exp 2: " << update_vars_.exp_2 << std::endl;
-  // std::cout << "alpha: " << alpha_ << std::endl;
-  // std::cout << "beta: " << beta_ << std::endl;
-  // std::cout << "weight: " << update_vars_.weight << std::endl;
+  update_vars_.weight = exp(alpha_ * update_vars_.weight_time);
 }
 
 const boost::shared_ptr<Trajectory>& WeightedMpc::get_trajectory() const { return trajectory_; }

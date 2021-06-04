@@ -291,6 +291,7 @@ bool SolverSbFDDP::solveFDDP(const std::size_t& maxiter, const bool& is_feasible
       return true;
     }
   }
+  iter_ = iter_ >= maxiter ? maxiter - 1 : iter_;
   return false;
 }
 
@@ -367,6 +368,7 @@ bool SolverSbFDDP::solveDDP(const std::size_t& maxiter, const bool& is_feasible,
       return true;
     }
   }
+  iter_ = iter_ >= maxiter ? maxiter - 1 : iter_;
   return false;
 }
 

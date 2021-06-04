@@ -10,12 +10,13 @@ namespace python {
 namespace bp = boost::python;
 
 void exposeParserYaml() {
-  bp::class_<ParserYaml>("ParserYaml", bp::init<std::string, std::string>(
-    bp::args("file", "path_root", "freely_parse"), "Initialize parser YAML"))
-    .def("get_params", &ParserYaml::get_params,bp::return_value_policy<bp::reference_existing_object>());
+  bp::class_<ParserYaml>("ParserYaml",
+                         bp::init<std::string, std::string, const bool>(bp::args("self", "file", "path_root", "freely_parse"),
+                                                            "Initialize parser YAML"))
+      .def("get_params", &ParserYaml::get_params, bp::return_value_policy<bp::reference_existing_object>());
 }
 
 }  // namespace python
-}  // namespace optiuavm
+}  // namespace multicopter_mpc
 
 #endif  // BINDINGS_PYTHON_OPTIUAVM_YAML_PARSER_YAML_HPP_
