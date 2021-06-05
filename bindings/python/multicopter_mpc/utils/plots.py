@@ -249,10 +249,10 @@ def plotTrajectoryGroup(data, time, axs, groupIdx, names=None, legend=None, mark
                     markevery=markevery,
                     markersize=markersize)
         j += 1
-    if names is not None:
-        axs[i].set_title(names[i])
-    axs[i].grid(linestyle='--', linewidth=0.5)
-    axs[i].margins(x=0, y=0)
+        if names is not None:
+            axs[i].set_title(names[i])
+        axs[i].grid(linestyle='--', linewidth=0.5)
+        axs[i].margins(x=0, y=0)
 
 
 def plotWpReferenceFrame(ax, wp, wp_number=None):
