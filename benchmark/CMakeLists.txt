@@ -9,7 +9,7 @@ ${Boost_INCLUDE_DIRS}
 )
 
 set(LIBS_BENCHMARK
-multicopter_mpc
+eagle_mpc
 ${Boost_LIBRARIES}
 ${CROCODDYL_LIB}
 ${URDFDOM_LIB}

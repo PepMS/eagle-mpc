@@ -1,35 +1,33 @@
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 
-file(GLOB_RECURSE MULTICOPTER_MPC_SOURCES *.cpp)
-file(GLOB_RECURSE MULTICOPTER_MPC_HEADERS ${multicopter_mpc_SOURCE_DIR}/include/multicopter_mpc/*.hpp)
+file(GLOB_RECURSE EAGLE_MPC_SOURCES *.cpp)
+file(GLOB_RECURSE EAGLE_MPC_HEADERS ${eagle_mpc_SOURCE_DIR}/include/eagle_mpc/*.hpp)
 
-set(MULTICOPTER_MPC_INCLUDE_DIRS
+set(EAGLE_MPC_INCLUDE_DIRS
     ${PINOCCHIO_INCLUDE_DIRS}
     ${EIGEN3_INCLUDE_DIRS}
     ${CROCODDYL_INCLUDE_DIRS}
     ${YAMLCPP_INCLUDE_DIRS}
 )
 
-set(MULTICOPTER_MPC_LIBS
+set(EAGLE_MPC_LIBS
     ${YAMLCPP_LIBRARY}
     ${YAML_PARSER_LIB}
     ${CROCODDYL_LIBRARIES}
     ${PINOCCHIO_LIBRARIES}
 )
 
-add_library(multicopter_mpc SHARED ${MULTICOPTER_MPC_SOURCES})
-target_include_directories(multicopter_mpc PUBLIC
-                       $<BUILD_INTERFACE:${multicopter_mpc_SOURCE_DIR}/include>
+add_library(eagle_mpc SHARED ${EAGLE_MPC_SOURCES})
+target_include_directories(eagle_mpc PUBLIC
+                       $<BUILD_INTERFACE:${eagle_mpc_SOURCE_DIR}/include>
                        $<INSTALL_INTERFACE:${INCLUDE_DESTINATION}> 
-                       ${MULTICOPTER_MPC_INCLUDE_DIRS})
-target_link_libraries(multicopter_mpc PUBLIC ${MULTICOPTER_MPC_LIBS})
+                       ${EAGLE_MPC_INCLUDE_DIRS})
+target_link_libraries(eagle_mpc PUBLIC ${EAGLE_MPC_LIBS})
 
 # Install
-install(TARGETS multicopter_mpc
-        EXPORT multicopter_mpc DESTINATION ${LIBRARY_DESTINATION})
-install(FILES ${multicopter_mpc_SOURCE_DIR}/cmake/multicopter_mpc-config.cmake DESTINATION ${LIBRARY_DESTINATION}/cmake/multicopter_mpc)
-install(EXPORT multicopter_mpc DESTINATION ${LIBRARY_DESTINATION}/cmake/multicopter_mpc)
-install(EXPORT multicopter_mpc CONFIGURATIONS Release DESTINATION ${LIBRARY_DESTINATION}/cmake/multicopter_mpc/Release)
-install(DIRECTORY ../include/multicopter_mpc DESTINATION ${INCLUDE_DESTINATION})
-# install(FILES ${multicopter_mpc_SOURCE_DIR}/config/other/path.h DESTINATION ${INCLUDE_DESTINATION}/multicopter_mpc)
-# install(DIRECTORY ../config/multicopter DESTINATION ${SHARE_DESTINATION})
+install(TARGETS eagle_mpc
+        EXPORT eagle_mpc DESTINATION ${LIBRARY_DESTINATION})
+install(FILES ${eagle_mpc_SOURCE_DIR}/cmake/eagle_mpc-config.cmake DESTINATION ${LIBRARY_DESTINATION}/cmake/eagle_mpc)
+install(EXPORT eagle_mpc DESTINATION ${LIBRARY_DESTINATION}/cmake/eagle_mpc)
+install(EXPORT eagle_mpc CONFIGURATIONS Release DESTINATION ${LIBRARY_DESTINATION}/cmake/eagle_mpc/Release)
+install(DIRECTORY ../include/eagle_mpc DESTINATION ${INCLUDE_DESTINATION})
