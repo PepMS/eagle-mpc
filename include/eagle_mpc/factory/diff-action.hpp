@@ -1,5 +1,12 @@
-#ifndef MULTICOPTER_MPC_FACTORY_DIFF_ACTION_HPP_
-#define MULTICOPTER_MPC_FACTORY_DIFF_ACTION_HPP_
+///////////////////////////////////////////////////////////////////////////////
+// BSD 3-Clause License
+//
+// Copyright (c) 2021, Institut de Robotica i Informatica Industrial (CSIC-UPC)
+// All rights reserved.
+///////////////////////////////////////////////////////////////////////////////
+
+#ifndef EAGLE_MPC_FACTORY_DIFF_ACTION_HPP_
+#define EAGLE_MPC_FACTORY_DIFF_ACTION_HPP_
 
 #include <map>
 
@@ -8,9 +15,9 @@
 #include "crocoddyl/multibody/actions/free-fwddyn.hpp"
 #include "crocoddyl/multibody/actions/contact-fwddyn.hpp"
 
-#include "multicopter_mpc/stage.hpp"
+#include "eagle_mpc/stage.hpp"
 
-namespace multicopter_mpc {
+namespace eagle_mpc {
 
 class Stage;
 
@@ -43,5 +50,5 @@ class DifferentialActionModelFactory {
                                                                        const boost::shared_ptr<Stage>& stage) const;
 };
 
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc
 #endif

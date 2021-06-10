@@ -1,8 +1,15 @@
-#include "multicopter_mpc/factory/contacts.hpp"
+///////////////////////////////////////////////////////////////////////////////
+// BSD 3-Clause License
+//
+// Copyright (c) 2021, Institut de Robotica i Informatica Industrial (CSIC-UPC)
+// All rights reserved.
+///////////////////////////////////////////////////////////////////////////////
 
-#include "multicopter_mpc/utils/log.hpp"
+#include "eagle_mpc/factory/contacts.hpp"
 
-namespace multicopter_mpc {
+#include "eagle_mpc/utils/log.hpp"
+
+namespace eagle_mpc {
 
 ContactModelFactory::ContactModelFactory() {}
 ContactModelFactory::~ContactModelFactory() {}
@@ -75,4 +82,4 @@ boost::shared_ptr<crocoddyl::ContactModelAbstract> ContactModelFactory::create(
   return contact;
 }
 
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc

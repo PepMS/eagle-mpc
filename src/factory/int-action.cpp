@@ -1,6 +1,13 @@
-#include "multicopter_mpc/factory/int-action.hpp"
+///////////////////////////////////////////////////////////////////////////////
+// BSD 3-Clause License
+//
+// Copyright (c) 2021, Institut de Robotica i Informatica Industrial (CSIC-UPC)
+// All rights reserved.
+///////////////////////////////////////////////////////////////////////////////
 
-namespace multicopter_mpc {
+#include "eagle_mpc/factory/int-action.hpp"
+
+namespace eagle_mpc {
 
 IntegratedActionModelFactory::IntegratedActionModelFactory() {}
 
@@ -28,4 +35,4 @@ boost::shared_ptr<crocoddyl::ActionModelAbstract> IntegratedActionModelFactory::
   return iam;
 }
 
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc

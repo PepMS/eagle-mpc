@@ -2,12 +2,11 @@
 // BSD 3-Clause License
 //
 // Copyright (C) 2018-2020, LAAS-CNRS, University of Edinburgh, IRI: CSIC-UPC
-// Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef MULTICOPTER_MPC_FACTORY_CONTACTS_HPP_
-#define MULTICOPTER_MPC_FACTORY_CONTACTS_HPP_
+#ifndef EAGLE_MPC_FACTORY_CONTACTS_HPP_
+#define EAGLE_MPC_FACTORY_CONTACTS_HPP_
 
 #include <vector>
 #include <string>
@@ -19,11 +18,11 @@
 #include "crocoddyl/multibody/contacts/contact-3d.hpp"
 #include "crocoddyl/multibody/contacts/contact-6d.hpp"
 
-#include "multicopter_mpc/stage.hpp"
-#include "multicopter_mpc/utils/params_server.hpp"
-#include "multicopter_mpc/factory/activation.hpp"
+#include "eagle_mpc/stage.hpp"
+#include "eagle_mpc/utils/params_server.hpp"
+#include "eagle_mpc/factory/activation.hpp"
 
-namespace multicopter_mpc {
+namespace eagle_mpc {
 enum class ContactModelTypes { ContactModel2D, ContactModel3D, ContactModel6D, NbContactModelTypes };
 
 static std::map<std::string, ContactModelTypes> ContactModelTypes_init_map() {
@@ -49,6 +48,6 @@ class ContactModelFactory {
                                                             ContactModelTypes& contact_type) const;
 };
 
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc
 
 #endif

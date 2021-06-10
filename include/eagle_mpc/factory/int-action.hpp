@@ -1,5 +1,12 @@
-#ifndef MULTICOPTER_MPC_FACTORY_INT_ACTION_HPP_
-#define MULTICOPTER_MPC_FACTORY_INT_ACTION_HPP_
+///////////////////////////////////////////////////////////////////////////////
+// BSD 3-Clause License
+//
+// Copyright (c) 2021, Institut de Robotica i Informatica Industrial (CSIC-UPC)
+// All rights reserved.
+///////////////////////////////////////////////////////////////////////////////
+
+#ifndef EAGLE_MPC_FACTORY_INT_ACTION_HPP_
+#define EAGLE_MPC_FACTORY_INT_ACTION_HPP_
 
 #include <map>
 
@@ -8,9 +15,9 @@
 #include "crocoddyl/core/integrator/euler.hpp"
 #include "crocoddyl/core/integrator/rk4.hpp"
 
-#include "multicopter_mpc/stage.hpp"
+#include "eagle_mpc/stage.hpp"
 
-namespace multicopter_mpc {
+namespace eagle_mpc {
 
 // class Stage;
 
@@ -44,5 +51,5 @@ class IntegratedActionModelFactory {
       const boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract>& diff_model) const;
 };
 
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc
 #endif

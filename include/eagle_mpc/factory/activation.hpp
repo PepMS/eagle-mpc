@@ -1,13 +1,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2018-2020, LAAS-CNRS, University of Edinburgh, IRI: CSIC-UPC
-// Copyright note valid unless otherwise stated in individual files.
+// Copyright (C) 2018-2021, LAAS-CNRS, University of Edinburgh, IRI: CSIC-UPC
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef MULTICOPTER_MPC_FACTORY_ACTIVATION_COST_HPP_
-#define MULTICOPTER_MPC_FACTORY_ACTIVATION_COST_HPP_
+#ifndef EAGLE_MPC_FACTORY_ACTIVATION_COST_HPP_
+#define EAGLE_MPC_FACTORY_ACTIVATION_COST_HPP_
 
 #include <vector>
 #include <string>
@@ -19,9 +18,9 @@
 #include "crocoddyl/core/activations/quadratic-barrier.hpp"
 #include "crocoddyl/core/activations/weighted-quadratic-barrier.hpp"
 
-#include "multicopter_mpc/utils/params_server.hpp"
+#include "eagle_mpc/utils/params_server.hpp"
 
-namespace multicopter_mpc {
+namespace eagle_mpc {
 
 enum class ActivationModelTypes {
   ActivationModelQuad,
@@ -63,6 +62,6 @@ class ActivationModelFactory {
                                                                const std::size_t& nr) const;
 };
 
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc
 
 #endif

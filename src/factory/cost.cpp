@@ -1,8 +1,15 @@
-#include "multicopter_mpc/factory/cost.hpp"
+///////////////////////////////////////////////////////////////////////////////
+// BSD 3-Clause License
+//
+// Copyright (c) 2021, Institut de Robotica i Informatica Industrial (CSIC-UPC)
+// All rights reserved.
+///////////////////////////////////////////////////////////////////////////////
 
-#include "multicopter_mpc/utils/log.hpp"
+#include "eagle_mpc/factory/cost.hpp"
 
-namespace multicopter_mpc {
+#include "eagle_mpc/utils/log.hpp"
+
+namespace eagle_mpc {
 
 CostModelFactory::CostModelFactory() { activation_factory_ = boost::make_shared<ActivationModelFactory>(); }
 CostModelFactory::~CostModelFactory() {}
@@ -38,7 +45,6 @@ boost::shared_ptr<crocoddyl::CostModelAbstract> CostModelFactory::create(
       }
 
       cost = boost::make_shared<crocoddyl::CostModelState>(state, activation, reference, nu);
-      // cost_type = CostModelTypes::CostModelState;
     } break;
     case CostModelTypes::CostModelControl: {
       activation = activation_factory_->create(path_to_cost, server, nu);
@@ -149,4 +155,4 @@ boost::shared_ptr<crocoddyl::CostModelAbstract> CostModelFactory::create(
   return cost;
 }
 
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc

@@ -1,6 +1,13 @@
-#include "multicopter_mpc/factory/diff-action.hpp"
+///////////////////////////////////////////////////////////////////////////////
+// BSD 3-Clause License
+//
+// Copyright (c) 2021, Institut de Robotica i Informatica Industrial (CSIC-UPC)
+// All rights reserved.
+///////////////////////////////////////////////////////////////////////////////
 
-namespace multicopter_mpc {
+#include "eagle_mpc/factory/diff-action.hpp"
+
+namespace eagle_mpc {
 
 DifferentialActionModelFactory::DifferentialActionModelFactory() {}
 
@@ -27,4 +34,4 @@ boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract> DifferentialAction
   return dam;
 }
 
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc
