@@ -1,9 +1,13 @@
-# Multicopter MPC
-This is a C++ libary to solve optimal control problems for multirotor-based robotic systems.
+:warning: **Disclaimer** :warning:
+This is an work-in-progress library. As such, it contains basic features. For any doubt, problem or suggestion feel free to open an issue. 
 
-It is based on [Crocoddyl](https://github.com/loco-3d/crocoddyl).
+# Eagle MPC
+This library contains tools to solve optimal control problems that deal with *unmanned aerial manipulators* (UAMs).
+It is strongly dependant on [Crocoddyl](https://github.com/loco-3d/crocoddyl), whose API is used to build optimal control problems.
 
-It contains Python bindings, only tested with Python3 version.
+It has two principal pieces:
+- **Trajectory generator**: It can be used to generate different maneuvers using any type of UAM. The optimal control problem can be specified by means of a YAML file (see the [example section](#examples))
+
 
 ## Building
 ### Install Crocoddyl
@@ -37,7 +41,7 @@ make -j6
 sudo make install
 ``` 
 
-## Running examples
+## <a name="examples"></a> Running examples
 As this library contains Python bindings to its C++ code, we can run a python-based example.
 ```
 python3 path/to/multicopter_mpc/examples/python/trajectory_generation.py
