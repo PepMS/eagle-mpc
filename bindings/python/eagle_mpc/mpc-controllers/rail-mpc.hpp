@@ -1,3 +1,11 @@
+
+///////////////////////////////////////////////////////////////////////////////
+// BSD 3-Clause License
+//
+// Copyright (c) 2021, Institut de Robotica i Informatica Industrial (CSIC-UPC)
+// All rights reserved.
+///////////////////////////////////////////////////////////////////////////////
+
 #ifndef BINDINGS_PYTHON_EAGLE_MPC_CONTROLLERS_RAIL_MPC_HPP_
 #define BINDINGS_PYTHON_EAGLE_MPC_CONTROLLERS_RAIL_MPC_HPP_
 
