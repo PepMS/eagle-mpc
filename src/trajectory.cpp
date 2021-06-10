@@ -9,7 +9,7 @@ Trajectory::Trajectory() {
   iam_factory_ = boost::make_shared<IntegratedActionModelFactory>();
 }
 
-Trajectory::~Trajectory() { std::cout << "Inside trajectory constructor" << std::endl; }
+Trajectory::~Trajectory() {}
 
 boost::shared_ptr<Trajectory> Trajectory::create() {
   boost::shared_ptr<Trajectory> trajectory(new Trajectory());
