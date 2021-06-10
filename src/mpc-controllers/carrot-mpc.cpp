@@ -1,9 +1,16 @@
+///////////////////////////////////////////////////////////////////////////////
+// BSD 3-Clause License
+//
+// Copyright (c) 2021, Institut de Robotica i Informatica Industrial (CSIC-UPC)
+// All rights reserved.
+///////////////////////////////////////////////////////////////////////////////
+
 #include <algorithm>
 
-#include "multicopter_mpc/mpc-controllers/carrot-mpc.hpp"
-#include "multicopter_mpc/utils/log.hpp"
+#include "eagle_mpc/mpc-controllers/carrot-mpc.hpp"
+#include "eagle_mpc/utils/log.hpp"
 
-namespace multicopter_mpc {
+namespace eagle_mpc {
 
 CarrotMpc::CarrotMpc(const boost::shared_ptr<Trajectory>& trajectory, const std::vector<Eigen::VectorXd>& state_ref,
                      const std::size_t dt_ref, const std::string& yaml_path)
@@ -209,7 +216,7 @@ void CarrotMpc::createProblem() {
 
   switch (params_.solver_type) {
     case SolverTypes::SolverSbFDDP:
-      solver_ = boost::make_shared<multicopter_mpc::SolverSbFDDP>(problem_, squash_);
+      solver_ = boost::make_shared<eagle_mpc::SolverSbFDDP>(problem_, squash_);
       break;
     case SolverTypes::SolverBoxFDDP:
       solver_ = boost::make_shared<crocoddyl::SolverBoxFDDP>(problem_);
@@ -404,4 +411,4 @@ const std::vector<Eigen::VectorXd>& CarrotMpc::get_state_ref() const { return st
 const std::vector<std::size_t>& CarrotMpc::get_t_stages() const { return t_stages_; }
 const std::vector<std::size_t>& CarrotMpc::get_t_ref() const { return t_ref_; }
 
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc

@@ -1,16 +1,23 @@
-#ifndef MULTICOPTER_MPC_MPC_CONTROLLERS_CARROT_MPC_HPP_
-#define MULTICOPTER_MPC_MPC_CONTROLLERS_CARROT_MPC_HPP_
+///////////////////////////////////////////////////////////////////////////////
+// BSD 3-Clause License
+//
+// Copyright (c) 2021, Institut de Robotica i Informatica Industrial (CSIC-UPC)
+// All rights reserved.
+///////////////////////////////////////////////////////////////////////////////
+
+#ifndef EAGLE_MPC_MPC_CONTROLLERS_CARROT_MPC_HPP_
+#define EAGLE_MPC_MPC_CONTROLLERS_CARROT_MPC_HPP_
 
 // #include "pinocchio/algorithm/joint-configuration.hpp"
 
 #include "crocoddyl/core/costs/cost-sum.hpp"
 #include "crocoddyl/multibody/costs/state.hpp"
 
-#include "multicopter_mpc/trajectory.hpp"
-#include "multicopter_mpc/mpc-base.hpp"
-#include "multicopter_mpc/utils/params_server.hpp"
+#include "eagle_mpc/trajectory.hpp"
+#include "eagle_mpc/mpc-base.hpp"
+#include "eagle_mpc/utils/params_server.hpp"
 
-namespace multicopter_mpc {
+namespace eagle_mpc {
 
 class CarrotMpc : public MpcAbstract {
  public:
@@ -73,6 +80,6 @@ class CarrotMpc : public MpcAbstract {
   Eigen::VectorXd state_limits_l_bound_;
 
 };
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc
 
 #endif
