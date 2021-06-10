@@ -19,12 +19,12 @@
 #include "crocoddyl/multibody/actuations/multicopter-base.hpp"
 #include "crocoddyl/multibody/states/multibody.hpp"
 
-#include "multicopter_mpc/factory/cost.hpp"
-#include "multicopter_mpc/factory/int-action.hpp"
-#include "multicopter_mpc/utils/params_server.hpp"
-#include "multicopter_mpc/sbfddp.hpp"
+#include "eagle_mpc/factory/cost.hpp"
+#include "eagle_mpc/factory/int-action.hpp"
+#include "eagle_mpc/utils/params_server.hpp"
+#include "eagle_mpc/sbfddp.hpp"
 
-namespace multicopter_mpc {
+namespace eagle_mpc {
 
 enum class SolverTypes { SolverSbFDDP, SolverBoxFDDP, SolverBoxDDP };
 
@@ -106,6 +106,6 @@ class MpcAbstract {
   void initializeRobotObjects();
   void loadParams();
 };
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc
 
 #endif

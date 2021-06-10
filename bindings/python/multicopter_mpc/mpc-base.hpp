@@ -1,10 +1,10 @@
 #ifndef BINDINGS_PYTHON_EAGLE_MPC_BASE_HPP_
 #define BINDINGS_PYTHON_EAGLE_MPC_BASE_HPP_
 
-#include "multicopter_mpc/mpc-base.hpp"
-#include "python/multicopter_mpc/utils/vector-converter.hpp"
+#include "eagle_mpc/mpc-base.hpp"
+#include "python/eagle_mpc/utils/vector-converter.hpp"
 
-namespace multicopter_mpc {
+namespace eagle_mpc {
 namespace python {
 
 namespace bp = boost::python;
@@ -62,5 +62,5 @@ void exposeMpcAbstract() {
 }
 
 }  // namespace python
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc
 #endif

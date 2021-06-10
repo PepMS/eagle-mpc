@@ -6,10 +6,10 @@
 
 #include "pinocchio/spatial/se3.hpp"
 
-#include "python/multicopter_mpc/utils/vector-converter.hpp"
-#include "multicopter_mpc/multicopter-base-params.hpp"
+#include "python/eagle_mpc/utils/vector-converter.hpp"
+#include "eagle_mpc/multicopter-base-params.hpp"
 
-namespace multicopter_mpc {
+namespace eagle_mpc {
 namespace python {
 
 namespace bp = boost::python;
@@ -74,6 +74,6 @@ void exposeMultiCopterBaseParams() {
                                                    bp::return_value_policy<bp::return_by_value>()));
 }
 }  // namespace python
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc
 
 #endif  // BINDINGS_PYTHON_EAGLE_MPC_MULTICOPTER_BASE_PARAMS_HPP_

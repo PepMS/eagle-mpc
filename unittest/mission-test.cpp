@@ -3,26 +3,26 @@
 #include <boost/test/unit_test.hpp>
 #include <algorithm>
 
-#include "multicopter_mpc/path.h"
-#include "multicopter_mpc/mission.hpp"
+#include "eagle_mpc/path.h"
+#include "eagle_mpc/mission.hpp"
 
 #include "yaml_parser/parser_yaml.h"
 #include "yaml_parser/params_server.hpp"
 
-BOOST_AUTO_TEST_SUITE(multicopter_mpc_mission_test)
+BOOST_AUTO_TEST_SUITE(eagle_mpc_mission_test)
 
 BOOST_AUTO_TEST_CASE(constructors_test) {
   std::size_t nx = 5;
   Eigen::VectorXd x0 = Eigen::VectorXd::Zero(nx);
 
-  multicopter_mpc::Mission m00(nx);
+  eagle_mpc::Mission m00(nx);
 
   BOOST_CHECK(x0 == m00.getInitialState());
 }
 
 BOOST_AUTO_TEST_CASE(fill_waypoints_number_waypoints) {
   std::size_t nx = 13;
-  multicopter_mpc::Mission mission(nx);
+  eagle_mpc::Mission mission(nx);
 
   std::string mission_yaml_path = std::string(MULTICOPTER_MPC_ROOT_DIR) + "/unittest/config/mission/mission-test.yaml";
   mission.fillWaypoints(mission_yaml_path);
@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(fill_waypoints_number_waypoints) {
 
 BOOST_AUTO_TEST_CASE(fill_waypoints_waypoint_pose_motion) {
   std::size_t nx = 13;
-  multicopter_mpc::Mission mission(nx);
+  eagle_mpc::Mission mission(nx);
 
   std::string mission_yaml_path = std::string(MULTICOPTER_MPC_ROOT_DIR) + "/unittest/config/mission/mission-test.yaml";
 
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(fill_waypoints_waypoint_pose_motion) {
 
 BOOST_AUTO_TEST_CASE(fill_waypoints_waypoint_pose) {
   std::size_t nx = 13;
-  multicopter_mpc::Mission mission(nx);
+  eagle_mpc::Mission mission(nx);
 
   std::string mission_yaml_path = std::string(MULTICOPTER_MPC_ROOT_DIR) + "/unittest/config/mission/mission-test.yaml";
 
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(fill_waypoints_waypoint_pose) {
 
 BOOST_AUTO_TEST_CASE(fill_initial_state) {
   std::size_t nx = 13;
-  multicopter_mpc::Mission mission(nx);
+  eagle_mpc::Mission mission(nx);
 
   std::string mission_yaml_path = std::string(MULTICOPTER_MPC_ROOT_DIR) + "/unittest/config/mission/mission-test.yaml";
 
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(fill_initial_state) {
 
 BOOST_AUTO_TEST_CASE(count_total_knots) {
   std::size_t nx = 13;
-  multicopter_mpc::Mission mission(nx);
+  eagle_mpc::Mission mission(nx);
 
   std::string mission_yaml_path = std::string(MULTICOPTER_MPC_ROOT_DIR) + "/unittest/config/mission/mission-test.yaml";
 
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(count_total_knots) {
 
 BOOST_AUTO_TEST_CASE(get_wp_from_traj_idx) {
   std::size_t nx = 13;
-  multicopter_mpc::Mission mission(nx);
+  eagle_mpc::Mission mission(nx);
 
   std::string mission_yaml_path = std::string(MULTICOPTER_MPC_ROOT_DIR) + "/unittest/config/mission/mission-test.yaml";
 

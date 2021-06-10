@@ -8,14 +8,14 @@
 #ifndef EAGLE_MPC_UTILSparams__SERVER_HPP
 #define EAGLE_MPC_UTILSparams__SERVER_HPP
 
-#include "multicopter_mpc/utils/converter.hpp"
+#include "eagle_mpc/utils/converter.hpp"
 
 #include <vector>
 #include <regex>
 #include <map>
 #include <exception>
 
-namespace multicopter_mpc {
+namespace eagle_mpc {
 
 class MissingValueException : public std::runtime_error {
  public:
@@ -60,6 +60,6 @@ class ParamsServer {
   }
 };
 
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc
 
 #endif

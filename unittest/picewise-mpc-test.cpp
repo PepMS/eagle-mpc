@@ -10,18 +10,18 @@
 #include "yaml_parser/parser_yaml.h"
 #include "yaml_parser/params_server.hpp"
 
-#include "multicopter_mpc/path.h"
-#include "multicopter_mpc/ocp/mpc/picewise-mpc.hpp"
-#include "multicopter_mpc/mission.hpp"
+#include "eagle_mpc/path.h"
+#include "eagle_mpc/ocp/mpc/picewise-mpc.hpp"
+#include "eagle_mpc/mission.hpp"
 
-BOOST_AUTO_TEST_SUITE(multicopter_mpc_trajectory_generator_test)
+BOOST_AUTO_TEST_SUITE(eagle_mpc_trajectory_generator_test)
 
-class PiceWiseMpcDerived : public multicopter_mpc::PiceWiseMpc {
+class PiceWiseMpcDerived : public eagle_mpc::PiceWiseMpc {
  public:
   PiceWiseMpcDerived(const boost::shared_ptr<pinocchio::Model>& model,
-                     const boost::shared_ptr<multicopter_mpc::MultiCopterBaseParams>& mc_params,
-                     const boost::shared_ptr<multicopter_mpc::Mission>& mission)
-      : multicopter_mpc::PiceWiseMpc(model, mc_params, mission) {}
+                     const boost::shared_ptr<eagle_mpc::MultiCopterBaseParams>& mc_params,
+                     const boost::shared_ptr<eagle_mpc::Mission>& mission)
+      : eagle_mpc::PiceWiseMpc(model, mc_params, mission) {}
 
   ~PiceWiseMpcDerived(){};
 
@@ -58,12 +58,12 @@ class PiceWiseMpcTest {
     pinocchio::urdf::buildModel(EXAMPLE_ROBOT_DATA_MODEL_DIR "/iris_description/robots/iris_simple.urdf",
                                 pinocchio::JointModelFreeFlyer(), model_);
 
-    mc_params_ = boost::make_shared<multicopter_mpc::MultiCopterBaseParams>();
+    mc_params_ = boost::make_shared<eagle_mpc::MultiCopterBaseParams>();
     mc_params_->fill(multirotor_yaml_path);
 
     mc_model_ = boost::make_shared<pinocchio::Model>(model_);
 
-    mc_mission_ = boost::make_shared<multicopter_mpc::Mission>(mc_model_->nq + mc_model_->nv);
+    mc_mission_ = boost::make_shared<eagle_mpc::Mission>(mc_model_->nq + mc_model_->nv);
     mc_mission_->fillWaypoints(mission_yaml_path);
 
     dt_ = 1e-2;
@@ -77,9 +77,9 @@ class PiceWiseMpcTest {
 
   pinocchio::Model model_;
 
-  boost::shared_ptr<multicopter_mpc::MultiCopterBaseParams> mc_params_;
+  boost::shared_ptr<eagle_mpc::MultiCopterBaseParams> mc_params_;
   boost::shared_ptr<pinocchio::Model> mc_model_;
-  boost::shared_ptr<multicopter_mpc::Mission> mc_mission_;
+  boost::shared_ptr<eagle_mpc::Mission> mc_mission_;
 
   double dt_;
   std::size_t n_knots_;
@@ -225,7 +225,7 @@ BOOST_AUTO_TEST_CASE(initialize_tg_test, *boost::unit_test::tolerance(1e-7)) {
 BOOST_AUTO_TEST_CASE(create_problem_test, *boost::unit_test::tolerance(1e-7)) {
   PiceWiseMpcTest pw_mpc_test("takeoff.yaml");
 
-  pw_mpc_test.pw_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP, multicopter_mpc::IntegratorTypes::Euler);
+  pw_mpc_test.pw_mpc_->createProblem(eagle_mpc::SolverTypes::BoxFDDP, eagle_mpc::IntegratorTypes::Euler);
 
   BOOST_CHECK(pw_mpc_test.pw_mpc_->getDifferentialRunningModels().size() == pw_mpc_test.pw_mpc_->getKnots());
   BOOST_CHECK(pw_mpc_test.pw_mpc_->getIntegratedRunningModels().size() == pw_mpc_test.pw_mpc_->getKnots());
@@ -264,7 +264,7 @@ BOOST_AUTO_TEST_CASE(create_problem_test, *boost::unit_test::tolerance(1e-7)) {
 BOOST_AUTO_TEST_CASE(create_costs_weights_test, *boost::unit_test::tolerance(1e-7)) {
   PiceWiseMpcTest pw_mpc_test("takeoff.yaml");
 
-  pw_mpc_test.pw_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP, multicopter_mpc::IntegratorTypes::Euler);
+  pw_mpc_test.pw_mpc_->createProblem(eagle_mpc::SolverTypes::BoxFDDP, eagle_mpc::IntegratorTypes::Euler);
 
   for (std::size_t i = 0; i < pw_mpc_test.pw_mpc_->getKnots() - 1; ++i) {
     BOOST_CHECK(pw_mpc_test.pw_mpc_->getDifferentialRunningModels()[i]
@@ -305,8 +305,8 @@ BOOST_AUTO_TEST_CASE(create_costs_weights_test, *boost::unit_test::tolerance(1e-
 // BOOST_AUTO_TEST_CASE(create_costs_reference_test, *boost::unit_test::tolerance(1e-7)) {
 //   PiceWiseMpcTest pw_mpc_test("takeoff.yaml");
 
-//   pw_mpc_test.pw_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP,
-//   multicopter_mpc::IntegratorTypes::Euler);
+//   pw_mpc_test.pw_mpc_->createProblem(eagle_mpc::SolverTypes::BoxFDDP,
+//   eagle_mpc::IntegratorTypes::Euler);
 
 //   for (std::size_t i = 0; i < pw_mpc_test.pw_mpc_->getKnots() - 1; ++i) {
 //     boost::shared_ptr<crocoddyl::CostModelFramePlacement> cost_pose =
@@ -354,7 +354,7 @@ BOOST_AUTO_TEST_CASE(create_costs_weights_test, *boost::unit_test::tolerance(1e-
 BOOST_AUTO_TEST_CASE(create_cost_state_test, *boost::unit_test::tolerance(1e-7)) {
   PiceWiseMpcTest pw_mpc_test("takeoff.yaml");
 
-  pw_mpc_test.pw_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP, multicopter_mpc::IntegratorTypes::Euler);
+  pw_mpc_test.pw_mpc_->createProblem(eagle_mpc::SolverTypes::BoxFDDP, eagle_mpc::IntegratorTypes::Euler);
 
   for (std::size_t i = 0; i < pw_mpc_test.pw_mpc_->getKnots() - 1; ++i) {
     boost::shared_ptr<crocoddyl::ActivationModelWeightedQuad> activation =
@@ -378,7 +378,7 @@ BOOST_AUTO_TEST_CASE(create_cost_state_test, *boost::unit_test::tolerance(1e-7))
 BOOST_AUTO_TEST_CASE(update_weights_test, *boost::unit_test::tolerance(1e-7)) {
   PiceWiseMpcTest pw_mpc_test("takeoff.yaml");
 
-  pw_mpc_test.pw_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP, multicopter_mpc::IntegratorTypes::Euler);
+  pw_mpc_test.pw_mpc_->createProblem(eagle_mpc::SolverTypes::BoxFDDP, eagle_mpc::IntegratorTypes::Euler);
 
   // Before calling the updateProblem() last node should have the terminal weight
   BOOST_CHECK(pw_mpc_test.pw_mpc_->getDifferentialRunningModels()
@@ -436,7 +436,7 @@ BOOST_AUTO_TEST_CASE(update_weights_test, *boost::unit_test::tolerance(1e-7)) {
 BOOST_AUTO_TEST_CASE(update_iterator_cyclic_test, *boost::unit_test::tolerance(1e-7)) {
   PiceWiseMpcTest pw_mpc_test("takeoff.yaml");
 
-  pw_mpc_test.pw_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP, multicopter_mpc::IntegratorTypes::Euler);
+  pw_mpc_test.pw_mpc_->createProblem(eagle_mpc::SolverTypes::BoxFDDP, eagle_mpc::IntegratorTypes::Euler);
 
   for (int i = 0; i < pw_mpc_test.pw_mpc_->getKnots() - 1; ++i) {
     pw_mpc_test.pw_mpc_->updateProblem(pw_mpc_test.pw_mpc_->getKnots());
@@ -448,7 +448,7 @@ BOOST_AUTO_TEST_CASE(update_iterator_cyclic_test, *boost::unit_test::tolerance(1
 BOOST_AUTO_TEST_CASE(update_terminal_cost_test, *boost::unit_test::tolerance(1e-7)) {
   PiceWiseMpcTest pw_mpc_test("takeoff.yaml");
 
-  pw_mpc_test.pw_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP, multicopter_mpc::IntegratorTypes::Euler);
+  pw_mpc_test.pw_mpc_->createProblem(eagle_mpc::SolverTypes::BoxFDDP, eagle_mpc::IntegratorTypes::Euler);
 
   std::size_t trajectory_cursor = pw_mpc_test.pw_mpc_->getKnots();
 
@@ -471,8 +471,8 @@ BOOST_AUTO_TEST_CASE(update_terminal_cost_test, *boost::unit_test::tolerance(1e-
 BOOST_AUTO_TEST_CASE(hovering_state_test, *boost::unit_test::tolerance(1e-7)) {
   // PiceWiseMpcTest pw_mpc_test("takeoff.yaml");
 
-  // pw_mpc_test.pw_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP,
-  // multicopter_mpc::IntegratorTypes::Euler);
+  // pw_mpc_test.pw_mpc_->createProblem(eagle_mpc::SolverTypes::BoxFDDP,
+  // eagle_mpc::IntegratorTypes::Euler);
 
   // std::size_t trajectory_cursor = pw_mpc_test.pw_mpc_->getKnots() - 1;
 

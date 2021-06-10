@@ -20,7 +20,7 @@ if __name__ == '__main__':
   unittest.main()
 
 # import numpy as np
-# import multicopter_mpc
+# import eagle_mpc
 
 # cf = 1e-6
 # cm = 1e-7
@@ -31,7 +31,7 @@ if __name__ == '__main__':
 # min_th = 0.1
 # base_link = "base_link"
 
-# params = multicopter_mpc.MultiCopterBaseParams(cf, cm, tau_f, max_th, min_th, base_link)
+# params = eagle_mpc.MultiCopterBaseParams(cf, cm, tau_f, max_th, min_th, base_link)
 
 # print("cf: \n", params.cf)
 # print("cm: \n", params.cm)

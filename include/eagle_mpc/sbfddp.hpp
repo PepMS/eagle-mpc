@@ -18,10 +18,10 @@
 #include "crocoddyl/multibody/actions/free-fwddyn.hpp"
 #include "crocoddyl/multibody/actions/contact-fwddyn.hpp"
 
-#include "multicopter_mpc/factory/diff-action.hpp"
-#include "multicopter_mpc/utils/log.hpp"
+#include "eagle_mpc/factory/diff-action.hpp"
+#include "eagle_mpc/utils/log.hpp"
 
-namespace multicopter_mpc {
+namespace eagle_mpc {
 
 class SolverSbFDDP : public crocoddyl::SolverFDDP {
  public:
@@ -114,6 +114,6 @@ class SolverSbFDDP : public crocoddyl::SolverFDDP {
   double th_acceptnegstep_;  // FDDP solver
 };
 
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc
 
 #endif

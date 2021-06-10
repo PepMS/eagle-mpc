@@ -1,7 +1,7 @@
-#include "multicopter_mpc/trajectory.hpp"
+#include "eagle_mpc/trajectory.hpp"
 
-#include "multicopter_mpc/utils/log.hpp"
-namespace multicopter_mpc {
+#include "eagle_mpc/utils/log.hpp"
+namespace eagle_mpc {
 
 Trajectory::Trajectory() {
   has_contact_ = false;
@@ -142,4 +142,4 @@ const Eigen::VectorXd& Trajectory::get_initial_state() const { return initial_st
 const boost::shared_ptr<ParamsServer>& Trajectory::get_params_server() const { return params_server_; }
 const bool& Trajectory::get_has_contact() const { return has_contact_; }
 const std::size_t& Trajectory::get_duration() const { return duration_; }
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc

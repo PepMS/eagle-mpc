@@ -16,10 +16,10 @@
 #include <boost/python/to_python_converter.hpp>
 #include <boost/python/suite/indexing/map_indexing_suite.hpp>
 
-#include "python/multicopter_mpc/utils/vector-converter.hpp"
+#include "python/eagle_mpc/utils/vector-converter.hpp"
 
 
-namespace multicopter_mpc {
+namespace eagle_mpc {
 namespace python {
 
 namespace bp = boost::python;

@@ -3,9 +3,9 @@ import time
 import copy
 import crocoddyl
 
-import multicopter_mpc
-from multicopter_mpc.utils.simulator import AerialSimulator
-from multicopter_mpc.utils.plots import PlotControlsGroup, showPlots
+import eagle_mpc
+from eagle_mpc.utils.simulator import AerialSimulator
+from eagle_mpc.utils.plots import PlotControlsGroup, showPlots
 
 # Trajectory
 dt = 20  # ms
@@ -15,13 +15,13 @@ robotName = 'hexacopter370_flying_arm_3'
 trajectoryName = 'displacement'
 mpcName = 'carrot'
 
-trajectory = multicopter_mpc.Trajectory()
-trajectory.autoSetup("/home/pepms/wsros/mpc-ws/src/multicopter_mpc/multicopter_mpc_yaml/trajectories/" + robotName +
+trajectory = eagle_mpc.Trajectory()
+trajectory.autoSetup("/home/pepms/wsros/mpc-ws/src/eagle_mpc/eagle_mpc_yaml/trajectories/" + robotName +
                      '_' + trajectoryName + ".yaml")
 
 problem = trajectory.createProblem(dt, useSquash, "IntegratedActionModelEuler")
 if useSquash:
-    solver = multicopter_mpc.SolverSbFDDP(problem, trajectory.squash)
+    solver = eagle_mpc.SolverSbFDDP(problem, trajectory.squash)
 else:
     solver = crocoddyl.SolverBoxFDDP(problem)
 
@@ -29,17 +29,17 @@ solver.setCallbacks([crocoddyl.CallbackVerbose()])
 solver.solve([], [], maxiter=400)
 
 if mpcName == 'rail':
-    mpcController = multicopter_mpc.RailMpc(
+    mpcController = eagle_mpc.RailMpc(
         solver.xs, dt,
-        "/home/pepms/wsros/mpc-ws/src/multicopter_mpc/multicopter_mpc_yaml/mpc/" + robotName + "_mpc.yaml")
+        "/home/pepms/wsros/mpc-ws/src/eagle_mpc/eagle_mpc_yaml/mpc/" + robotName + "_mpc.yaml")
 elif mpcName == 'weighted':
-    mpcController = multicopter_mpc.WeightedMpc(
+    mpcController = eagle_mpc.WeightedMpc(
         trajectory, dt,
-        "/home/pepms/wsros/mpc-ws/src/multicopter_mpc/multicopter_mpc_yaml/mpc/" + robotName + "_mpc.yaml")
+        "/home/pepms/wsros/mpc-ws/src/eagle_mpc/eagle_mpc_yaml/mpc/" + robotName + "_mpc.yaml")
 else:
-    mpcController = multicopter_mpc.CarrotMpc(
+    mpcController = eagle_mpc.CarrotMpc(
         trajectory, solver.xs, dt,
-        "/home/pepms/wsros/mpc-ws/src/multicopter_mpc/multicopter_mpc_yaml/mpc/" + robotName + "_mpc.yaml")
+        "/home/pepms/wsros/mpc-ws/src/eagle_mpc/eagle_mpc_yaml/mpc/" + robotName + "_mpc.yaml")
 
 mpcController.updateProblem(0)
 mpcController.solver.solve(solver.xs[:mpcController.problem.T + 1], solver.us[:mpcController.problem.T])

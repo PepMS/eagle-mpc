@@ -1,9 +1,9 @@
 #ifndef BINDINGS_PYTHON_EAGLE_MPC_CONTROLLERS_RAIL_MPC_HPP_
 #define BINDINGS_PYTHON_EAGLE_MPC_CONTROLLERS_RAIL_MPC_HPP_
 
-#include "multicopter_mpc/mpc-controllers/rail-mpc.hpp"
+#include "eagle_mpc/mpc-controllers/rail-mpc.hpp"
 
-namespace multicopter_mpc {
+namespace eagle_mpc {
 namespace python {
 
 namespace bp = boost::python;
@@ -23,5 +23,5 @@ void exposeRailMpc() {
 }
 
 }  // namespace python
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc
 #endif

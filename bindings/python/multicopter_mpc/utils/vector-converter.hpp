@@ -15,7 +15,7 @@
 #include <boost/python/to_python_converter.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
-namespace multicopter_mpc {
+namespace eagle_mpc {
 namespace python {
 
 namespace bp = boost::python;
@@ -131,6 +131,6 @@ struct StdVectorPythonVisitor
 };
 
 }  // namespace python
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc
 
 #endif  // BINDINGS_PYTHON_CROCODDYL_UTILS_VECTOR_CONVERTER_HPP_

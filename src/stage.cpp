@@ -1,8 +1,8 @@
-#include "multicopter_mpc/stage.hpp"
+#include "eagle_mpc/stage.hpp"
 
-#include "multicopter_mpc/utils/log.hpp"
+#include "eagle_mpc/utils/log.hpp"
 
-namespace multicopter_mpc {
+namespace eagle_mpc {
 Stage::Stage(const boost::shared_ptr<Trajectory>& trajectory) : trajectory_(trajectory) {
   costs_ = boost::make_shared<crocoddyl::CostModelSum>(trajectory_->get_robot_state(),
                                                        trajectory_->get_actuation()->get_nu());
@@ -79,4 +79,4 @@ const std::string& Stage::get_name() const { return name_; };
 const bool& Stage::get_is_terminal() const { return is_terminal_; }
 const bool& Stage::get_is_transition() const { return is_transition_; }
 
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc

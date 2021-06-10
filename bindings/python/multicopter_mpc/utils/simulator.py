@@ -1,7 +1,7 @@
 import numpy as np
 
 import crocoddyl
-import multicopter_mpc
+import eagle_mpc
 
 class AerialSimulator():
     def __init__(self, robotModel, platformParams, dt, x0):

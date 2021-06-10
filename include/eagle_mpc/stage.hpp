@@ -11,14 +11,14 @@
 #include "crocoddyl/multibody/actions/contact-fwddyn.hpp"
 #include "crocoddyl/multibody/actions/free-fwddyn.hpp"
 
-#include "multicopter_mpc/trajectory.hpp"
-#include "multicopter_mpc/utils/params_server.hpp"
+#include "eagle_mpc/trajectory.hpp"
+#include "eagle_mpc/utils/params_server.hpp"
 
-#include "multicopter_mpc/factory/cost.hpp"
-#include "multicopter_mpc/factory/diff-action.hpp"
-#include "multicopter_mpc/factory/contacts.hpp"
+#include "eagle_mpc/factory/cost.hpp"
+#include "eagle_mpc/factory/diff-action.hpp"
+#include "eagle_mpc/factory/contacts.hpp"
 
-namespace multicopter_mpc {
+namespace eagle_mpc {
 class Trajectory;
 class CostModelFactory;
 class ContactModelFactory;
@@ -71,6 +71,6 @@ class Stage : public boost::enable_shared_from_this<Stage> {
   bool is_transition_;
 };
 
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc
 
 #endif

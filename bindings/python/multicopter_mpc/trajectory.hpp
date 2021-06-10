@@ -5,10 +5,10 @@
 #include <pinocchio/fwd.hpp>
 #include "crocoddyl/multibody/states/multibody.hpp"
 
-#include "multicopter_mpc/trajectory.hpp"
-#include "python/multicopter_mpc/utils/vector-converter.hpp"
+#include "eagle_mpc/trajectory.hpp"
+#include "python/eagle_mpc/utils/vector-converter.hpp"
 
-namespace multicopter_mpc {
+namespace eagle_mpc {
 namespace python {
 
 namespace bp = boost::python;
@@ -50,5 +50,5 @@ void exposeTrajectory() {
       .def("removeStage", &Trajectory::removeStage, bp::args("self", "idx_stage"));
 }
 }  // namespace python
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc
 #endif

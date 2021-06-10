@@ -1,9 +1,9 @@
-#include "multicopter_mpc/mpc-base.hpp"
+#include "eagle_mpc/mpc-base.hpp"
 
-namespace multicopter_mpc {
+namespace eagle_mpc {
 
 MpcAbstract::MpcAbstract(const std::string& yaml_path) {
-  multicopter_mpc::ParserYaml parser(yaml_path);
+  eagle_mpc::ParserYaml parser(yaml_path);
   params_server_ = boost::make_shared<ParamsServer>(parser.get_params());
 
   initializeRobotObjects();
@@ -73,4 +73,4 @@ const std::size_t& MpcAbstract::get_knots() const { return params_.knots; }
 const std::size_t& MpcAbstract::get_iters() const { return params_.iters; }
 const SolverTypes& MpcAbstract::get_solver_type() const { return params_.solver_type; }
 
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc

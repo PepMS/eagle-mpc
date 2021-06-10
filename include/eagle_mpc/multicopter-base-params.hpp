@@ -8,9 +8,9 @@
 #include "pinocchio/multibody/model.hpp"
 #include "pinocchio/spatial/se3.hpp"
 
-#include "multicopter_mpc/utils/params_server.hpp"
+#include "eagle_mpc/utils/params_server.hpp"
 
-namespace multicopter_mpc {
+namespace eagle_mpc {
 class MultiCopterBaseParams {
  public:
   MultiCopterBaseParams();
@@ -42,5 +42,5 @@ class MultiCopterBaseParams {
   std::vector<pinocchio::SE3> rotors_pose_;
   std::vector<int> rotors_spin_dir_;
 };
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc
 #endif  // EAGLE_MPC_MULTICOPTER_BASE_PARAMS_HPP_

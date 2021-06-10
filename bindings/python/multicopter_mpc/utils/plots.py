@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 
-from multicopter_mpc.utils.tools import wayPointListToStateArray
+from eagle_mpc.utils.tools import wayPointListToStateArray
 
 matplotlib.rcParams['mathtext.fontset'] = 'stix'
 matplotlib.rcParams['font.family'] = 'STIXGeneral'

@@ -7,23 +7,23 @@ import pinocchio
 import crocoddyl
 # import example_robot_data
 
-import multicopter_mpc
+import eagle_mpc
 
 
 def rev_enumerate(lname):
     return reversed(list(enumerate(lname)))
 
 
-class CarrotMpc(multicopter_mpc.CarrotMpc):
+class CarrotMpc(eagle_mpc.CarrotMpc):
     def __init__(self, trajectory, stateRef, dtRef, yamlPath):
-        multicopter_mpc.CarrotMpc.__init__(self, trajectory, stateRef, dtRef, yamlPath)
+        eagle_mpc.CarrotMpc.__init__(self, trajectory, stateRef, dtRef, yamlPath)
         self.lastTime = 0
 
     def createProblem_(self):
         self.ts_ini = []
         for stage in self.trajectory.stages:
             self.ts_ini.append(stage.t_ini)
-        # self.solver = multicopter_mpc.SolverSbFDDP(self.problem, self.squash)
+        # self.solver = eagle_mpc.SolverSbFDDP(self.problem, self.squash)
         # self.solver.setCallbacks([crocoddyl.CallbackVerbose()])
 
     def updateProblem(self, currentTime):

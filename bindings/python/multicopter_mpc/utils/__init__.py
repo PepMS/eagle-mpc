@@ -1,10 +1,10 @@
 import pinocchio
 import crocoddyl
-import multicopter_mpc
+import eagle_mpc
 import example_robot_data
 
 import numpy as np
-from multicopter_mpc.utils.mpc_controllers import CarrotMpc
+from eagle_mpc.utils.mpc_controllers import CarrotMpc
 
 
 def rev_enumerate(lname):

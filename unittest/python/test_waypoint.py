@@ -23,7 +23,7 @@ if __name__ == '__main__':
 # # import eigenpy
 # import pinocchio
 
-# import multicopter_mpc
+# import eagle_mpc
 
 # knots = 24
 # pos = np.array([1, 1, 1])
@@ -31,8 +31,8 @@ if __name__ == '__main__':
 # vel = np.array([1, 1, 1])
 # rate = np.array([1, 2, 1])
 
-# wp_1 = multicopter_mpc.WayPoint(knots, pos, quat)
-# wp_2 = multicopter_mpc.WayPoint(knots, pos, quat, vel, rate)
+# wp_1 = eagle_mpc.WayPoint(knots, pos, quat)
+# wp_2 = eagle_mpc.WayPoint(knots, pos, quat, vel, rate)
 
 # wp_lst = []
 # wp_lst.append(wp_1)

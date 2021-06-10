@@ -11,26 +11,26 @@
 #include "crocoddyl/core/fwd.hpp"
 #include "crocoddyl/multibody/fwd.hpp"
 
-#include "python/multicopter_mpc/utils/vector-converter.hpp"
-#include "python/multicopter_mpc/utils/map-converter.hpp"
+#include "python/eagle_mpc/utils/vector-converter.hpp"
+#include "python/eagle_mpc/utils/map-converter.hpp"
 
-#include "python/multicopter_mpc/multicopter-base-params.hpp"
-#include "python/multicopter_mpc/mpc-base.hpp"
-#include "python/multicopter_mpc/mpc-controllers/carrot-mpc.hpp"
-#include "python/multicopter_mpc/mpc-controllers/rail-mpc.hpp"
-#include "python/multicopter_mpc/mpc-controllers/weighted-mpc.hpp"
-#include "python/multicopter_mpc/sbfddp.hpp"
-#include "python/multicopter_mpc/stage.hpp"
-#include "python/multicopter_mpc/trajectory.hpp"
-#include "python/multicopter_mpc/utils/parser_yaml.hpp"
-#include "python/multicopter_mpc/utils/params_server.hpp"
+#include "python/eagle_mpc/multicopter-base-params.hpp"
+#include "python/eagle_mpc/mpc-base.hpp"
+#include "python/eagle_mpc/mpc-controllers/carrot-mpc.hpp"
+#include "python/eagle_mpc/mpc-controllers/rail-mpc.hpp"
+#include "python/eagle_mpc/mpc-controllers/weighted-mpc.hpp"
+#include "python/eagle_mpc/sbfddp.hpp"
+#include "python/eagle_mpc/stage.hpp"
+#include "python/eagle_mpc/trajectory.hpp"
+#include "python/eagle_mpc/utils/parser_yaml.hpp"
+#include "python/eagle_mpc/utils/params_server.hpp"
 
-namespace multicopter_mpc {
+namespace eagle_mpc {
 namespace python {
 
 namespace bp = boost::python;
 
-BOOST_PYTHON_MODULE(libmulticopter_mpc_pywrap) {
+BOOST_PYTHON_MODULE(libeagle_mpc_pywrap) {
   exposeMpcAbstract();
   exposeCarrotMpc();
   exposeRailMpc();
@@ -44,6 +44,6 @@ BOOST_PYTHON_MODULE(libmulticopter_mpc_pywrap) {
 }
 
 }  // namespace python
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc
 
 #endif

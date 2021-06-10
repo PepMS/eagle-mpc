@@ -5,9 +5,9 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "multicopter_mpc/utils/tools.hpp"
+#include "eagle_mpc/utils/tools.hpp"
 
-namespace multicopter_mpc {
+namespace eagle_mpc {
 
 Tools::Tools(){}
 
@@ -17,4 +17,4 @@ void Tools::thrustToSpeed(const Eigen::VectorXd& thrust, const boost::shared_ptr
                           Eigen::VectorXd& speed) {
   speed = (thrust.array() / params->cf_).sqrt();
 }
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc

@@ -10,9 +10,9 @@
 
 #include <Eigen/Dense>
 
-#include "multicopter_mpc/multicopter-base-params.hpp"
+#include "eagle_mpc/multicopter-base-params.hpp"
 
-namespace multicopter_mpc {
+namespace eagle_mpc {
 
 class Tools {
  public:
@@ -22,5 +22,5 @@ class Tools {
                             Eigen::VectorXd& speed);
 };
 
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc
 #endif

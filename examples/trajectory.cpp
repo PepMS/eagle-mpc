@@ -8,19 +8,19 @@
 #include "crocoddyl/multibody/actuations/multicopter-base.hpp"
 #include "crocoddyl/multibody/states/multibody.hpp"
 
-#include "multicopter_mpc/trajectory.hpp"
-#include "multicopter_mpc/utils/parser_yaml.hpp"
-#include "multicopter_mpc/utils/params_server.hpp"
-#include "multicopter_mpc/path.h"
-#include "multicopter_mpc/sbfddp.hpp"
+#include "eagle_mpc/trajectory.hpp"
+#include "eagle_mpc/utils/parser_yaml.hpp"
+#include "eagle_mpc/utils/params_server.hpp"
+#include "eagle_mpc/path.h"
+#include "eagle_mpc/sbfddp.hpp"
 
 int main(void) {
-  multicopter_mpc::ParserYaml parser_aux(
+  eagle_mpc::ParserYaml parser_aux(
       "/home/pepms/robotics/libraries/multicopter-mpc/config/trajectory/trajectory.yaml", "", true);
-  multicopter_mpc::ParamsServer server_aux(parser_aux.get_params());
+  eagle_mpc::ParamsServer server_aux(parser_aux.get_params());
   std::string trajectory_yaml = server_aux.getParam<std::string>("trajectory_file");
 
-  boost::shared_ptr<multicopter_mpc::Trajectory> trajectory = multicopter_mpc::Trajectory::create();
+  boost::shared_ptr<eagle_mpc::Trajectory> trajectory = eagle_mpc::Trajectory::create();
   trajectory->autoSetup("/home/pepms/robotics/libraries/multicopter-mpc/config/trajectory/" + trajectory_yaml);
 
   // boost::shared_ptr<crocoddyl::ShootingProblem> problem =
@@ -29,8 +29,8 @@ int main(void) {
 
   boost::shared_ptr<crocoddyl::ShootingProblem> problem =
       trajectory->createProblem(10, true, "IntegratedActionModelEuler");
-  boost::shared_ptr<multicopter_mpc::SolverSbFDDP> solver =
-      boost::make_shared<multicopter_mpc::SolverSbFDDP>(problem, trajectory->get_squash());
+  boost::shared_ptr<eagle_mpc::SolverSbFDDP> solver =
+      boost::make_shared<eagle_mpc::SolverSbFDDP>(problem, trajectory->get_squash());
 
   std::vector<boost::shared_ptr<crocoddyl::CallbackAbstract>> callbacks;
   callbacks.push_back(boost::make_shared<crocoddyl::CallbackVerbose>());

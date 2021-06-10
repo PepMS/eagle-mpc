@@ -1,15 +1,15 @@
 import sys
 import unittest
 
-from multicopter_mpc.utils import (TrajectoryGeneratorDerived)
-from multicopter_mpc.utils.path import MULTICOPTER_MPC_MISSION_DIR, MULTICOPTER_MPC_MULTIROTOR_DIR
+from eagle_mpc.utils import (TrajectoryGeneratorDerived)
+from eagle_mpc.utils.path import MULTICOPTER_MPC_MISSION_DIR, MULTICOPTER_MPC_MULTIROTOR_DIR
 
 class TrajectoryGeneratorTestCase(unittest.TestCase):
     TRAJECTORY = None
     TRAJECTORY = None
 
     def test_upper(self):
-        multicopter_mpc.
+        eagle_mpc.
         self.assertEqual('foo'.upper(), 'FOO')
 
     def test_isupper(self):

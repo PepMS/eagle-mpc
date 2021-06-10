@@ -10,7 +10,7 @@
 
 #include <iostream>
 
-namespace multicopter_mpc {
+namespace eagle_mpc {
 
 class Log {
  public:
@@ -31,5 +31,5 @@ class Log {
 #define MMPC_WARN Log("\033[0;33m[EAGLE_MPC WARN]:") // 33==yellow
 #define MMPC_ERROR Log("\033[0;31m[EAGLE_MPC ERROR]") // 31==red
 
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc
 #endif

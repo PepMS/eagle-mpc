@@ -10,17 +10,17 @@
 #include "yaml_parser/parser_yaml.h"
 #include "yaml_parser/params_server.hpp"
 
-#include "multicopter_mpc/path.h"
-#include "multicopter_mpc/ocp/trajectory-generator.hpp"
+#include "eagle_mpc/path.h"
+#include "eagle_mpc/ocp/trajectory-generator.hpp"
 
-BOOST_AUTO_TEST_SUITE(multicopter_mpc_trajectory_generator_test)
+BOOST_AUTO_TEST_SUITE(eagle_mpc_trajectory_generator_test)
 
-class TrajectoryGeneratorDerived : public multicopter_mpc::TrajectoryGenerator {
+class TrajectoryGeneratorDerived : public eagle_mpc::TrajectoryGenerator {
  public:
   TrajectoryGeneratorDerived(const boost::shared_ptr<pinocchio::Model>& model,
-                             const boost::shared_ptr<multicopter_mpc::MultiCopterBaseParams>& mc_params,
-                             const boost::shared_ptr<multicopter_mpc::Mission>& mission)
-      : multicopter_mpc::TrajectoryGenerator(model, mc_params, mission) {}
+                             const boost::shared_ptr<eagle_mpc::MultiCopterBaseParams>& mc_params,
+                             const boost::shared_ptr<eagle_mpc::Mission>& mission)
+      : eagle_mpc::TrajectoryGenerator(model, mc_params, mission) {}
 
   ~TrajectoryGeneratorDerived(){};
 
@@ -50,11 +50,11 @@ class TrajectoryGeneratorTest {
     pinocchio::urdf::buildModel(EXAMPLE_ROBOT_DATA_MODEL_DIR "/iris_description/robots/iris_simple.urdf",
                                 pinocchio::JointModelFreeFlyer(), model_);
 
-    mc_params_ = boost::make_shared<multicopter_mpc::MultiCopterBaseParams>();
+    mc_params_ = boost::make_shared<eagle_mpc::MultiCopterBaseParams>();
     mc_params_->fill(multirotor_yaml_path);
 
     dt_ = 1e-2;
-    mission_ = boost::make_shared<multicopter_mpc::Mission>(model_.nq + model_.nv);
+    mission_ = boost::make_shared<eagle_mpc::Mission>(model_.nq + model_.nv);
     mission_->fillWaypoints(mission_yaml_path, dt_);
 
     mc_model_ = boost::make_shared<pinocchio::Model>(model_);
@@ -67,9 +67,9 @@ class TrajectoryGeneratorTest {
 
   pinocchio::Model model_;
 
-  boost::shared_ptr<multicopter_mpc::MultiCopterBaseParams> mc_params_;
+  boost::shared_ptr<eagle_mpc::MultiCopterBaseParams> mc_params_;
   boost::shared_ptr<pinocchio::Model> mc_model_;
-  boost::shared_ptr<multicopter_mpc::Mission> mission_;
+  boost::shared_ptr<eagle_mpc::Mission> mission_;
 
   double dt_;
   boost::shared_ptr<TrajectoryGeneratorDerived> trajectory_generator_;
@@ -158,11 +158,11 @@ BOOST_AUTO_TEST_CASE(load_parameters_test, *boost::unit_test::tolerance(1e-7)) {
 BOOST_AUTO_TEST_CASE(trajectory_create_differential_model_test, *boost::unit_test::tolerance(1e-7)) {
   TrajectoryGeneratorTest tg_test;
 
-  tg_test.trajectory_generator_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP,
-                                               multicopter_mpc::IntegratorTypes::Euler, tg_test.dt_);
+  tg_test.trajectory_generator_->createProblem(eagle_mpc::SolverTypes::BoxFDDP,
+                                               eagle_mpc::IntegratorTypes::Euler, tg_test.dt_);
 
   std::size_t knot_cursor = 0;
-  for (std::vector<multicopter_mpc::WayPoint>::const_iterator wp =
+  for (std::vector<eagle_mpc::WayPoint>::const_iterator wp =
            tg_test.trajectory_generator_->getMission()->getWaypoints().begin();
        wp != tg_test.trajectory_generator_->getMission()->getWaypoints().end(); ++wp) {
     for (std::size_t i = knot_cursor; i < knot_cursor + wp->knots - 2; ++i) {
@@ -211,8 +211,8 @@ BOOST_AUTO_TEST_CASE(trajectory_create_differential_model_test, *boost::unit_tes
 BOOST_AUTO_TEST_CASE(trajectory_create_differential_model_state_test, *boost::unit_test::tolerance(1e-7)) {
   TrajectoryGeneratorTest tg_test;
 
-  tg_test.trajectory_generator_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP,
-                                               multicopter_mpc::IntegratorTypes::Euler, tg_test.dt_);;
+  tg_test.trajectory_generator_->createProblem(eagle_mpc::SolverTypes::BoxFDDP,
+                                               eagle_mpc::IntegratorTypes::Euler, tg_test.dt_);;
 
   boost::shared_ptr<crocoddyl::ActivationModelWeightedQuad> activation =
       boost::static_pointer_cast<crocoddyl::ActivationModelWeightedQuad>(
@@ -238,8 +238,8 @@ BOOST_AUTO_TEST_CASE(trajectory_create_differential_model_state_test, *boost::un
 BOOST_AUTO_TEST_CASE(trajectory_create_problem_action_models_test, *boost::unit_test::tolerance(1e-7)) {
   TrajectoryGeneratorTest tg_test;
 
-  tg_test.trajectory_generator_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP,
-                                               multicopter_mpc::IntegratorTypes::Euler, tg_test.dt_);;
+  tg_test.trajectory_generator_->createProblem(eagle_mpc::SolverTypes::BoxFDDP,
+                                               eagle_mpc::IntegratorTypes::Euler, tg_test.dt_);;
 
   BOOST_CHECK(tg_test.trajectory_generator_->getDifferentialRunningModels().size() ==
               tg_test.trajectory_generator_->getKnots() - 1);
@@ -253,7 +253,7 @@ BOOST_AUTO_TEST_CASE(trajectory_create_problem_action_models_test, *boost::unit_
   // Be aware that we could have several Waypoints, meaning different stages of the whole trajectory. Each
   // stage has its own models
   std::size_t knot_cursor = 0;
-  for (std::vector<multicopter_mpc::WayPoint>::const_iterator wp =
+  for (std::vector<eagle_mpc::WayPoint>::const_iterator wp =
            tg_test.trajectory_generator_->getMission()->getWaypoints().begin();
        wp != tg_test.trajectory_generator_->getMission()->getWaypoints().end(); ++wp) {
     boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> int_model_0 =
@@ -283,16 +283,16 @@ BOOST_AUTO_TEST_CASE(trajectory_create_problem_action_models_test, *boost::unit_
 BOOST_AUTO_TEST_CASE(set_solver_test, *boost::unit_test::tolerance(1e-7)) {
   TrajectoryGeneratorTest tg_test;
 
-  tg_test.trajectory_generator_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP,
-                                               multicopter_mpc::IntegratorTypes::Euler, tg_test.dt_);;
+  tg_test.trajectory_generator_->createProblem(eagle_mpc::SolverTypes::BoxFDDP,
+                                               eagle_mpc::IntegratorTypes::Euler, tg_test.dt_);;
   BOOST_CHECK(tg_test.trajectory_generator_->getSolver() != nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(solve_test, *boost::unit_test::tolerance(1e-7)) {
   TrajectoryGeneratorTest tg_test;
 
-  tg_test.trajectory_generator_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP,
-                                               multicopter_mpc::IntegratorTypes::Euler, tg_test.dt_);;
+  tg_test.trajectory_generator_->createProblem(eagle_mpc::SolverTypes::BoxFDDP,
+                                               eagle_mpc::IntegratorTypes::Euler, tg_test.dt_);;
   tg_test.trajectory_generator_->setSolverCallbacks(true);
   tg_test.trajectory_generator_->solve();
   BOOST_CHECK(tg_test.trajectory_generator_->getSolver()->get_xs().size() ==
@@ -305,8 +305,8 @@ BOOST_AUTO_TEST_CASE(solve_test, *boost::unit_test::tolerance(1e-7)) {
 BOOST_AUTO_TEST_CASE(hover_test, *boost::unit_test::tolerance(1e-7)) {
   TrajectoryGeneratorTest tg_test;
 
-  tg_test.trajectory_generator_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP,
-                                               multicopter_mpc::IntegratorTypes::Euler, tg_test.dt_);;
+  tg_test.trajectory_generator_->createProblem(eagle_mpc::SolverTypes::BoxFDDP,
+                                               eagle_mpc::IntegratorTypes::Euler, tg_test.dt_);;
   tg_test.trajectory_generator_->setSolverCallbacks(true);
   tg_test.trajectory_generator_->solve();
 

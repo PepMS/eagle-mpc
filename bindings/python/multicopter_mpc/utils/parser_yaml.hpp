@@ -2,9 +2,9 @@
 #ifndef BINDINGS_PYTHON_EAGLE_MPC_UTILS_PARSER_YAML_HPP_
 #define BINDINGS_PYTHON_EAGLE_MPC_UTILS_PARSER_YAML_HPP_
 
-#include "multicopter_mpc/utils/parser_yaml.hpp"
+#include "eagle_mpc/utils/parser_yaml.hpp"
 
-namespace multicopter_mpc {
+namespace eagle_mpc {
 namespace python {
 
 namespace bp = boost::python;
@@ -17,6 +17,6 @@ void exposeParserYaml() {
 }
 
 }  // namespace python
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc
 
 #endif  // BINDINGS_PYTHON_OPTIUAVM_YAML_PARSER_YAML_HPP_

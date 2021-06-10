@@ -1,14 +1,14 @@
 #ifndef BINDINGS_PYTHON_MULTICOPTER_STAGE_HPP_
 #define BINDINGS_PYTHON_MULTICOPTER_STAGE_HPP_
 
-#include "multicopter_mpc/stage.hpp"
+#include "eagle_mpc/stage.hpp"
 
-#include "python/multicopter_mpc/utils/vector-converter.hpp"
-#include "python/multicopter_mpc/utils/map-converter.hpp"
+#include "python/eagle_mpc/utils/vector-converter.hpp"
+#include "python/eagle_mpc/utils/map-converter.hpp"
 
 #include <Eigen/Dense>
 
-namespace multicopter_mpc {
+namespace eagle_mpc {
 namespace python {
 
 namespace bp = boost::python;
@@ -65,5 +65,5 @@ void exposeStage() {
       .def("autoSetup", &Stage::autoSetup, bp::args("self", "stages", "server"));
 }
 }  // namespace python
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc
 #endif

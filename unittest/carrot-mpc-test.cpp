@@ -10,18 +10,18 @@
 #include "yaml_parser/parser_yaml.h"
 #include "yaml_parser/params_server.hpp"
 
-#include "multicopter_mpc/path.h"
-#include "multicopter_mpc/ocp/mpc/carrot-mpc.hpp"
-#include "multicopter_mpc/mission.hpp"
+#include "eagle_mpc/path.h"
+#include "eagle_mpc/ocp/mpc/carrot-mpc.hpp"
+#include "eagle_mpc/mission.hpp"
 
-BOOST_AUTO_TEST_SUITE(multicopter_mpc_trajectory_generator_test)
+BOOST_AUTO_TEST_SUITE(eagle_mpc_trajectory_generator_test)
 
-class CarrotMpcDerived : public multicopter_mpc::CarrotMpc {
+class CarrotMpcDerived : public eagle_mpc::CarrotMpc {
  public:
   CarrotMpcDerived(const boost::shared_ptr<pinocchio::Model>& model,
-                   const boost::shared_ptr<multicopter_mpc::MultiCopterBaseParams>& mc_params,
-                   const boost::shared_ptr<multicopter_mpc::Mission>& mission)
-      : multicopter_mpc::CarrotMpc(model, mc_params, mission) {}
+                   const boost::shared_ptr<eagle_mpc::MultiCopterBaseParams>& mc_params,
+                   const boost::shared_ptr<eagle_mpc::Mission>& mission)
+      : eagle_mpc::CarrotMpc(model, mc_params, mission) {}
 
   ~CarrotMpcDerived(){};
 
@@ -60,12 +60,12 @@ class CarrotMpcTest {
     pinocchio::urdf::buildModel(EXAMPLE_ROBOT_DATA_MODEL_DIR "/iris_description/robots/iris_simple.urdf",
                                 pinocchio::JointModelFreeFlyer(), model_);
 
-    mc_params_ = boost::make_shared<multicopter_mpc::MultiCopterBaseParams>();
+    mc_params_ = boost::make_shared<eagle_mpc::MultiCopterBaseParams>();
     mc_params_->fill(multirotor_yaml_path);
 
     mc_model_ = boost::make_shared<pinocchio::Model>(model_);
 
-    mc_mission_ = boost::make_shared<multicopter_mpc::Mission>(mc_model_->nq + mc_model_->nv);
+    mc_mission_ = boost::make_shared<eagle_mpc::Mission>(mc_model_->nq + mc_model_->nv);
     mc_mission_->fillWaypoints(mission_yaml_path);
 
     dt_ = 1e-2;
@@ -79,9 +79,9 @@ class CarrotMpcTest {
 
   pinocchio::Model model_;
 
-  boost::shared_ptr<multicopter_mpc::MultiCopterBaseParams> mc_params_;
+  boost::shared_ptr<eagle_mpc::MultiCopterBaseParams> mc_params_;
   boost::shared_ptr<pinocchio::Model> mc_model_;
-  boost::shared_ptr<multicopter_mpc::Mission> mc_mission_;
+  boost::shared_ptr<eagle_mpc::Mission> mc_mission_;
 
   double dt_;
   std::size_t n_knots_;
@@ -257,8 +257,8 @@ BOOST_AUTO_TEST_CASE(create_problem_test, *boost::unit_test::tolerance(1e-7)) {
   {
     CarrotMpcTest carrot_mpc_test("carrot-mpc-test-1.yaml");
 
-    carrot_mpc_test.carrot_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP,
-                                               multicopter_mpc::IntegratorTypes::Euler, carrot_mpc_test.dt_);
+    carrot_mpc_test.carrot_mpc_->createProblem(eagle_mpc::SolverTypes::BoxFDDP,
+                                               eagle_mpc::IntegratorTypes::Euler, carrot_mpc_test.dt_);
 
     // Check that the differential running vector has ALL nodes (terminal node included)
     BOOST_CHECK(carrot_mpc_test.carrot_mpc_->getDifferentialRunningModels().size() ==
@@ -328,8 +328,8 @@ BOOST_AUTO_TEST_CASE(create_problem_test, *boost::unit_test::tolerance(1e-7)) {
   {
     CarrotMpcTest carrot_mpc_test("carrot-mpc-test-2.yaml");
 
-    carrot_mpc_test.carrot_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP,
-                                               multicopter_mpc::IntegratorTypes::Euler, carrot_mpc_test.dt_);
+    carrot_mpc_test.carrot_mpc_->createProblem(eagle_mpc::SolverTypes::BoxFDDP,
+                                               eagle_mpc::IntegratorTypes::Euler, carrot_mpc_test.dt_);
 
     for (std::size_t i = 0; i < carrot_mpc_test.carrot_mpc_->getTerminalWeights().size(); ++i) {
       boost::shared_ptr<crocoddyl::CostModelFramePlacement> cost_pose =
@@ -386,8 +386,8 @@ BOOST_AUTO_TEST_CASE(create_problem_test, *boost::unit_test::tolerance(1e-7)) {
   {
     CarrotMpcTest carrot_mpc_test("carrot-mpc-test-3.yaml");
 
-    carrot_mpc_test.carrot_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP,
-                                               multicopter_mpc::IntegratorTypes::Euler, carrot_mpc_test.dt_);
+    carrot_mpc_test.carrot_mpc_->createProblem(eagle_mpc::SolverTypes::BoxFDDP,
+                                               eagle_mpc::IntegratorTypes::Euler, carrot_mpc_test.dt_);
     ;
 
     for (std::size_t i = 0; i < carrot_mpc_test.carrot_mpc_->getTerminalWeights().size(); ++i) {
@@ -450,8 +450,8 @@ BOOST_AUTO_TEST_CASE(create_problem_test, *boost::unit_test::tolerance(1e-7)) {
   {
     CarrotMpcTest carrot_mpc_test("carrot-mpc-test-4.yaml");
 
-    carrot_mpc_test.carrot_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP,
-                                               multicopter_mpc::IntegratorTypes::Euler, carrot_mpc_test.dt_);
+    carrot_mpc_test.carrot_mpc_->createProblem(eagle_mpc::SolverTypes::BoxFDDP,
+                                               eagle_mpc::IntegratorTypes::Euler, carrot_mpc_test.dt_);
     ;
 
     for (std::size_t i = 0; i < carrot_mpc_test.carrot_mpc_->getTerminalWeights().size(); ++i) {
@@ -518,8 +518,8 @@ BOOST_AUTO_TEST_CASE(update_problem_weight_test, *boost::unit_test::tolerance(1e
 
   CarrotMpcTest carrot_mpc_test("carrot-mpc-test-3.yaml");
 
-  carrot_mpc_test.carrot_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP,
-                                             multicopter_mpc::IntegratorTypes::Euler, carrot_mpc_test.dt_);
+  carrot_mpc_test.carrot_mpc_->createProblem(eagle_mpc::SolverTypes::BoxFDDP,
+                                             eagle_mpc::IntegratorTypes::Euler, carrot_mpc_test.dt_);
   std::size_t trajectory_idx = carrot_mpc_test.carrot_mpc_->getKnots();
   std::vector<bool> initial_weights = carrot_mpc_test.carrot_mpc_->getTerminalWeights();
   carrot_mpc_test.carrot_mpc_->updateProblem(trajectory_idx);
@@ -543,8 +543,8 @@ BOOST_AUTO_TEST_CASE(update_problem_references_test, *boost::unit_test::toleranc
 
   CarrotMpcTest carrot_mpc_test("carrot-mpc-test-3.yaml");
 
-  carrot_mpc_test.carrot_mpc_->createProblem(multicopter_mpc::SolverTypes::BoxFDDP,
-                                             multicopter_mpc::IntegratorTypes::Euler, carrot_mpc_test.dt_);
+  carrot_mpc_test.carrot_mpc_->createProblem(eagle_mpc::SolverTypes::BoxFDDP,
+                                             eagle_mpc::IntegratorTypes::Euler, carrot_mpc_test.dt_);
   std::size_t trajectory_idx = carrot_mpc_test.carrot_mpc_->getKnots();
   carrot_mpc_test.carrot_mpc_->updateProblem(trajectory_idx);
 

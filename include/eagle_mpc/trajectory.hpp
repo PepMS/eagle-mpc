@@ -21,14 +21,14 @@
 #include "crocoddyl/multibody/actuations/multicopter-base.hpp"
 #include "crocoddyl/multibody/states/multibody.hpp"
 
-#include "multicopter_mpc/multicopter-base-params.hpp"
-#include "multicopter_mpc/stage.hpp"
-#include "multicopter_mpc/utils/params_server.hpp"
-#include "multicopter_mpc/utils/parser_yaml.hpp"
-#include "multicopter_mpc/factory/diff-action.hpp"
-#include "multicopter_mpc/factory/int-action.hpp"
+#include "eagle_mpc/multicopter-base-params.hpp"
+#include "eagle_mpc/stage.hpp"
+#include "eagle_mpc/utils/params_server.hpp"
+#include "eagle_mpc/utils/parser_yaml.hpp"
+#include "eagle_mpc/factory/diff-action.hpp"
+#include "eagle_mpc/factory/int-action.hpp"
 
-namespace multicopter_mpc {
+namespace eagle_mpc {
 class Stage;
 class DifferentialActionModelFactory;
 class IntegratedActionModelFactory;
@@ -84,6 +84,6 @@ class Trajectory : public boost::enable_shared_from_this<Trajectory> {
   boost::shared_ptr<DifferentialActionModelFactory> dam_factory_;
   boost::shared_ptr<IntegratedActionModelFactory> iam_factory_;
 };
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc
 
 #endif

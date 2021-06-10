@@ -1,9 +1,9 @@
 #ifndef BINDINGS_PYTHON_EAGLE_MPC_CONTROLLERS_WEIGHTED_MPC_HPP_
 #define BINDINGS_PYTHON_EAGLE_MPC_CONTROLLERS_WEIGHTED_MPC_HPP_
 
-#include "multicopter_mpc/mpc-controllers/weighted-mpc.hpp"
+#include "eagle_mpc/mpc-controllers/weighted-mpc.hpp"
 
-namespace multicopter_mpc {
+namespace eagle_mpc {
 namespace python {
 
 namespace bp = boost::python;
@@ -22,5 +22,5 @@ void exposeWeightedMpc() {
 }
 
 }  // namespace python
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc
 #endif

@@ -6,9 +6,9 @@
 #include "crocoddyl/core/optctrl/shooting.hpp"
 #include "crocoddyl/core/actuation/squashing/smooth-sat.hpp"
 
-#include "multicopter_mpc/sbfddp.hpp"
+#include "eagle_mpc/sbfddp.hpp"
 
-namespace multicopter_mpc {
+namespace eagle_mpc {
 namespace python {
 
 namespace bp = boost::python;
@@ -70,6 +70,6 @@ void exposeSolverSbFDDP() {
 }  // namespace python
 }  // namespace python
 
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc
 
 #endif

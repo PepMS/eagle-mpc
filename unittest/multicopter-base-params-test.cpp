@@ -3,13 +3,13 @@
 #include <boost/test/unit_test.hpp>
 #include <algorithm>
 
-#include "multicopter_mpc/path.h"
-#include "multicopter_mpc/multicopter-base-params.hpp"
+#include "eagle_mpc/path.h"
+#include "eagle_mpc/multicopter-base-params.hpp"
 
 #include "yaml_parser/parser_yaml.h"
 #include "yaml_parser/params_server.hpp"
 
-BOOST_AUTO_TEST_SUITE(multicopter_mpc_mcparams_test)
+BOOST_AUTO_TEST_SUITE(eagle_mpc_mcparams_test)
 
 BOOST_AUTO_TEST_CASE(constructors_test, *boost::unit_test::tolerance(1e-7)) {
   double cf = 6.6e-5;
@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_CASE(constructors_test, *boost::unit_test::tolerance(1e-7)) {
   tau_f << 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, d_cog, 0.0, -d_cog, -d_cog, 0.0, d_cog,
       0.0, -cm / cf, cm / cf, -cm / cf, cm / cf;
 
-  multicopter_mpc::MultiCopterBaseParams m00(cf, cm, tau_f, max_thrust, min_thrust, base_link_name);
+  eagle_mpc::MultiCopterBaseParams m00(cf, cm, tau_f, max_thrust, min_thrust, base_link_name);
 
   BOOST_CHECK(cf == m00.cf_);
   BOOST_CHECK(cm == m00.cm_);
@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(fill_test, *boost::unit_test::tolerance(1e-7)) {
   std::string mc_params_yaml_path =
       std::string(MULTICOPTER_MPC_ROOT_DIR) + "/unittest/config/multirotor/hector-test.yaml";
 
-  multicopter_mpc::MultiCopterBaseParams m00;
+  eagle_mpc::MultiCopterBaseParams m00;
   m00.fill(mc_params_yaml_path);
 
   BOOST_CHECK(cf == m00.cf_);

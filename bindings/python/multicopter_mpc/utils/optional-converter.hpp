@@ -7,7 +7,7 @@
 #include <boost/type_traits/integral_constant.hpp>
 #include <boost/python/module.hpp>
 
-namespace multicopter_mpc {
+namespace eagle_mpc {
 namespace python {
 
 namespace bp = boost::python;
@@ -92,4 +92,4 @@ struct return_optional {
 };    // return_optional
 
 }  // namespace python
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc

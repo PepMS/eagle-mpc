@@ -15,9 +15,9 @@
 
 #include "yaml-cpp/yaml.h"
 
-#include "multicopter_mpc/utils/converter.hpp"
+#include "eagle_mpc/utils/converter.hpp"
 
-namespace multicopter_mpc {
+namespace eagle_mpc {
 
 class ParserYaml {
  public:
@@ -66,6 +66,6 @@ class ParserYaml {
 
   bool is_trajectory_;
 };
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc
 
 #endif

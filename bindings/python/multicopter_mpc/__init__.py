@@ -1,3 +1,3 @@
 import crocoddyl
 
-from .libmulticopter_mpc_pywrap import *
+from .libeagle_mpc_pywrap import *
