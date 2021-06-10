@@ -1,5 +1,5 @@
-#ifndef MULTICOPTER_MPC_MPC_BASE_HPP_
-#define MULTICOPTER_MPC_MPC_BASE_HPP_
+#ifndef EAGLE_MPC_MPC_BASE_HPP_
+#define EAGLE_MPC_MPC_BASE_HPP_
 
 #include "pinocchio/multibody/model.hpp"
 #include "pinocchio/parsers/urdf.hpp"

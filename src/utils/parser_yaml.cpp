@@ -1,3 +1,10 @@
+///////////////////////////////////////////////////////////////////////////////
+// BSD 3-Clause License
+//
+// Copyright (c) 2021, Institut de Robotica i Informatica Industrial (CSIC-UPC)
+// All rights reserved.
+///////////////////////////////////////////////////////////////////////////////
+
 #include "multicopter_mpc/utils/parser_yaml.hpp"
 #include "multicopter_mpc/utils/log.hpp"
 

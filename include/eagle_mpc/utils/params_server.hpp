@@ -1,5 +1,12 @@
-#ifndef MULTICOPTER_MPC_UTILSparams__SERVER_HPP
-#define MULTICOPTER_MPC_UTILSparams__SERVER_HPP
+///////////////////////////////////////////////////////////////////////////////
+// BSD 3-Clause License
+//
+// Copyright (c) 2021, Institut de Robotica i Informatica Industrial (CSIC-UPC)
+// All rights reserved.
+///////////////////////////////////////////////////////////////////////////////
+
+#ifndef EAGLE_MPC_UTILSparams__SERVER_HPP
+#define EAGLE_MPC_UTILSparams__SERVER_HPP
 
 #include "multicopter_mpc/utils/converter.hpp"
 

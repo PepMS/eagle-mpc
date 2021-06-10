@@ -1,7 +1,14 @@
-#ifndef MULTICOPTER_MPC_UTILS_CONVERTER_HPP
-#define MULTICOPTER_MPC_UTILS_CONVERTER_HPP
+///////////////////////////////////////////////////////////////////////////////
+// BSD 3-Clause License
+//
+// Copyright (c) 2021, Institut de Robotica i Informatica Industrial (CSIC-UPC)
+// All rights reserved.
+///////////////////////////////////////////////////////////////////////////////
 
-#include "multicopter_mpc/utils/converter_utils.hpp"
+#ifndef EAGLE_MPC_UTILS_CONVERTER_HPP
+#define EAGLE_MPC_UTILS_CONVERTER_HPP
+
+#include "eagle_mpc/utils/converter_utils.hpp"
 
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Geometry>
@@ -13,7 +20,7 @@
 #include <stack>
 #include <list>
 
-namespace multicopter_mpc {
+namespace eagle_mpc {
 
 template <typename T>
 struct converter {
@@ -234,5 +241,5 @@ struct converter<std::map<std::string, A>> {
   }
 };
 
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc
 #endif

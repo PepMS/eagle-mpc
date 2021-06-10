@@ -1,5 +1,5 @@
-#ifndef MULTICOPTER_MPC_TRAJECTORY_HPP_
-#define MULTICOPTER_MPC_TRAJECTORY_HPP_
+#ifndef EAGLE_MPC_TRAJECTORY_HPP_
+#define EAGLE_MPC_TRAJECTORY_HPP_
 
 #include <iostream>
 #include <map>

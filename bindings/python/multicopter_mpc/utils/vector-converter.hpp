@@ -6,8 +6,8 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef BINDINGS_PYTHON_MULTICOPTER_MPC_VECTOR_CONVERTER_HPP_
-#define BINDINGS_PYTHON_MULTICOPTER_MPC_VECTOR_CONVERTER_HPP_
+#ifndef BINDINGS_PYTHON_EAGLE_MPC_VECTOR_CONVERTER_HPP_
+#define BINDINGS_PYTHON_EAGLE_MPC_VECTOR_CONVERTER_HPP_
 
 #include <Eigen/Dense>
 #include <vector>

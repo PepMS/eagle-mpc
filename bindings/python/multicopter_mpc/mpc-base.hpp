@@ -1,5 +1,5 @@
-#ifndef BINDINGS_PYTHON_MULTICOPTER_MPC_BASE_HPP_
-#define BINDINGS_PYTHON_MULTICOPTER_MPC_BASE_HPP_
+#ifndef BINDINGS_PYTHON_EAGLE_MPC_BASE_HPP_
+#define BINDINGS_PYTHON_EAGLE_MPC_BASE_HPP_
 
 #include "multicopter_mpc/mpc-base.hpp"
 #include "python/multicopter_mpc/utils/vector-converter.hpp"

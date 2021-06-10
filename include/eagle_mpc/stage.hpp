@@ -1,5 +1,5 @@
-#ifndef MULTICOPTER_MPC_STAGE_HPP_
-#define MULTICOPTER_MPC_STAGE_HPP_
+#ifndef EAGLE_MPC_STAGE_HPP_
+#define EAGLE_MPC_STAGE_HPP_
 
 #include <map>
 

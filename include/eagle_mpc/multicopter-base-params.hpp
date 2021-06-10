@@ -1,5 +1,5 @@
-#ifndef MULTICOPTER_MPC_MULTICOPTER_BASE_PARAMS_HPP_
-#define MULTICOPTER_MPC_MULTICOPTER_BASE_PARAMS_HPP_
+#ifndef EAGLE_MPC_MULTICOPTER_BASE_PARAMS_HPP_
+#define EAGLE_MPC_MULTICOPTER_BASE_PARAMS_HPP_
 
 #include <iostream>
 
@@ -43,4 +43,4 @@ class MultiCopterBaseParams {
   std::vector<int> rotors_spin_dir_;
 };
 }  // namespace multicopter_mpc
-#endif  // MULTICOPTER_MPC_MULTICOPTER_BASE_PARAMS_HPP_
+#endif  // EAGLE_MPC_MULTICOPTER_BASE_PARAMS_HPP_
