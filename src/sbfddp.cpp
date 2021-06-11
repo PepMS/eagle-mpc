@@ -1,6 +1,6 @@
-#include "multicopter_mpc/sbfddp.hpp"
+#include "eagle_mpc/sbfddp.hpp"
 
-namespace multicopter_mpc {
+namespace eagle_mpc {
 
 SolverSbFDDP::SolverSbFDDP(boost::shared_ptr<crocoddyl::ShootingProblem> problem,
                            boost::shared_ptr<crocoddyl::SquashingModelSmoothSat> squashing_model)
@@ -464,4 +464,4 @@ const double& SolverSbFDDP::get_convergence_init() const { return convergence_in
 
 void SolverSbFDDP::set_convergence_init(const double& convergence_init) { convergence_init_ = convergence_init; }
 
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc

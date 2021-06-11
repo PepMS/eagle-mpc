@@ -1,6 +1,13 @@
-#include "multicopter_mpc/utils/tools.hpp"
+///////////////////////////////////////////////////////////////////////////////
+// BSD 3-Clause License
+//
+// Copyright (c) 2021, Institut de Robotica i Informatica Industrial (CSIC-UPC)
+// All rights reserved.
+///////////////////////////////////////////////////////////////////////////////
 
-namespace multicopter_mpc {
+#include "eagle_mpc/utils/tools.hpp"
+
+namespace eagle_mpc {
 
 Tools::Tools(){}
 
@@ -10,4 +17,4 @@ void Tools::thrustToSpeed(const Eigen::VectorXd& thrust, const boost::shared_ptr
                           Eigen::VectorXd& speed) {
   speed = (thrust.array() / params->cf_).sqrt();
 }
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc

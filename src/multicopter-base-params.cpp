@@ -1,8 +1,8 @@
-#include "multicopter_mpc/multicopter-base-params.hpp"
+#include "eagle_mpc/multicopter-base-params.hpp"
 
-#include "multicopter_mpc/utils/log.hpp"
+#include "eagle_mpc/utils/log.hpp"
 
-namespace multicopter_mpc {
+namespace eagle_mpc {
 
 MultiCopterBaseParams::MultiCopterBaseParams() {}
 MultiCopterBaseParams::MultiCopterBaseParams(const double& cf, const double& cm, const Eigen::MatrixXd& tau_f,
@@ -85,4 +85,4 @@ void MultiCopterBaseParams::setControlLimits(const boost::shared_ptr<pinocchio::
   u_ub.tail(n_arm_joints) = robot_model->effortLimit.tail(n_arm_joints);
 }
 
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc

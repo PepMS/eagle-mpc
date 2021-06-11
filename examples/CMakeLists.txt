@@ -7,7 +7,7 @@ ${CROCODDYL_INCLUDE_DIRS}
 )
 
 set(LIBS_EXAMPLES
-multicopter_mpc
+eagle_mpc
 ${Boost_SYSTEM_LIBRARY}
 ${CROCODDYL_LIB}
 ${URDFDOM_LIB}

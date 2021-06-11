@@ -1,9 +1,16 @@
+///////////////////////////////////////////////////////////////////////////////
+// BSD 3-Clause License
+//
+// Copyright (c) 2021, Institut de Robotica i Informatica Industrial (CSIC-UPC)
+// All rights reserved.
+///////////////////////////////////////////////////////////////////////////////
+
 #include <algorithm>
 
-#include "multicopter_mpc/mpc-controllers/rail-mpc.hpp"
-#include "multicopter_mpc/utils/log.hpp"
+#include "eagle_mpc/mpc-controllers/rail-mpc.hpp"
+#include "eagle_mpc/utils/log.hpp"
 
-namespace multicopter_mpc {
+namespace eagle_mpc {
 
 RailMpc::RailMpc(const std::vector<Eigen::VectorXd>& state_ref, const std::size_t dt_ref, const std::string& yaml_path)
     : MpcAbstract(yaml_path) {
@@ -100,7 +107,7 @@ void RailMpc::createProblem() {
 
   switch (params_.solver_type) {
     case SolverTypes::SolverSbFDDP:
-      solver_ = boost::make_shared<multicopter_mpc::SolverSbFDDP>(problem_, squash_);
+      solver_ = boost::make_shared<eagle_mpc::SolverSbFDDP>(problem_, squash_);
       break;
     case SolverTypes::SolverBoxFDDP:
       solver_ = boost::make_shared<crocoddyl::SolverBoxFDDP>(problem_);
@@ -176,4 +183,4 @@ void RailMpc::computeStateReference(const std::size_t& time) {
 const std::vector<Eigen::VectorXd>& RailMpc::get_state_ref() const { return state_ref_; }
 const std::vector<std::size_t>& RailMpc::get_t_ref() const { return t_ref_; }
 
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc

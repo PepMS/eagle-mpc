@@ -1,8 +1,15 @@
-#include "multicopter_mpc/factory/activation.hpp"
+///////////////////////////////////////////////////////////////////////////////
+// BSD 3-Clause License
+//
+// Copyright (c) 2021, Institut de Robotica i Informatica Industrial (CSIC-UPC)
+// All rights reserved.
+///////////////////////////////////////////////////////////////////////////////
 
-#include "multicopter_mpc/utils/log.hpp"
+#include "eagle_mpc/factory/activation.hpp"
 
-namespace multicopter_mpc {
+#include "eagle_mpc/utils/log.hpp"
+
+namespace eagle_mpc {
 
 ActivationModelFactory::ActivationModelFactory() {}
 ActivationModelFactory::~ActivationModelFactory() {}
@@ -41,8 +48,10 @@ boost::shared_ptr<crocoddyl::ActivationModelAbstract> ActivationModelFactory::cr
       activation = boost::make_shared<crocoddyl::ActivationModelWeightedQuad>(weights);
     } break;
     case ActivationModelTypes::ActivationModelQuadraticBarrier: {
-      Eigen::VectorXd lb = converter<Eigen::VectorXd>::convert(server->getParam<std::string>(path_to_cost + "l_bound"));
-      Eigen::VectorXd ub = converter<Eigen::VectorXd>::convert(server->getParam<std::string>(path_to_cost + "u_bound"));
+      Eigen::VectorXd lb =
+          converter<Eigen::VectorXd>::convert(server->getParam<std::string>(path_to_cost + "l_bound"));
+      Eigen::VectorXd ub =
+          converter<Eigen::VectorXd>::convert(server->getParam<std::string>(path_to_cost + "u_bound"));
 
       if (lb.size() != nr) {
         throw std::runtime_error("l_bound vector @" + path_to_cost + "l_bound has dimension " +
@@ -56,8 +65,10 @@ boost::shared_ptr<crocoddyl::ActivationModelAbstract> ActivationModelFactory::cr
       activation = boost::make_shared<crocoddyl::ActivationModelQuadraticBarrier>(bounds);
     } break;
     case ActivationModelTypes::ActivationModelWeightedQuadraticBarrier: {
-      Eigen::VectorXd lb = converter<Eigen::VectorXd>::convert(server->getParam<std::string>(path_to_cost + "l_bound"));
-      Eigen::VectorXd ub = converter<Eigen::VectorXd>::convert(server->getParam<std::string>(path_to_cost + "u_bound"));
+      Eigen::VectorXd lb =
+          converter<Eigen::VectorXd>::convert(server->getParam<std::string>(path_to_cost + "l_bound"));
+      Eigen::VectorXd ub =
+          converter<Eigen::VectorXd>::convert(server->getParam<std::string>(path_to_cost + "u_bound"));
       try {
         weights = converter<Eigen::VectorXd>::convert(server->getParam<std::string>(path_to_cost + "weights"));
       } catch (const std::exception& e) {
@@ -88,4 +99,4 @@ boost::shared_ptr<crocoddyl::ActivationModelAbstract> ActivationModelFactory::cr
   return activation;
 }
 
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc

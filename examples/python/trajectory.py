@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import crocoddyl
-import multicopter_mpc
+import eagle_mpc
 import example_robot_data
 
 WITHDISPLAY = 'display' in sys.argv
@@ -13,13 +13,13 @@ useSquash = True
 robotName = 'hexacopter370'
 trajectoryName = 'hover'
 
-trajectory = multicopter_mpc.Trajectory()
-trajectory.autoSetup("/home/pepms/wsros/mpc-ws/src/multicopter_mpc/multicopter_mpc_yaml/trajectories/" + robotName +
+trajectory = eagle_mpc.Trajectory()
+trajectory.autoSetup("/home/pepms/wsros/mpc-ws/src/eagle_mpc/eagle_mpc_yaml/trajectories/" + robotName +
                      '_' + trajectoryName + ".yaml")
 problem = trajectory.createProblem(dt, useSquash, "IntegratedActionModelEuler")
 
 if useSquash:
-    solver = multicopter_mpc.SolverSbFDDP(problem, trajectory.squash)
+    solver = eagle_mpc.SolverSbFDDP(problem, trajectory.squash)
 else:
     solver = crocoddyl.SolverBoxFDDP(problem)
 

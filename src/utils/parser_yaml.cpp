@@ -1,7 +1,14 @@
-#include "multicopter_mpc/utils/parser_yaml.hpp"
-#include "multicopter_mpc/utils/log.hpp"
+///////////////////////////////////////////////////////////////////////////////
+// BSD 3-Clause License
+//
+// Copyright (c) 2021, Institut de Robotica i Informatica Industrial (CSIC-UPC)
+// All rights reserved.
+///////////////////////////////////////////////////////////////////////////////
 
-namespace multicopter_mpc {
+#include "eagle_mpc/utils/parser_yaml.hpp"
+#include "eagle_mpc/utils/log.hpp"
+
+namespace eagle_mpc {
 
 //====== START OF FORWARD DECLARATION ========
 std::string parseAtomicNode(YAML::Node);
@@ -429,4 +436,4 @@ void ParserYaml::insertRegister(std::string key, std::string value) {
 void ParserYaml::updateActiveName(std::string tag) { active_name_ = tag; }
 
 const std::map<std::string, std::string>& ParserYaml::get_params() { return params_; }
-}  // namespace multicopter_mpc
+}  // namespace eagle_mpc

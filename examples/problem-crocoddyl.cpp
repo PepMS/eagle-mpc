@@ -20,24 +20,24 @@
 
 // #include "yaml_parser/parser_yaml.h"
 
-// #include "multicopter_mpc/multicopter-base-params.hpp"
-// #include "multicopter_mpc/mission.hpp"
+// #include "eagle_mpc/multicopter-base-params.hpp"
+// #include "eagle_mpc/mission.hpp"
 
 int main(void) {
 //   pinocchio::Model model;
 //   pinocchio::urdf::buildModel(EXAMPLE_ROBOT_DATA_MODEL_DIR "/hector_description/robots/quadrotor_base.urdf",
 //                               pinocchio::JointModelFreeFlyer(), model);
 
-//   yaml_parser::ParserYAML yaml_file("/usr/local/share/multicopter_mpc/multirotor/hector.yaml", "", true);
+//   yaml_parser::ParserYAML yaml_file("/usr/local/share/eagle_mpc/multirotor/hector.yaml", "", true);
 //   yaml_parser::ParamsServer server_params(yaml_file.getParams());
 
-//   multicopter_mpc::MultiCopterBaseParams mc_params;
+//   eagle_mpc::MultiCopterBaseParams mc_params;
 //   mc_params.fill(server_params);
 
-//   yaml_parser::ParserYAML yaml_mission("/usr/local/share/multicopter_mpc/mission/simple.yaml", "", true);
+//   yaml_parser::ParserYAML yaml_mission("/usr/local/share/eagle_mpc/mission/simple.yaml", "", true);
 //   yaml_parser::ParamsServer server_mission(yaml_mission.getParams());
 
-//   multicopter_mpc::Mission mission(model.nq + model.nv);
+//   eagle_mpc::Mission mission(model.nq + model.nv);
 //   mission.fillWaypoints(server_mission);
 //   mission.fillInitialState(server_mission);
 
