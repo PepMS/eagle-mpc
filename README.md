@@ -29,12 +29,12 @@ Follow its documentation to build from source.
 Use the forked version of the [original repository](https://github.com/Gepetto/example-robot-data). 
 The [forked version](https://github.com/PepMS/example-robot-data) contains additional UAM models with different platform and robotic arm combination:
 
-**Platforms**:
+Platforms:
 - Planar small hexacopter (370mm)
 - Planar medium-sized hexacopter (680mm)
 - Fully actuated hexacopter (Tilthex)
 
-**Robotic Arms**:
+Robotic Arms:
 - 2 DoFs, 3 DoFs and 5 DoFs (with spherical wrist)
 
 ### Eagle MPC
@@ -48,7 +48,7 @@ cmake -DCMAKE_BUILD_TYPE=Release ..
 make -j6
 ```
 
-Install this library. By default it will be install at `usr/local/`. If you want to install this somewhere else, the `CMAKE_INSTALL_PREFIX` from the `CMakeLists.txt`should be modified accordingly.
+Install this library. By default it will be installed at `usr/local/`. If you want to install it somewhere else, the `CMAKE_INSTALL_PREFIX` from the `CMakeLists.txt`should be modified accordingly. Then, to install do
 ```
 sudo make install
 ```
