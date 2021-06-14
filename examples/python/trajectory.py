@@ -14,7 +14,7 @@ robotName = 'hexacopter370'
 trajectoryName = 'hover'
 
 trajectory = eagle_mpc.Trajectory()
-trajectory.autoSetup("/home/pepms/wsros/mpc-ws/src/eagle_mpc/eagle_mpc_yaml/trajectories/" + robotName +
+trajectory.autoSetup("/home/pepms/wsros/mpc-ws/src/eagle_mpc_ros/eagle_mpc_yaml/trajectories/" + robotName +
                      '_' + trajectoryName + ".yaml")
 problem = trajectory.createProblem(dt, useSquash, "IntegratedActionModelEuler")
 

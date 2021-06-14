@@ -151,19 +151,19 @@ class MulticopterMpcDisplay(crocoddyl.GepettoDisplay):
                     fc = []
                     for key, contact in data.differential.multibody.contacts.contacts.todict().items():
                         if model.differential.contacts.contacts[key].active:
-                            oMf = contact.pinocchio.oMi[contact.joint] * contact.jMf
-                            fiMo = pinocchio.SE3(contact.pinocchio.oMi[contact.joint].rotation.T,
-                                                 contact.jMf.translation)
+                            joint = model.differential.state.pinocchio.frames[contact.frame].parent
+                            oMf = contact.pinocchio.oMi[joint] * contact.jMf
+                            fiMo = pinocchio.SE3(contact.pinocchio.oMi[joint].rotation.T, contact.jMf.translation)
                             force = fiMo.actInv(contact.f)
                             R = np.eye(3)
                             mu = 0.7
                             for k, c in model.differential.costs.costs.todict().items():
                                 if isinstance(c.cost, crocoddyl.libcrocoddyl_pywrap.CostModelContactFrictionCone):
-                                    if contact.joint == self.robot.model.frames[c.cost.reference.id].parent:
+                                    if contact.frame == c.cost.reference.id:
                                         R = c.cost.reference.cone.R
                                         mu = c.cost.reference.cone.mu
                                         continue
-                            fc.append({"key": str(contact.joint), "oMf": oMf, "f": force, "R": R, "mu": mu})
+                            fc.append({"key": str(joint), "oMf": oMf, "f": force, "R": R, "mu": mu})
                     fs.append(fc)
                 elif isinstance(data.differential, crocoddyl.libcrocoddyl_pywrap.StdVec_DiffActionData):
                     if isinstance(data.differential[0],
@@ -171,19 +171,19 @@ class MulticopterMpcDisplay(crocoddyl.GepettoDisplay):
                         fc = []
                         for key, contact in data.differential[0].multibody.contacts.contacts.todict().items():
                             if model.differential.contacts.contacts[key].active:
-                                oMf = contact.pinocchio.oMi[contact.joint] * contact.jMf
-                                fiMo = pinocchio.SE3(contact.pinocchio.oMi[contact.joint].rotation.T,
-                                                     contact.jMf.translation)
+                                joint = model.differential.state.pinocchio.frames[contact.frame].parent
+                                oMf = contact.pinocchio.oMi[joint] * contact.jMf
+                                fiMo = pinocchio.SE3(contact.pinocchio.oMi[joint].rotation.T, contact.jMf.translation)
                                 force = fiMo.actInv(contact.f)
                                 R = np.eye(3)
                                 mu = 0.7
                                 for k, c in model.differential.costs.costs.todict().items():
                                     if isinstance(c.cost, crocoddyl.libcrocoddyl_pywrap.CostModelContactFrictionCone):
-                                        if contact.joint == self.robot.model.frames[c.cost.reference.id].parent:
+                                        if contact.frame == c.cost.reference.id:
                                             R = c.cost.reference.cone.R
                                             mu = c.cost.reference.cone.mu
                                             continue
-                                fc.append({"key": str(contact.joint), "oMf": oMf, "f": force, "R": R, "mu": mu})
+                                fc.append({"key": str(joint), "oMf": oMf, "f": force, "R": R, "mu": mu})
                         fs.append(fc)
             elif isinstance(data, crocoddyl.libcrocoddyl_pywrap.ActionDataImpulseFwdDynamics):
                 fc = []
