@@ -33,14 +33,18 @@ Overview of the different branches in the [forked Crocoddyl repository](https://
 - **devel** : Even with its `devel` [parent branch](https://github.com/loco-3d/crocoddyl/tree/devel)
 - **sbfddp**: Even with the `devel` branch adding the modifications of the stopping criteria.
 
-Fast installation instructions:
+Quick installation instructions:
 ```console
 cd <choose-your-path>
 git clone https://github.com/PepMS/crocoddyl/tree/sbfddp
 cd crocoddyl
+git submodule update --init
 mkdir build && cd build
-
+cmake -DCMAKE_BUILD_TYPE=Release ..
+make -j6
+sudo make install
 ```
+
  ⚠️ **If you want to reproduce the experiments of the paper** *Full-body torque-level Nonlinear Model Predictive Control*, checkout the *Crocoddyl* repository to [this tag](https://github.com/PepMS/crocoddyl/releases/tag/fbtlnmpc_uam).
 
 ### example-robot-data
@@ -57,6 +61,18 @@ Robotic Arms:
 - 3 DoFs
 - 5 DoFs (with spherical wrist)
 
+Quick installation instructions:
+```console
+cd <choose-your-path>
+git clone https://github.com/PepMS/example-robot-data/tree/devel
+cd example-robot-data
+git submodule update --init
+mkdir build && cd build
+cmake -DCMAKE_BUILD_TYPE=Release ..
+make -j6
+sudo make install
+```
+
 ## Installation - Eagle MPC
 
 Clone this repo and build:
@@ -66,6 +82,7 @@ cd eagle-mpc
 mkdir build && cd build
 cmake -DCMAKE_BUILD_TYPE=Release ..
 make -j6
+sudo make install
 ```
 
 Install this library. By default it will be installed at `usr/local/`. If you want to install it somewhere else, the `CMAKE_INSTALL_PREFIX` from the `CMakeLists.txt`should be modified accordingly. Then, to install do
