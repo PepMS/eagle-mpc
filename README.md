@@ -22,23 +22,28 @@ This is a C++ library. However, it can also be used within a Python environment 
 #### Crocoddyl
 **Crocoddyl** stands for *Contact Robot Optimal Control by Differential Dynamic Library*. It is a library to create and solve optimal control problems for robotics.
 
-:warning: **Crocoddyl** needs to be built from source. Here: :arrow_down:
+:warning: **Crocoddyl needs to be built from source.** :arrow_down::arrow_down:Reason:arrow_down::arrow_down:
 
 *EagleMPC* has *Crocoddyl* as its main dependency (most of the classes contain *Crocoddyl* objects). Unfortunately, we cannot use the release packages given by the *Crocoddyl* team and we need to build it from source.
 This is due to the implementation of the *Squash-box FDDP* solver in the *EagleMPC* library. 
 It inherits from the base class `crocoddyl::SolverFDDP` that has been slightly modified to consider different stopping criteria. 
 
+The *Crocoddyl* version you need to build is in [this branch](https://github.com/PepMS/crocoddyl/tree/sbfddp).
 
+Overview of the different branches in the [forked Crocoddyl repository](https://github.com/PepMS/crocoddyl):
+- **master** : Even with its `master` [parent branch](https://github.com/loco-3d/crocoddyl/tree/master)
+- **devel** : Even with its `devel` [parent branch](https://github.com/loco-3d/crocoddyl/tree/devel)
+- **sbfddp**: Even with the `devel` branch adding the modifications of the stopping criteria.
 
-Thus, the code you *Crocoddyl* version you need to build is in [this branch](https://github.com/PepMS/crocoddyl/tree/sbfddp).
+Fast installation instructions:
+```console
+cd <choose-your-path>
+git clone https://github.com/PepMS/crocoddyl/tree/sbfddp
+cd crocoddyl
+mkdir build && cd build
 
-This library uses the **Squash-box FDDP** solver, which requires some small adjustments in the 
-:information_source: **Information about branches**:
-- devel: same as in 
-
-This library depends on the forked version of [Crocoddyl](https://github.com/PepMS/crocoddyl). Its devel branch is up to date. This version allows to choose among different stopping criteria for its different solvers.
-
-Follow its documentation to build from source.
+```
+ ⚠️ **If you want to reproduce the experiments of the paper** *Full-body torque-level Nonlinear Model Predictive Control*, checkout the *Crocoddyl* repository to [this tag](https://github.com/PepMS/crocoddyl/releases/tag/fbtlnmpc_uam).
 
 #### example-robot-data
 Use the forked version of the [original repository](https://github.com/Gepetto/example-robot-data). 
