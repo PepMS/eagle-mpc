@@ -19,8 +19,8 @@ This is a C++ library. However, it can also be used within a Python environment 
 ## 2. Installation - Dependencies
 ### 2.1 Crocoddyl dependencies
 Crocoddyl has several dependencies. We need to installed the following ones:
-- **Pinocchio**: [install instructions](https://stack-of-tasks.github.io/pinocchio/download.html). Install from *robotpkg* recommended.
-- **Gepetto viewer**: 
+- **Pinocchio**: [installation instructions](https://stack-of-tasks.github.io/pinocchio/download.html). Install from *robotpkg* recommended.
+- **Gepetto viewer**: [installation instructions](https://github.com/Gepetto/gepetto-viewer-corba)
 
 ### 2.2 Crocoddyl
 **Crocoddyl** stands for *Contact Robot Optimal Control by Differential Dynamic Library*. It is a library to create and solve optimal control problems for robotics.
