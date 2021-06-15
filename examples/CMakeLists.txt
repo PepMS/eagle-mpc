@@ -7,8 +7,8 @@ ${CROCODDYL_INCLUDE_DIRS}
 )
 
 set(LIBS_EXAMPLES
-multicopter_mpc
--lboost_system
+eagle_mpc
+${Boost_SYSTEM_LIBRARY}
 ${CROCODDYL_LIB}
 ${URDFDOM_LIB}
 ${YAMLCPP_LIBRARY}
@@ -24,4 +24,3 @@ foreach(sourcefile ${APP_SOURCES})
   target_include_directories(${execname} PUBLIC ${INCLUDE_EXAMPLES})
   target_link_libraries(${execname} PUBLIC ${LIBS_EXAMPLES})
 endforeach(sourcefile ${APP_SOURCES})
-message("EXAMPLES BUILD")
