@@ -3,7 +3,7 @@
 This is a work-in-progress library. As such, it only contains basic features. For any doubt, bug, problem or suggestion feel free to open an issue. 
 
 # Eagle MPC
-## Introduction
+## 1. Introduction
 This library contains tools to solve *optimal control problems* (OCPs) that deal with *unmanned aerial manipulators* (UAMs).
 It is strongly dependant on [Crocoddyl](https://github.com/loco-3d/crocoddyl), whose API is used to build the OCPs.
 
@@ -16,8 +16,8 @@ It also contains an implementation of the **Squash-box FDDP** solver presented i
 
 This is a C++ library. However, it can also be used within a Python environment since almost all classes have their corresponding **Python bindings**.
 
-## Installation - Dependencies
-### Crocoddyl
+## 2. Installation - Dependencies
+### 2.1 Crocoddyl
 **Crocoddyl** stands for *Contact Robot Optimal Control by Differential Dynamic Library*. It is a library to create and solve optimal control problems for robotics.
 
 :warning: **Crocoddyl needs to be built from source.** :arrow_down::arrow_down:Reason:arrow_down::arrow_down:
@@ -47,7 +47,7 @@ sudo make install
 
  ⚠️ **If you want to reproduce the experiments of the paper** *Full-body torque-level Nonlinear Model Predictive Control*, checkout the *Crocoddyl* repository to [this tag](https://github.com/PepMS/crocoddyl/releases/tag/fbtlnmpc_uam).
 
-### example-robot-data
+### 2.2 example-robot-data
 Use the [forked version](https://github.com/PepMS/example-robot-data) of the [original repository](https://github.com/Gepetto/example-robot-data). 
 The forked version contains additional UAM models with different platform and robotic arm combination:
 
@@ -73,16 +73,15 @@ make -j6
 sudo make install
 ```
 
-## Installation - Eagle MPC
+## 3. Installation - Eagle MPC
 
 Clone this repo and build:
-```bash
+```console
 git clone https://github.com/PepMS/eagle-mpc.git
 cd eagle-mpc
 mkdir build && cd build
 cmake -DCMAKE_BUILD_TYPE=Release ..
 make -j6
-sudo make install
 ```
 
 Install this library. By default it will be installed at `usr/local/`. If you want to install it somewhere else, the `CMAKE_INSTALL_PREFIX` from the `CMakeLists.txt`should be modified accordingly. Then, to install do
@@ -90,7 +89,7 @@ Install this library. By default it will be installed at `usr/local/`. If you wa
 sudo make install
 ```
 
-## <a name="examples"></a> Running examples
+## <a name="examples"></a> 4. Running examples
 As this library contains Python bindings to its C++ code, we can run a python-based example.
 ```
 python3 path/to/multicopter_mpc/examples/python/trajectory_generation.py
