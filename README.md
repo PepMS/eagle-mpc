@@ -20,6 +20,21 @@ This is a C++ library. However, it can also be used within a Python environment 
 
 ### Dependencies
 #### Crocoddyl
+**Crocoddyl** stands for *Contact Robot Optimal Control by Differential Dynamic Library*. It is a library to create and solve optimal control problems for robotics.
+
+:warning: **Crocoddyl** needs to be built from source. Here: :arrow_down:
+
+*EagleMPC* has *Crocoddyl* as its main dependency (most of the classes contain *Crocoddyl* objects). Unfortunately, we cannot use the release packages given by the *Crocoddyl* team and we need to build it from source.
+This is due to the implementation of the *Squash-box FDDP* solver in the *EagleMPC* library. 
+It inherits from the base class `crocoddyl::SolverFDDP` that has been slightly modified to consider different stopping criteria. 
+
+
+
+Thus, the code you *Crocoddyl* version you need to build is in [this branch](https://github.com/PepMS/crocoddyl/tree/sbfddp).
+
+This library uses the **Squash-box FDDP** solver, which requires some small adjustments in the 
+:information_source: **Information about branches**:
+- devel: same as in 
 
 This library depends on the forked version of [Crocoddyl](https://github.com/PepMS/crocoddyl). Its devel branch is up to date. This version allows to choose among different stopping criteria for its different solvers.
 
