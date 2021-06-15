@@ -17,7 +17,12 @@ It also contains an implementation of the **Squash-box FDDP** solver presented i
 This is a C++ library. However, it can also be used within a Python environment since almost all classes have their corresponding **Python bindings**.
 
 ## 2. Installation - Dependencies
-### 2.1 Crocoddyl
+### 2.1 Crocoddyl dependencies
+Crocoddyl has several dependencies. We need to installed the following ones:
+- **Pinocchio**: [install instructions](https://stack-of-tasks.github.io/pinocchio/download.html). Install from *robotpkg* recommended.
+- **Gepetto viewer**: 
+
+### 2.2 Crocoddyl
 **Crocoddyl** stands for *Contact Robot Optimal Control by Differential Dynamic Library*. It is a library to create and solve optimal control problems for robotics.
 
 :warning: **Crocoddyl needs to be built from source.** :arrow_down::arrow_down:Reason:arrow_down::arrow_down:
@@ -47,7 +52,7 @@ sudo make install
 
  ⚠️ **If you want to reproduce the experiments of the paper** *Full-body torque-level Nonlinear Model Predictive Control*, checkout the *Crocoddyl* repository to [this tag](https://github.com/PepMS/crocoddyl/releases/tag/fbtlnmpc_uam).
 
-### 2.2 example-robot-data
+### 2.3 example-robot-data
 Use the [forked version](https://github.com/PepMS/example-robot-data) of the [original repository](https://github.com/Gepetto/example-robot-data). 
 The forked version contains additional UAM models with different platform and robotic arm combination:
 
