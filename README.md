@@ -1,6 +1,8 @@
 :warning: **Disclaimer** :warning:
 
-This is a work-in-progress library. As such, it only contains basic features. For any doubt, bug, problem or suggestion feel free to open an issue. 
+This is a work-in-progress library. As such, it only contains basic features. For any doubt, bug, problem or suggestion feel free to open an issue.
+
+By now it has only been tested with Ubuntu 20.04 and Python 3.8.
 
 # Eagle MPC
 ## 1. Introduction
@@ -20,11 +22,38 @@ This is a C++ library. However, it can also be used within a Python environment 
 ### 2.1 Crocoddyl dependencies
 Crocoddyl has several dependencies. We need to install the following ones:
 
-#### Pinocchio 
+#### 2.1.1 Pinocchio 
 Follow the [installation instructions](https://stack-of-tasks.github.io/pinocchio/download.html). Install from *robotpkg* recommended.
 
-#### Gepetto viewer: 
-Follow the [installation instructions](https://stack-of-tasks.github.io/pinocchio/download.html). Install from *robotpkg* recommended.
+#### 2.1.2 Gepetto viewer: 
+Follow the [installation instructions](https://github.com/Gepetto/gepetto-viewer-corba). Install from *robotpkg* recommended.
+
+#### 2.1.3 example-robot-data
+Use the [forked version](https://github.com/PepMS/example-robot-data) of the [original repository](https://github.com/Gepetto/example-robot-data). 
+The `devel` branch of the forked version contains additional UAM models with different platform and robotic arm combination:
+
+Platforms:
+- Planar small hexacopter (370mm)
+- Planar medium-sized hexacopter (680mm)
+- Fully actuated hexacopter (Tilthex)
+
+Robotic Arms:
+- 2 DoFs
+- 3 DoFs
+- 5 DoFs (with spherical wrist)
+
+Quick installation instructions:
+```console
+cd <choose-your-path>
+git clone https://github.com/PepMS/example-robot-data
+cd example-robot-data
+git submodule update --init
+git checkout devel
+mkdir build && cd build
+cmake -DCMAKE_BUILD_TYPE=Release ..
+make -j6
+sudo make install
+```
 
 ### 2.2 Crocoddyl
 **Crocoddyl** stands for *Contact Robot Optimal Control by Differential Dynamic Library*. It is a library to create and solve optimal control problems for robotics.
@@ -45,41 +74,32 @@ Overview of the different branches in the [forked Crocoddyl repository](https://
 Quick installation instructions:
 ```console
 cd <choose-your-path>
-git clone https://github.com/PepMS/crocoddyl/tree/sbfddp
+git clone https://github.com/PepMS/crocoddyl.git
 cd crocoddyl
 git submodule update --init
+git checkout sbfddp
 mkdir build && cd build
 cmake -DCMAKE_BUILD_TYPE=Release ..
 make -j6
 sudo make install
 ```
 
+Add the installation folder to your environment variables:
+```console
+export PATH=/usr/local/bin:$PATH
+export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH
+export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+export PYTHONPATH=/usr/local/lib/python3/dist-packages:$PYTHONPATH
+```
+
  ⚠️ **If you want to reproduce the experiments of the paper** *Full-body torque-level Nonlinear Model Predictive Control*, checkout the *Crocoddyl* repository to [this tag](https://github.com/PepMS/crocoddyl/releases/tag/fbtlnmpc_uam).
 
-### 2.3 example-robot-data
-Use the [forked version](https://github.com/PepMS/example-robot-data) of the [original repository](https://github.com/Gepetto/example-robot-data). 
-The forked version contains additional UAM models with different platform and robotic arm combination:
+### 2.3 YAML-Cpp
+YAML files are used to ease the creation of optimal control problems, to help in the definition of new multicopter platforms or to define the tunning parameters for the MPC controllers. 
 
-Platforms:
-- Planar small hexacopter (370mm)
-- Planar medium-sized hexacopter (680mm)
-- Fully actuated hexacopter (Tilthex)
-
-Robotic Arms:
-- 2 DoFs
-- 3 DoFs
-- 5 DoFs (with spherical wrist)
-
-Quick installation instructions:
+You can install this dependency by doing:
 ```console
-cd <choose-your-path>
-git clone https://github.com/PepMS/example-robot-data/tree/devel
-cd example-robot-data
-git submodule update --init
-mkdir build && cd build
-cmake -DCMAKE_BUILD_TYPE=Release ..
-make -j6
-sudo make install
+sudo apt-get install libyaml-cpp-dev
 ```
 
 ## 3. Installation - Eagle MPC
@@ -96,6 +116,11 @@ make -j6
 Install this library. By default it will be installed at `usr/local/`. If you want to install it somewhere else, the `CMAKE_INSTALL_PREFIX` from the `CMakeLists.txt`should be modified accordingly. Then, to install do
 ```
 sudo make install
+```
+
+:warning: **Problem with the system locale** :warning: The Yaml parser uses the `std::stod` function to convert a string to a double. This function is locale dependant. Be sure to have set a locale that uses `.` as a decimal separator. To make sure of it you can run:
+```
+export LC_NUMERIC="en_US.UTF-8"
 ```
 
 ## <a name="examples"></a> 4. Running examples
