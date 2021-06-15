@@ -44,8 +44,8 @@ mkdir build && cd build
  ⚠️ **If you want to reproduce the experiments of the paper** *Full-body torque-level Nonlinear Model Predictive Control*, checkout the *Crocoddyl* repository to [this tag](https://github.com/PepMS/crocoddyl/releases/tag/fbtlnmpc_uam).
 
 ### example-robot-data
-Use the forked version of the [original repository](https://github.com/Gepetto/example-robot-data). 
-The [forked version](https://github.com/PepMS/example-robot-data) contains additional UAM models with different platform and robotic arm combination:
+Use the [forked version](https://github.com/PepMS/example-robot-data) of the [original repository](https://github.com/Gepetto/example-robot-data). 
+The forked version contains additional UAM models with different platform and robotic arm combination:
 
 Platforms:
 - Planar small hexacopter (370mm)
@@ -53,7 +53,9 @@ Platforms:
 - Fully actuated hexacopter (Tilthex)
 
 Robotic Arms:
-- 2 DoFs, 3 DoFs and 5 DoFs (with spherical wrist)
+- 2 DoFs
+- 3 DoFs
+- 5 DoFs (with spherical wrist)
 
 ## Installation - Eagle MPC
 
