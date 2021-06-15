@@ -18,7 +18,7 @@
 #include "crocoddyl/core/actuation/actuation-squashing.hpp"
 #include "crocoddyl/core/activations/quadratic-barrier.hpp"
 #include "crocoddyl/core/activations/weighted-quadratic-barrier.hpp"
-#include "crocoddyl/multibody/costs/control.hpp"
+#include "crocoddyl/core/costs/control.hpp"
 #include "crocoddyl/core/integrator/euler.hpp"
 #include "crocoddyl/core/integrator/rk4.hpp"
 
