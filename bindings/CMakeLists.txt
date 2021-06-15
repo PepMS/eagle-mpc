@@ -16,7 +16,6 @@ target_include_directories(${PROJECT_NAME}_pywrap PUBLIC  ${Boost_INCLUDE_DIRS}
 
 target_link_libraries(${PROJECT_NAME}_pywrap ${Boost_LIBRARIES} 
                                              ${Python3_LIBRARIES}
-                                             ${YAML_PARSER_LIB}
                                              eagle_mpc
                                              ${eigenpy_LIBRARIES})
 
