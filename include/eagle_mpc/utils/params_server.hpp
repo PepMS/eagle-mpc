@@ -5,15 +5,15 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef EAGLE_MPC_UTILSparams__SERVER_HPP
-#define EAGLE_MPC_UTILSparams__SERVER_HPP
-
-#include "eagle_mpc/utils/converter.hpp"
+#ifndef EAGLE_MPC_UTILS_PARAMS_SERVER_HPP
+#define EAGLE_MPC_UTILS_PARAMS_SERVER_HPP
 
 #include <vector>
 #include <regex>
 #include <map>
 #include <exception>
+
+#include "eagle_mpc/utils/converter.hpp"
 
 namespace eagle_mpc {
 

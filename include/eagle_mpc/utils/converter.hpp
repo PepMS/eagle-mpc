@@ -8,17 +8,18 @@
 #ifndef EAGLE_MPC_UTILS_CONVERTER_HPP
 #define EAGLE_MPC_UTILS_CONVERTER_HPP
 
-#include "eagle_mpc/utils/converter_utils.hpp"
-
-#include <eigen3/Eigen/Dense>
-#include <eigen3/Eigen/Geometry>
-
 #include <regex>
 #include <iostream>
 #include <array>
 #include <vector>
 #include <stack>
 #include <list>
+#include <string>
+
+#include <Eigen/Dense>
+#include <Eigen/Geometry>
+
+#include "eagle_mpc/utils/converter_utils.hpp"
 
 namespace eagle_mpc {
 
@@ -39,7 +40,6 @@ struct converter<utils::list<A>> {
       // auto l = utils::getMatches(aux, std::regex("([^,]+)"));
       auto l = utils::parseList(val);
       for (auto it : l) {
-        // WOLF_DEBUG("Asking to convert in list ", it);
         result.push_back(converter<A>::convert(it));
       }
     } else
