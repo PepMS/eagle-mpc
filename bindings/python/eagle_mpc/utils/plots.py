@@ -116,7 +116,7 @@ def PlotPosition(xs, time, fig_title='', legend=None):
 
 def PlotAttitude(xs, time, wp_list=None, legend=None):
     fig, axs = plt.subplots(4, 1, figsize=(15, 10), sharex=True)
-    plotTrajectory(xs, time, axs, 3, 7, names=['X quat', 'Y quat', 'Z quat', 'W quat'], wp_list=wp_list, legend=legend)
+    plotTrajectory(xs, time, axs, 3, 7, names=['X quat', 'Y quat', 'Z quat', 'W quat'], legend=legend)
 
 
 def PlotVelocityLin(xs, time, wp_list=None, legend=None):
@@ -127,7 +127,6 @@ def PlotVelocityLin(xs, time, wp_list=None, legend=None):
                    7,
                    10,
                    names=['X vel. lin.', 'Y vel. lin.', 'Z vel. lin.'],
-                   wp_list=wp_list,
                    legend=legend)
 
 
@@ -139,7 +138,6 @@ def PlotVelocityAng(xs, time, wp_list=None, legend=None):
                    10,
                    13,
                    names=['X vel. ang.', 'Y vel. ang.', 'Z vel. ang.'],
-                   wp_list=wp_list,
                    legend=legend)
 
 
