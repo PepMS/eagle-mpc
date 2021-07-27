@@ -1,6 +1,9 @@
+#include <math.h>
+
 #include "eagle_mpc/multicopter-base-params.hpp"
 
 #include "eagle_mpc/utils/log.hpp"
+
 
 namespace eagle_mpc {
 
@@ -23,6 +26,8 @@ void MultiCopterBaseParams::autoSetup(const std::string& path_to_platform,
     cm_ = server->getParam<double>(path_to_platform + "cm");
     max_thrust_ = server->getParam<double>(path_to_platform + "max_thrust");
     min_thrust_ = server->getParam<double>(path_to_platform + "min_thrust");
+    max_prop_speed_ = sqrt(max_thrust_ / cf_);
+    min_prop_speed_ = sqrt(min_thrust_ / cf_);
     // This parameter may be removed after refactor
     base_link_name_ = server->getParam<std::string>(path_to_platform + "base_link_name");
     n_rotors_ = server->getParam<int>(path_to_platform + "n_rotors");

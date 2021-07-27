@@ -38,6 +38,8 @@ class MultiCopterBaseParams {
   Eigen::MatrixXd tau_f_;       // From propellers thrust to body net force & torque
   double max_thrust_;           // Max thrust produced by the motor/propeller
   double min_thrust_;           // Max thrust produced by the motor/propeller
+  double max_prop_speed_;
+  double min_prop_speed_;
   std::string base_link_name_;  // Flying platform base_link name
 
   // To be used when dealing with UAM
