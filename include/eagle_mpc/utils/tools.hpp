@@ -20,6 +20,9 @@ class Tools {
   ~Tools();
   static void thrustToSpeed(const Eigen::VectorXd& thrust, const boost::shared_ptr<MultiCopterBaseParams>& params,
                             Eigen::VectorXd& speed);
+  
+  static void thrustToSpeedNormalized(const Eigen::VectorXd& thrust, const boost::shared_ptr<MultiCopterBaseParams>& params,
+                            Eigen::VectorXd& speed);
 };
 
 }  // namespace eagle_mpc
