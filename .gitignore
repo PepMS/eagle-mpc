@@ -2,6 +2,5 @@ build/
 bin/
 lib/
 .vscode/
-.clang-format
 *.pyc
 setup.cfg
