@@ -17,51 +17,56 @@
 #include "eagle_mpc/mpc-base.hpp"
 #include "eagle_mpc/utils/params_server.hpp"
 
-namespace eagle_mpc {
+namespace eagle_mpc
+{
+class WeightedMpc : public MpcAbstract
+{
+    public:
+    WeightedMpc(const boost::shared_ptr<Trajectory>& trajectory,
+                const std::size_t                    dt_ref,
+                const std::string&                   yaml_path);
 
-class WeightedMpc : public MpcAbstract {
- public:
-  WeightedMpc(const boost::shared_ptr<Trajectory>& trajectory, const std::size_t dt_ref, const std::string& yaml_path);
+    virtual ~WeightedMpc();
 
-  virtual ~WeightedMpc();
+    virtual void createProblem() override;
+    virtual void updateProblem(const std::size_t& current_time) override;
 
-  virtual void createProblem() override;
-  virtual void updateProblem(const std::size_t& current_time) override;
+    const boost::shared_ptr<Trajectory>& get_trajectory() const;
+    const std::vector<std::size_t>&      get_t_stages() const;
 
-  const boost::shared_ptr<Trajectory>& get_trajectory() const;
-  const std::vector<std::size_t>& get_t_stages() const;
+    private:
+    boost::shared_ptr<crocoddyl::CostModelSum> createCosts() const;
 
- private:
-  boost::shared_ptr<crocoddyl::CostModelSum> createCosts() const;
+    void computeActiveStage(const std::size_t& current_time);
+    void computeActiveStage(const std::size_t& current_time, const std::size_t& last_stage);
 
-  void computeActiveStage(const std::size_t& current_time);
-  void computeActiveStage(const std::size_t& current_time, const std::size_t& last_stage);
+    void computeWeight(const std::size_t& time);
+    void updateContactCosts(const std::size_t& idx);
+    void updateFreeCosts(const std::size_t& idx);
 
-  void computeWeight(const std::size_t& time);
-  void updateContactCosts(const std::size_t& idx);
-  void updateFreeCosts(const std::size_t& idx);
-  boost::shared_ptr<Trajectory> trajectory_;
+    boost::shared_ptr<Trajectory> trajectory_;
 
-  std::vector<std::size_t> t_stages_;
+    std::vector<std::size_t> t_stages_;
 
-  struct updateVars {
-    std::size_t idx_stage;
-    std::size_t idx_last_stage;
-    std::size_t t_start_stage;
-    std::size_t node_time;
-    std::string name_stage;
-    boost::shared_ptr<crocoddyl::DifferentialActionModelContactFwdDynamics> dif_contact;
-    boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> dif_free;
-    double weight;
-    double weight_time;
-    double exp_1;
-    double exp_2;
-  } update_vars_;
+    struct updateVars {
+        std::size_t idx_stage;
+        std::size_t idx_last_stage;
+        std::size_t t_start_stage;
+        std::size_t node_time;
+        std::string name_stage;
+        double      weight;
+        double      weight_time;
+        double      exp_1;
+        double      exp_2;
 
-  double alpha_;
-  double beta_;
-  double state_reg_;
-  double control_reg_;
+        boost::shared_ptr<crocoddyl::DifferentialActionModelContactFwdDynamics> dif_contact;
+        boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics>    dif_free;
+    } update_vars_;
+
+    double alpha_;
+    double beta_;
+    double state_reg_;
+    double control_reg_;
 };
 }  // namespace eagle_mpc
 
