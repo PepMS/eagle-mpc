@@ -64,7 +64,7 @@ sudo make install
 This is due to the implementation of the *Squash-box FDDP* solver in the *EagleMPC* library. 
 It inherits from the base class `crocoddyl::SolverFDDP` that has been slightly modified to consider different stopping criteria. 
 
-The *Crocoddyl* version you need to build is in [this branch](https://github.com/PepMS/crocoddyl/tree/sbfddp).
+The *Crocoddyl* version you need to build is in [this branch](https://github.com/PepMS/crocoddyl/tree/sbfddp-v2).
 
 Overview of the different branches in the [forked Crocoddyl repository](https://github.com/PepMS/crocoddyl):
 - **master** : Even with its `master` [parent branch](https://github.com/loco-3d/crocoddyl/tree/master)
