@@ -3,6 +3,7 @@ import numpy as np
 import crocoddyl
 import eagle_mpc
 
+
 class AerialSimulator():
     def __init__(self, robotModel, platformParams, dt, x0):
         self.robotModel = robotModel
@@ -10,8 +11,7 @@ class AerialSimulator():
         self.platformParams = platformParams
         self.dt = dt / 1000.
 
-        self.actuationModel = crocoddyl.ActuationModelMultiCopterBase(self.robotState, self.platformParams.n_rotors,
-                                                                      self.platformParams.tau_f)
+        self.actuationModel = crocoddyl.ActuationModelMultiCopterBase(self.robotState, self.platformParams.tau_f)
         self.difAM = crocoddyl.DifferentialActionModelFreeFwdDynamics(
             self.robotState, self.actuationModel, crocoddyl.CostModelSum(self.robotState, self.actuationModel.nu))
         self.intAM = crocoddyl.IntegratedActionModelRK4(self.difAM, self.dt)
