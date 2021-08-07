@@ -10,8 +10,8 @@ WITHDISPLAY = 'display' in sys.argv
 
 dt = 10  # ms
 useSquash = True
-robotName = 'hexacopter370'
-trajectoryName = 'hover'
+robotName = 'hexacopter370_flying_arm_3'
+trajectoryName = 'displacement'
 
 trajectory = eagle_mpc.Trajectory()
 trajectory.autoSetup("/home/pepms/wsros/mpc-ws/src/eagle_mpc_ros/eagle_mpc_yaml/trajectories/" + robotName +
@@ -24,7 +24,7 @@ else:
     solver = crocoddyl.SolverBoxFDDP(problem)
 
 solver.setCallbacks([crocoddyl.CallbackVerbose()])
-solver.solve([], [], maxiter=2)
+solver.solve([], [], maxiter=100)
 
 fig, axs = plt.subplots(6, 1)
 us = np.vstack(solver.us_squash).T
