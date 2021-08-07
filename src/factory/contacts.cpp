@@ -46,10 +46,9 @@ boost::shared_ptr<crocoddyl::ContactModelAbstract> ContactModelFactory::create(
                 gains = Eigen::Vector2d::Zero();
             }
 
-            crocoddyl::FrameTranslation frame(link_id, position);
-            contact = boost::make_shared<crocoddyl::ContactModel3D>(stage->get_trajectory()->get_robot_state(), frame,
-                                                                    stage->get_trajectory()->get_actuation()->get_nu(),
-                                                                    gains);
+            contact = boost::make_shared<crocoddyl::ContactModel3D>(
+                stage->get_trajectory()->get_robot_state(), link_id, position,
+                stage->get_trajectory()->get_actuation()->get_nu(), gains);
         } break;
         case ContactModelTypes::ContactModel6D: {
             Eigen::Vector3d position =
@@ -67,8 +66,6 @@ boost::shared_ptr<crocoddyl::ContactModelAbstract> ContactModelFactory::create(
             quat.normalize();
             pinocchio::SE3 m_ref(quat.toRotationMatrix(), position);
 
-            crocoddyl::FramePlacement frame(stage->get_trajectory()->get_robot_model()->getFrameId(link_name), m_ref);
-
             Eigen::Vector2d gains;
             try {
                 gains = converter<Eigen::VectorXd>::convert(server->getParam<std::string>(path_to_contact + "gains"));
@@ -77,9 +74,9 @@ boost::shared_ptr<crocoddyl::ContactModelAbstract> ContactModelFactory::create(
                 gains = Eigen::Vector2d::Zero();
             }
 
-            contact = boost::make_shared<crocoddyl::ContactModel6D>(stage->get_trajectory()->get_robot_state(), frame,
-                                                                    stage->get_trajectory()->get_actuation()->get_nu(),
-                                                                    gains);
+            contact = boost::make_shared<crocoddyl::ContactModel6D>(
+                stage->get_trajectory()->get_robot_state(), link_id, m_ref,
+                stage->get_trajectory()->get_actuation()->get_nu(), gains);
         } break;
     }
     return contact;
