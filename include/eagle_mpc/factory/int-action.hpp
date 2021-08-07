@@ -17,38 +17,41 @@
 
 #include "eagle_mpc/stage.hpp"
 
-namespace eagle_mpc {
-
+namespace eagle_mpc
+{
 // class Stage;
 
 enum class IntegratedActionModelTypes {
-  IntegratedActionModelEuler,
-  IntegratedActionModelRK4,
-  NbIntegratedActionModelTypes
+    IntegratedActionModelEuler,
+    IntegratedActionModelRK4,
+    NbIntegratedActionModelTypes
 
 };
 
-static std::map<std::string, IntegratedActionModelTypes> IntegratedActionModelTypes_init_map() {
-  std::map<std::string, IntegratedActionModelTypes> m;
-  m.clear();
-  m.insert({"IntegratedActionModelEuler", IntegratedActionModelTypes::IntegratedActionModelEuler});
-  m.insert({"IntegratedActionModelRK4", IntegratedActionModelTypes::IntegratedActionModelRK4});
-  return m;
+static std::map<std::string, IntegratedActionModelTypes> IntegratedActionModelTypes_init_map()
+{
+    std::map<std::string, IntegratedActionModelTypes> m;
+    m.clear();
+    m.insert({"IntegratedActionModelEuler", IntegratedActionModelTypes::IntegratedActionModelEuler});
+    m.insert({"IntegratedActionModelRK4", IntegratedActionModelTypes::IntegratedActionModelRK4});
+    return m;
 }
 
 static const std::map<std::string, IntegratedActionModelTypes> IntegratedActionModelTypes_map =
     IntegratedActionModelTypes_init_map();
 
-class IntegratedActionModelFactory {
- public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+class IntegratedActionModelFactory
+{
+    public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  explicit IntegratedActionModelFactory();
-  ~IntegratedActionModelFactory();
+    explicit IntegratedActionModelFactory();
+    ~IntegratedActionModelFactory();
 
-  boost::shared_ptr<crocoddyl::ActionModelAbstract> create(
-      const std::string& integration_method, const std::size_t& dt,
-      const boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract>& diff_model) const;
+    boost::shared_ptr<crocoddyl::ActionModelAbstract> create(
+        const std::string&                                                   integration_method,
+        const std::size_t&                                                   dt,
+        const boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract>& diff_model) const;
 };
 
 }  // namespace eagle_mpc

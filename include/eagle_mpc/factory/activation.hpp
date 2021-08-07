@@ -20,46 +20,49 @@
 
 #include "eagle_mpc/utils/params_server.hpp"
 
-namespace eagle_mpc {
-
+namespace eagle_mpc
+{
 enum class ActivationModelTypes {
-  ActivationModelQuad,
-  ActivationModelQuadFlatExp,
-  ActivationModelQuadFlatLog,
-  ActivationModelSmooth1Norm,
-  ActivationModelSmooth2Norm,
-  ActivationModelWeightedQuad,
-  ActivationModelQuadraticBarrier,
-  ActivationModelWeightedQuadraticBarrier,
-  NbActivationModelTypes
+    ActivationModelQuad,
+    ActivationModelQuadFlatExp,
+    ActivationModelQuadFlatLog,
+    ActivationModelSmooth1Norm,
+    ActivationModelSmooth2Norm,
+    ActivationModelWeightedQuad,
+    ActivationModelQuadraticBarrier,
+    ActivationModelWeightedQuadraticBarrier,
+    NbActivationModelTypes
 };
 
-static std::map<std::string, ActivationModelTypes> ActivationModelTypes_init_map() {
-  std::map<std::string, ActivationModelTypes> m;
-  m.clear();
-  m.insert({"ActivationModelQuad", ActivationModelTypes::ActivationModelQuad});
-  m.insert({"ActivationModelQuadFlatExp", ActivationModelTypes::ActivationModelQuadFlatExp});
-  m.insert({"ActivationModelQuadFlatLog", ActivationModelTypes::ActivationModelQuadFlatLog});
-  m.insert({"ActivationModelSmooth1Norm", ActivationModelTypes::ActivationModelSmooth1Norm});
-  m.insert({"ActivationModelSmooth2Norm", ActivationModelTypes::ActivationModelSmooth2Norm});
-  m.insert({"ActivationModelWeightedQuad", ActivationModelTypes::ActivationModelWeightedQuad});
-  m.insert({"ActivationModelQuadraticBarrier", ActivationModelTypes::ActivationModelQuadraticBarrier});
-  m.insert({"ActivationModelWeightedQuadraticBarrier", ActivationModelTypes::ActivationModelWeightedQuadraticBarrier});
-  return m;
+static std::map<std::string, ActivationModelTypes> ActivationModelTypes_init_map()
+{
+    std::map<std::string, ActivationModelTypes> m;
+    m.clear();
+    m.insert({"ActivationModelQuad", ActivationModelTypes::ActivationModelQuad});
+    m.insert({"ActivationModelQuadFlatExp", ActivationModelTypes::ActivationModelQuadFlatExp});
+    m.insert({"ActivationModelQuadFlatLog", ActivationModelTypes::ActivationModelQuadFlatLog});
+    m.insert({"ActivationModelSmooth1Norm", ActivationModelTypes::ActivationModelSmooth1Norm});
+    m.insert({"ActivationModelSmooth2Norm", ActivationModelTypes::ActivationModelSmooth2Norm});
+    m.insert({"ActivationModelWeightedQuad", ActivationModelTypes::ActivationModelWeightedQuad});
+    m.insert({"ActivationModelQuadraticBarrier", ActivationModelTypes::ActivationModelQuadraticBarrier});
+    m.insert(
+        {"ActivationModelWeightedQuadraticBarrier", ActivationModelTypes::ActivationModelWeightedQuadraticBarrier});
+    return m;
 }
 
 static const std::map<std::string, ActivationModelTypes> ActivationModelTypes_map = ActivationModelTypes_init_map();
 
-class ActivationModelFactory {
- public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+class ActivationModelFactory
+{
+    public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  explicit ActivationModelFactory();
-  ~ActivationModelFactory();
+    explicit ActivationModelFactory();
+    ~ActivationModelFactory();
 
-  boost::shared_ptr<crocoddyl::ActivationModelAbstract> create(const std::string& path_to_cost,
-                                                               const boost::shared_ptr<ParamsServer>& server,
-                                                               const std::size_t& nr) const;
+    boost::shared_ptr<crocoddyl::ActivationModelAbstract> create(const std::string&                     path_to_cost,
+                                                                 const boost::shared_ptr<ParamsServer>& server,
+                                                                 const std::size_t&                     nr) const;
 };
 
 }  // namespace eagle_mpc

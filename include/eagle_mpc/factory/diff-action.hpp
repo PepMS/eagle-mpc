@@ -17,37 +17,40 @@
 
 #include "eagle_mpc/stage.hpp"
 
-namespace eagle_mpc {
-
+namespace eagle_mpc
+{
 class Stage;
 
 enum class DifferentialActionModelTypes {
-  DifferentialActionModelFreeFwdDynamics,
-  DifferentialActionModelContactFwdDynamics,
-  NbDifferentialActionModelTypes
+    DifferentialActionModelFreeFwdDynamics,
+    DifferentialActionModelContactFwdDynamics,
+    NbDifferentialActionModelTypes
 };
 
-static std::map<std::string, DifferentialActionModelTypes> DifferentialActionModelTypes_init_map() {
-  std::map<std::string, DifferentialActionModelTypes> m;
-  m.clear();
-  m.insert({"DifferentialActionModelFreeFwdDynamics",
-            DifferentialActionModelTypes::DifferentialActionModelFreeFwdDynamics});
-  m.insert({"DifferentialActionModelContactFwdDynamics",
-            DifferentialActionModelTypes::DifferentialActionModelContactFwdDynamics});
-  return m;
+static std::map<std::string, DifferentialActionModelTypes> DifferentialActionModelTypes_init_map()
+{
+    std::map<std::string, DifferentialActionModelTypes> m;
+    m.clear();
+    m.insert({"DifferentialActionModelFreeFwdDynamics",
+              DifferentialActionModelTypes::DifferentialActionModelFreeFwdDynamics});
+    m.insert({"DifferentialActionModelContactFwdDynamics",
+              DifferentialActionModelTypes::DifferentialActionModelContactFwdDynamics});
+    return m;
 }
 static const std::map<std::string, DifferentialActionModelTypes> DifferentialActionModelTypes_map =
     DifferentialActionModelTypes_init_map();
 
-class DifferentialActionModelFactory {
- public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+class DifferentialActionModelFactory
+{
+    public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  explicit DifferentialActionModelFactory();
-  ~DifferentialActionModelFactory();
+    explicit DifferentialActionModelFactory();
+    ~DifferentialActionModelFactory();
 
-  boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract> create(const bool& is_contact, const bool& squash,
-                                                                       const boost::shared_ptr<Stage>& stage) const;
+    boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract> create(const bool&                     is_contact,
+                                                                         const bool&                     squash,
+                                                                         const boost::shared_ptr<Stage>& stage) const;
 };
 
 }  // namespace eagle_mpc

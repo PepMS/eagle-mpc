@@ -4,16 +4,18 @@
 
 #include "eagle_mpc/utils/params_server.hpp"
 
-namespace eagle_mpc {
-namespace python {
-
+namespace eagle_mpc
+{
+namespace python
+{
 namespace bp = boost::python;
 
-void exposeParamsServer() {
-  bp::class_<std::map<std::string, std::string>>("StringMap")
-      .def(bp::map_indexing_suite<std::map<std::string, std::string>>());
-  bp::class_<ParamsServer>(
-      "ParamsServer", bp::init<std::map<std::string, std::string>>(bp::args("params"), "Initialize params server"));
+void exposeParamsServer()
+{
+    bp::class_<std::map<std::string, std::string>>("StringMap")
+        .def(bp::map_indexing_suite<std::map<std::string, std::string>>());
+    bp::class_<ParamsServer>(
+        "ParamsServer", bp::init<std::map<std::string, std::string>>(bp::args("params"), "Initialize params server"));
 }
 
 }  // namespace python
