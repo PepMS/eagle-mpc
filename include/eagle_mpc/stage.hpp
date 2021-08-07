@@ -25,57 +25,61 @@
 #include "eagle_mpc/factory/diff-action.hpp"
 #include "eagle_mpc/factory/contacts.hpp"
 
-namespace eagle_mpc {
+namespace eagle_mpc
+{
 class Trajectory;
 class CostModelFactory;
 class ContactModelFactory;
 enum class CostModelTypes;
 enum class ContactModelTypes;
 
-class Stage : public boost::enable_shared_from_this<Stage> {
- public:
-  static boost::shared_ptr<Stage> create(const boost::shared_ptr<Trajectory>& trajectory);
-  ~Stage();
+class Stage : public boost::enable_shared_from_this<Stage>
+{
+    public:
+    static boost::shared_ptr<Stage> create(const boost::shared_ptr<Trajectory>& trajectory);
+    ~Stage();
 
-  void autoSetup(const std::string& path_to_stages, const std::map<std::string, std::string>& stage,
-                 const boost::shared_ptr<ParamsServer>& server, std::size_t t_ini);
+    void autoSetup(const std::string&                        path_to_stages,
+                   const std::map<std::string, std::string>& stage,
+                   const boost::shared_ptr<ParamsServer>&    server,
+                   std::size_t                               t_ini);
 
-  void set_t_ini(const std::size_t& t_ini);
-  void set_duration(const std::size_t& duration);
+    void set_t_ini(const std::size_t& t_ini);
+    void set_duration(const std::size_t& duration);
 
-  const boost::shared_ptr<Trajectory>& get_trajectory() const;
-  const boost::shared_ptr<crocoddyl::CostModelSum>& get_costs() const;
-  const boost::shared_ptr<crocoddyl::ContactModelMultiple>& get_contacts() const;
+    const boost::shared_ptr<Trajectory>&                      get_trajectory() const;
+    const boost::shared_ptr<crocoddyl::CostModelSum>&         get_costs() const;
+    const boost::shared_ptr<crocoddyl::ContactModelMultiple>& get_contacts() const;
 
-  const std::map<std::string, CostModelTypes>& get_cost_types() const;
-  const std::map<std::string, ContactModelTypes>& get_contact_types() const;
+    const std::map<std::string, CostModelTypes>&    get_cost_types() const;
+    const std::map<std::string, ContactModelTypes>& get_contact_types() const;
 
-  const std::size_t& get_t_ini() const;
-  
-  const std::size_t& get_duration() const;
-  const bool& get_is_transition() const;
-  const bool& get_is_terminal() const;
-  const std::string& get_name() const;
+    const std::size_t& get_t_ini() const;
 
- private:
-  Stage(const boost::shared_ptr<Trajectory>& trajectory);
+    const std::size_t& get_duration() const;
+    const bool&        get_is_transition() const;
+    const bool&        get_is_terminal() const;
+    const std::string& get_name() const;
 
-  boost::shared_ptr<crocoddyl::CostModelSum> costs_;
-  boost::shared_ptr<crocoddyl::ContactModelMultiple> contacts_;
-  boost::shared_ptr<Trajectory> trajectory_;
+    private:
+    Stage(const boost::shared_ptr<Trajectory>& trajectory);
 
-  std::map<std::string, CostModelTypes> cost_types_;
-  std::map<std::string, ContactModelTypes> contact_types_;
+    boost::shared_ptr<crocoddyl::CostModelSum>         costs_;
+    boost::shared_ptr<crocoddyl::ContactModelMultiple> contacts_;
+    boost::shared_ptr<Trajectory>                      trajectory_;
 
-  boost::shared_ptr<CostModelFactory> cost_factory_;
-  boost::shared_ptr<ContactModelFactory> contact_factory_;
+    std::map<std::string, CostModelTypes>    cost_types_;
+    std::map<std::string, ContactModelTypes> contact_types_;
 
-  std::string name_;
-  std::size_t duration_;
-  std::size_t t_ini_;
+    boost::shared_ptr<CostModelFactory>    cost_factory_;
+    boost::shared_ptr<ContactModelFactory> contact_factory_;
 
-  bool is_terminal_;
-  bool is_transition_;
+    std::string name_;
+    std::size_t duration_;
+    std::size_t t_ini_;
+
+    bool is_terminal_;
+    bool is_transition_;
 };
 
 }  // namespace eagle_mpc
