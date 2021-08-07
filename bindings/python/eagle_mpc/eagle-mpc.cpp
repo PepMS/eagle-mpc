@@ -32,22 +32,24 @@
 #include "python/eagle_mpc/utils/parser_yaml.hpp"
 #include "python/eagle_mpc/utils/params_server.hpp"
 
-namespace eagle_mpc {
-namespace python {
-
+namespace eagle_mpc
+{
+namespace python
+{
 namespace bp = boost::python;
 
-BOOST_PYTHON_MODULE(libeagle_mpc_pywrap) {
-  exposeMpcAbstract();
-  exposeCarrotMpc();
-  exposeRailMpc();
-  exposeWeightedMpc();
-  exposeMultiCopterBaseParams();
-  exposeSolverSbFDDP();
-  exposeTrajectory();
-  exposeParamsServer();
-  exposeParserYaml();
-  exposeStage();
+BOOST_PYTHON_MODULE(libeagle_mpc_pywrap)
+{
+    exposeMpcAbstract();
+    exposeCarrotMpc();
+    exposeRailMpc();
+    exposeWeightedMpc();
+    exposeMultiCopterBaseParams();
+    exposeSolverSbFDDP();
+    exposeTrajectory();
+    exposeParamsServer();
+    exposeParserYaml();
+    exposeStage();
 }
 
 }  // namespace python

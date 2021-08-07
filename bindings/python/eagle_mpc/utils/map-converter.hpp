@@ -18,7 +18,7 @@
 
 #include "python/eagle_mpc/utils/vector-converter.hpp"
 
-
+// clang-format off
 namespace eagle_mpc {
 namespace python {
 
