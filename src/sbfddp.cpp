@@ -175,7 +175,7 @@ void SolverSbFDDP::barrierInit()
     squash_barr_residual_ = boost::make_shared<crocoddyl::ResidualModelControl>(
         problem_->get_terminalModel()->get_state(), squashing_model_->get_ns());
 
-    squash_barr_cost_ = boost::make_shared<crocoddyl::CostModelControl>(problem_->get_terminalModel()->get_state(),
+    squash_barr_cost_ = boost::make_shared<crocoddyl::CostModelResidual>(problem_->get_terminalModel()->get_state(),
                                                                         barrier_activation_, squash_barr_residual_);
 
     for (std::size_t i = 0; i < problem_->get_runningModels().size(); ++i) {
