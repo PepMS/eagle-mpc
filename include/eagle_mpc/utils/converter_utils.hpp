@@ -10,7 +10,8 @@
 
 #include <regex>
 
-namespace utils {
+namespace utils
+{
 // Typically we want to convert from/to list-type structures. In order to be general
 // we define a list type which is used throughout the converter. In this case this type
 // is implemented with std::vector
@@ -44,7 +45,7 @@ std::vector<std::string> pairSplitter(std::string val);
  * @param str_map just a dictionary-like string
  * @return <b>{std::string}</b> String {k1:v1},{k2:v2},... (notice the removed brackets)
  */
-std::string splitMapStringRepresentation(std::string str_map);
+std::string              splitMapStringRepresentation(std::string str_map);
 std::vector<std::string> parseList(std::string val);
 }  // namespace utils
 #endif
