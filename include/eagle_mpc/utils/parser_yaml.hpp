@@ -19,6 +19,10 @@
 
 namespace eagle_mpc
 {
+std::string getYamlPath(const std::string& yaml_path);
+
+std::string getUrdfPath(const std::string& urdf_path);
+
 class ParserYaml
 {
     public:

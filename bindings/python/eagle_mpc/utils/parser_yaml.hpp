@@ -12,6 +12,9 @@ namespace bp = boost::python;
 
 void exposeParserYaml()
 {
+    bp::def("getYamlPath", getYamlPath);
+    bp::def("getUrdfPath", getUrdfPath);
+
     bp::class_<ParserYaml>("ParserYaml",
                            bp::init<std::string, std::string, const bool>(
                                bp::args("self", "file", "path_root", "freely_parse"), "Initialize parser YAML"))

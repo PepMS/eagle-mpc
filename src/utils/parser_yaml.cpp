@@ -7,6 +7,7 @@
 
 #include "eagle_mpc/utils/parser_yaml.hpp"
 #include "eagle_mpc/utils/log.hpp"
+#include "eagle_mpc/path.h"
 
 namespace eagle_mpc
 {
@@ -152,6 +153,20 @@ bool isAtomic(std::string key, YAML::Node node)
             break;
     }
     return false;
+}
+
+std::string getYamlPath(const std::string& yaml_path)
+{
+    std::string path;
+    path = yaml_path.find("/", 0) == 0 ? yaml_path : std::string(EAGLE_MPC_YAML_DIR) + "/" + yaml_path;
+    return path;
+}
+
+std::string getUrdfPath(const std::string& urdf_path)
+{
+    std::string path;
+    path = urdf_path.find("/", 0) == 0 ? urdf_path : std::string(EAGLE_MPC_ROBOT_DATA_DIR) + "/" + urdf_path;
+    return path;
 }
 
 ParserYaml::ParserYaml(std::string file, std::string path_root, const bool& freely_parse)
@@ -402,7 +417,8 @@ void ParserYaml::walkTreeRecursive(YAML::Node node, std::vector<std::string>& no
                             updateActiveName("");
                         }
                     } else {
-                        walkTree(kv.second.as<std::string>(), node_root, node_name);
+                        std::string path = getYamlPath(kv.second.as<std::string>());
+                        walkTree(path, node_root, node_name);
                     }
                 }
             }
