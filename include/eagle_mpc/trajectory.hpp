@@ -49,7 +49,8 @@ class Trajectory : public boost::enable_shared_from_this<Trajectory>
     ~Trajectory();
     static boost::shared_ptr<Trajectory> create();
 
-    void                                          autoSetup(const std::string& yaml_path);
+    void autoSetup(const std::string& yaml_path);
+
     boost::shared_ptr<crocoddyl::ShootingProblem> createProblem(const std::size_t& dt,
                                                                 const bool&        squash,
                                                                 const std::string& integration_method) const;
