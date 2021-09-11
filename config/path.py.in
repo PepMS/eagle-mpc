@@ -1,0 +1,7 @@
+EAGLE_MPC_YAML_DIR = "${EAGLE_MPC_YAML_DIR}"
+try:
+    import example_robot_data  
+    from example_robot_data.path import EXAMPLE_ROBOT_DATA_MODEL_DIR
+    EAGLE_MPC_ROBOT_DATA_DIR = EXAMPLE_ROBOT_DATA_MODEL_DIR
+except ImportError:
+    EAGLE_MPC_ROBOT_DATA_DIR = "${EAGLE_MPC_ROBOT_DATA_DIR}"
