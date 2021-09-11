@@ -1,0 +1,35 @@
+trajectory:
+  robot:
+    name: "hextilt_flying_arm_5"
+    urdf: "hextilt_description/urdf/hextilt_flying_arm_5.urdf"
+    follow: "hextilt_flying_arm_5/platform/hextilt.yaml"
+
+  initial_state: [0, 0, 1.0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+  stages:
+    - name: "navigation"
+      duration: 2000 #ms
+      transition: true
+      costs:
+        - name: "reg_state"
+          type: "CostModelState"
+          weight: 1e-2
+          reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+
+        - name: "reg_control"
+          type: "CostModelControl"
+          weight: 1e-2
+          reference: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+        
+        - name: "state_limits"
+          type: "CostModelState"
+          weight: 10
+          reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuadraticBarrier"
+          weights: [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1]
+          u_bound: [0, 0, 0, 0, 0, 0, 1.6707963267948966, 1.6707963267948966, 1.6707963267948966, 1.6707963267948966, 1.6707963267948966, 0, 0, 0, 0, 0, 0, 10000, 10000, 10000, 10000, 10000]
+          l_bound: [0, 0, 0, 0, 0, 0, -1.6707963267948966, -1.6707963267948966, -1.6707963267948966, -1.6707963267948966, -1.6707963267948966, 0, 0, 0, 0, 0, 0, -10000, -10000, -10000, -10000, -10000]

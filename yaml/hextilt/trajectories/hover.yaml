@@ -1,0 +1,48 @@
+trajectory:
+  robot:
+    name: "hextilt"
+    urdf: "hextilt_description/urdf/hextilt.urdf"
+    follow: "hextilt/platform/hextilt.yaml"
+
+  stages:
+    - name: "navigation"
+      duration: 2000 #ms
+      transition: true
+      costs:
+        - name: "reg_state"
+          type: "CostModelState"
+          weight: 1e-2
+          reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+
+        - name: "reg_control"
+          type: "CostModelControl"
+          weight: 1e-1
+          reference: [0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 1, 1, 1]
+
+    - name: "hover"
+      duration: 0 #ms
+      costs:
+        - name: "reg_control"
+          type: "CostModelControl"
+          weight: 1e-1
+          reference: [0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 1, 1, 1]
+
+        - name: "placement_base_link"
+          type: "CostModelFramePlacement"
+          weight: 2000
+          link_name: "hextilt__base_link"
+          position: [2, 0, 2.5]
+          orientation: [0, 0, 0, 1] # x,y,z,w
+
+        - name: "motion_base_link"
+          type: "CostModelFrameVelocity"
+          weight: 1000
+          link_name: "hextilt__base_link"
+          linear: [0, 0, 0]
+          angular: [0, 0, 0]

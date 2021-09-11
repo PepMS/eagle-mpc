@@ -1,0 +1,206 @@
+trajectory:
+  robot:
+    name: "hexacopter370"
+    urdf: "hexacopter370_description/urdf/hexacopter370.urdf"
+    follow: "hexacopter370/platform/hexacopter370.yaml"
+
+  stages:
+    - name: "nav_wp1"
+      duration: 2000 #ms
+      transition: true
+      costs:
+        - name: "reg_state"
+          type: "CostModelState"
+          weight: 1e-1
+          reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+
+        - name: "reg_control"
+          type: "CostModelControl"
+          weight: 1e-2
+          reference: [0, 0, 0, 0, 0, 0,]
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 1, 1, 1]
+
+    - name: "wp_1"
+      duration: 0 #ms
+      costs:
+        - name: "reg_state"
+          type: "CostModelState"
+          weight: 1e-1
+          reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+
+        - name: "reg_control"
+          type: "CostModelControl"
+          weight: 1e-2
+          reference: [0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 1, 1, 1]
+          
+        - name: "placement_base_link"
+          type: "CostModelFramePlacement"
+          weight: 2000
+          link_name: "hexacopter370__base_link"
+          position: [0, 0, 2]
+          orientation: [0, 0, 0, 1] # x,y,z,w
+
+        - name: "motion_base_link"
+          type: "CostModelFrameVelocity"
+          weight: 1000
+          link_name: "hexacopter370__base_link"
+          linear: [0, 0, 0]
+          angular: [0, 0, 0]
+    
+    - name: "nav_wp2"
+      duration: 2000 #ms
+      transition: true
+      costs:
+        - name: "reg_state"
+          type: "CostModelState"
+          weight: 1e-1
+          reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]        
+
+        - name: "reg_control"
+          type: "CostModelControl"
+          weight: 1e-2
+          reference: [0, 0, 0, 0, 0, 0,]
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 1, 1, 1]
+
+    - name: "wp_2"
+      duration: 0 #ms
+      costs:
+        - name: "reg_state"
+          type: "CostModelState"
+          weight: 1e-1
+          reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+
+        - name: "reg_control"
+          type: "CostModelControl"
+          weight: 1e-2
+          reference: [0, 0, 0, 0, 0, 0,]
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 1, 1, 1]
+
+        - name: "placement_base_link"
+          type: "CostModelFramePlacement"
+          weight: 2000
+          link_name: "hexacopter370__base_link"
+          position: [1, 0, 2]
+          # orientation: [0, 0, 1, 1] # x,y,z,w
+          orientation: [0, 0, 0, 1] # x,y,z,w
+
+        - name: "motion_base_link"
+          type: "CostModelFrameVelocity"
+          weight: 1000
+          link_name: "hexacopter370__base_link"
+          linear: [0, 0, 0]
+          angular: [0, 0, 0]
+
+    - name: "nav_wp3"
+      duration: 2000 #ms
+      transition: true
+      costs:
+        - name: "reg_state"
+          type: "CostModelState"
+          weight: 1e-1
+          reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+
+        - name: "reg_control"
+          type: "CostModelControl"
+          weight: 1e-2
+          reference: [0, 0, 0, 0, 0, 0,]
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 1, 1, 1]
+
+    - name: "wp_3"
+      duration: 0 #ms
+      costs:
+        - name: "reg_state"
+          type: "CostModelState"
+          weight: 1e-1
+          reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+
+        - name: "reg_control"
+          type: "CostModelControl"
+          weight: 1e-2
+          reference: [0, 0, 0, 0, 0, 0,]
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 1, 1, 1]
+
+        - name: "placement_base_link"
+          type: "CostModelFramePlacement"
+          weight: 2000
+          link_name: "hexacopter370__base_link"
+          position: [1, 1, 2]
+          # orientation: [0, 0, 1, 0] # x,y,z,w
+          orientation: [0, 0, 0, 1] # x,y,z,w
+
+        - name: "motion_base_link"
+          type: "CostModelFrameVelocity"
+          weight: 1000
+          link_name: "hexacopter370__base_link"
+          linear: [0, 0, 0]
+          angular: [0, 0, 0]
+
+    - name: "nav_wp4"
+      duration: 2000 #ms
+      transition: true
+      costs:
+        - name: "reg_state"
+          type: "CostModelState"
+          weight: 1e-1
+          reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+
+        - name: "reg_control"
+          type: "CostModelControl"
+          weight: 1e-2
+          reference: [0, 0, 0, 0, 0, 0,]
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 1, 1, 1]
+
+    - name: "wp_4"
+      duration: 0 #ms
+      costs:
+        - name: "reg_state"
+          type: "CostModelState"
+          weight: 1e-1
+          reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+
+        - name: "reg_control"
+          type: "CostModelControl"
+          weight: 1e-2
+          reference: [0, 0, 0, 0, 0, 0,]
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 1, 1, 1]
+
+        - name: "placement_base_link"
+          type: "CostModelFramePlacement"
+          weight: 2000
+          link_name: "hexacopter370__base_link"
+          position: [0, 1, 2]
+          # orientation: [0, 0, 1, 1] # x,y,z,w
+          orientation: [0, 0, 0, 1] # x,y,z,w
+
+        - name: "motion_base_link"
+          type: "CostModelFrameVelocity"
+          weight: 1000
+          link_name: "hexacopter370__base_link"
+          linear: [0, 0, 0]
+          angular: [0, 0, 0]
+

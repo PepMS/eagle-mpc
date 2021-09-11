@@ -1,0 +1,31 @@
+platform:
+  cf: 5.226447359467059e-05
+  cm: 1.0904825432024088e-06
+  max_thrust: 24.8193
+  min_thrust: 0.0
+  base_link_name: "hexacopter680__base_link"
+  n_rotors: 6
+  $rotors:
+    - translation: [0.29444864, 0.17, 0]
+      orientation: [0, 0, 0.258819, 0.965926] # x, y, z, w
+      spin_direction: [-1]
+
+    - translation: [0.0, 0.34, 0.0]
+      orientation: [0, 0, 0.707107, 0.707107]
+      spin_direction: [1]
+
+    - translation: [-0.29444864, 0.17, 0]
+      orientation: [0, 0, 0.965926, 0.258819]
+      spin_direction: [-1]
+
+    - translation: [-0.29444864, -0.17, 0]
+      orientation: [0, 0, 0.965926, -0.258819]
+      spin_direction: [1]
+
+    - translation: [0, -0.34, 0]
+      orientation: [0, 0, -0.707107, 0.707107]
+      spin_direction: [-1]
+
+    - translation: [0.29444864, -0.17, 0]
+      orientation: [0, 0, -0.258819, 0.965926]
+      spin_direction: [1]

@@ -1,0 +1,57 @@
+trajectory:
+  robot:
+    name: "hexacopter680_flying_arm_2"
+    urdf: "hexacopter680_description/urdf/hexacopter680_flying_arm_2.urdf"
+    follow: "hexacopter680_flying_arm_2/platform/hexacopter680.yaml"
+
+  stages:
+    - name: "navigation"
+      duration: 2000 #ms
+      transition: true
+      costs:
+        - name: "reg_state"
+          type: "CostModelState"
+          weight: 1e-2
+          reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ]
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 1, 1, 1, 100, 100, 1, 1, 1, 1, 1, 1, 100, 100]
+
+        - name: "limits_state"
+          type: "CostModelState"
+          weight: 10
+          reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ]
+          activation: "ActivationModelWeightedQuadraticBarrier"
+          weights: [0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1]
+          u_bound: [0, 0, 0, 0, 0, 0, 1.9, 1.9, 0, 0, 0, 0, 0, 0, 3, 3]
+          l_bound: [0, 0, 0, 0, 0, 0, -1.9, -1.9, 0, 0, 0, 0, 0, 0, -3, -3]
+            
+        - name: "reg_control"
+          type: "CostModelControl"
+          weight: 1e-1
+          reference: [0, 0, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 1, 1, 1, 100, 100]
+
+    - name: "hover"
+      duration: 0 #ms
+      costs:
+        - name: "state_arm"
+          type: "CostModelState"
+          weight: 1000
+          reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights: [0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1]
+
+        - name: "placement_base_link"
+          type: "CostModelFramePlacement"
+          weight: 2000
+          link_name: "hexacopter680__base_link"
+          position: [1, 0, 2]
+          orientation: [0, 0, 0, 1] # x,y,z,w
+
+        - name: "motion_base_link"
+          type: "CostModelFrameVelocity"
+          weight: 2000
+          link_name: "hexacopter680__base_link"
+          linear: [0, 0, 0]
+          angular: [0, 0, 0]
