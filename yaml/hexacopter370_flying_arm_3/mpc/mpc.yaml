@@ -1,0 +1,31 @@
+mpc_controller:
+  robot:
+    name: "hexacopter370"
+    urdf: "hexacopter370_description/urdf/hexacopter370_flying_arm_3.urdf"
+    follow: "hexacopter370_flying_arm_3/platform/hexacopter370.yaml"
+  integration_method: "IntegratedActionModelEuler"
+  knots: 30
+  solver: "SolverSbFDDP"
+  iters: 2
+  dt: 30
+
+  carrot_weight: 1000
+  carrot_tail_weight: 1
+  carrot_tail_act_weights: [1000, 1000, 1000, 1, 1, 1, 10, 10, 10, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+  carrot_control_reg_weight: 1e-1
+  carrot_control_reg_act_weights: [1, 1, 1, 1, 1, 1, 10, 10, 10]
+  carrot_state_reg_weight: 1e-2
+  carrot_state_ref_act_weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+  carrot_state_limits_weight: 10
+  carrot_state_limits_act_weights: [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1]
+  carrot_state_limits_u_bound: [0, 0, 0, 0, 0, 0, 1.9, 1.9, 1.9, 0, 0, 0, 0, 0, 0, 3, 3, 3]
+  carrot_state_limits_l_bound: [0, 0, 0, 0, 0, 0, -1.9, -1.9, -1.9, 0, 0, 0, 0, 0, 0, -3, -3, -3]
+
+  rail_weight: 100
+  rail_activation_weights: [80, 80, 80, 1, 1, 1, 80, 80, 80, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+  rail_control_weight: 1e-2
+
+  weighted_alpha: 3.0
+  weighted_beta: 0.01
+  weighted_state_reg: 1e-1
+  weighted_control_reg: 1e-2

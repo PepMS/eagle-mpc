@@ -1,0 +1,278 @@
+trajectory:
+  robot:
+    name: "hexacopter_370_flying_arm_3"
+    urdf: "hexacopter370_description/urdf/hexacopter370_flying_arm_3.urdf"
+    follow: "hexacopter370_flying_arm_3/platform/hexacopter370.yaml"
+
+  stages:
+    - name: "take_off"
+      duration: 2000 #ms
+      transition: true
+      costs:
+        - name: "state_reg"
+          type: "CostModelState"
+          weight: 1e-3
+          reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights:
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+
+        - name: "state_limits"
+          type: "CostModelState"
+          weight: 10
+          reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuadraticBarrier"
+          weights: [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1]
+          u_bound: [0, 0, 0, 0, 0, 0, 1.9, 1.9, 1.9, 0, 0, 0, 0, 0, 0, 3, 3, 3]
+          l_bound:
+            [0, 0, 0, 0, 0, 0, -1.9, -1.9, -1.9, 0, 0, 0, 0, 0, 0, -3, -3, -3]
+
+        - name: "control_reg"
+          type: "CostModelControl"
+          weight: 1e-1
+          reference: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 1, 1, 1, 0.01, 0.01, 0.01]
+
+        - name: "state_arm"
+          type: "CostModelState"
+          weight: 100
+          reference: [0, 0, 0, 0, 0, 0, 1, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights: [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1]
+
+    - name: "take_off_hover"
+      duration: 0 #ms
+      costs:
+        - name: "state_reg"
+          type: "CostModelState"
+          weight: 1e-3
+          reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights:
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+
+        - name: "control_reg"
+          type: "CostModelControl"
+          weight: 1e-2
+          reference: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 1, 1, 1, 0.01, 0.01, 0.01]
+          
+        - name: "state_limits"
+          type: "CostModelState"
+          weight: 10
+          reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuadraticBarrier"
+          weights: [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1]
+          u_bound: [0, 0, 0, 0, 0, 0, 1.9, 1.9, 1.9, 0, 0, 0, 0, 0, 0, 3, 3, 3]
+          l_bound:
+            [0, 0, 0, 0, 0, 0, -1.9, -1.9, -1.9, 0, 0, 0, 0, 0, 0, -3, -3, -3]
+
+        - name: "placement_base_link"
+          type: "CostModelFramePlacement"
+          weight: 2000
+          link_name: "hexacopter370__base_link"
+          orientation: [0, 0, 0, 1] # x,y,z,w
+          position: [0, 0, 1]
+
+        - name: "motion_base_link"
+          type: "CostModelFrameVelocity"
+          weight: 1000
+          link_name: "hexacopter370__base_link"
+          linear: [0, 0, 0]
+          angular: [0, 0, 0]
+
+    - name: "approach"
+      duration: 1400 #ms
+      transition: true
+      costs:
+        - name: "state_reg"
+          type: "CostModelState"
+          weight: 1e-3
+          reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights:
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+
+        - name: "state_limits"
+          type: "CostModelState"
+          weight: 10
+          reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuadraticBarrier"
+          weights: [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1]
+          u_bound: [0, 0, 0, 0, 0, 0, 1.9, 1.9, 1.9, 0, 0, 0, 0, 0, 0, 3, 3, 3]
+          l_bound:
+            [0, 0, 0, 0, 0, 0, -1.9, -1.9, -1.9, 0, 0, 0, 0, 0, 0, -3, -3, -3]
+
+        - name: "control_reg"
+          type: "CostModelControl"
+          weight: 1e-2
+          reference: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 1, 1, 1, 0.01, 0.01, 0.01]
+
+    - name: "pre_grasp"
+      duration: 0 #ms
+      costs:
+        - name: "state_reg"
+          type: "CostModelState"
+          weight: 1e-3
+          reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights:
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+
+        - name: "state_limits"
+          type: "CostModelState"
+          weight: 10
+          reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuadraticBarrier"
+          weights: [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1]
+          u_bound: [0, 0, 0, 0, 0, 0, 1.9, 1.9, 1.9, 0, 0, 0, 0, 0, 0, 3, 3, 3]
+          l_bound:
+            [0, 0, 0, 0, 0, 0, -1.9, -1.9, -1.9, 0, 0, 0, 0, 0, 0, -3, -3, -3]
+
+        - name: "control_reg"
+          type: "CostModelControl"
+          weight: 1e-2
+          reference: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 1, 1, 1, 0.01, 0.01, 0.01]
+
+        - name: "translation_ee"
+          type: "CostModelFrameTranslation"
+          weight: 2000
+          link_name: "flying_arm_3__gripper"
+          position: [5, 0, 0]
+
+        - name: "motion_ee"
+          type: "CostModelFrameVelocity"
+          weight: 1000
+          link_name: "flying_arm_3__gripper"
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 0, 0, 0]
+          linear: [0, 0, 0]
+          angular: [0, 0, 0]
+
+    - name: "grasp"
+      duration: 100 #ms
+      costs:
+        - name: "state_reg"
+          type: "CostModelState"
+          weight: 1e-3
+          reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights:
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+
+        - name: "state_limits"
+          type: "CostModelState"
+          weight: 10
+          reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuadraticBarrier"
+          weights: [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1]
+          u_bound: [0, 0, 0, 0, 0, 0, 1.9, 1.9, 1.9, 0, 0, 0, 0, 0, 0, 3, 3, 3]
+          l_bound:
+            [0, 0, 0, 0, 0, 0, -1.9, -1.9, -1.9, 0, 0, 0, 0, 0, 0, -3, -3, -3]
+
+        - name: "control_reg"
+          type: "CostModelControl"
+          weight: 1e-2
+          reference: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 1, 1, 1, 0.01, 0.01, 0.01]
+
+        - name: "translation_ee"
+          type: "CostModelFrameTranslation"
+          weight: 2000
+          link_name: "flying_arm_3__gripper"
+          position: [5, 0, 0]
+
+        - name: "motion_ee"
+          type: "CostModelFrameVelocity"
+          weight: 1000
+          link_name: "flying_arm_3__gripper"
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 0, 0, 0]
+          linear: [0, 0, 0]
+          angular: [0, 0, 0]
+
+    - name: "move_away"
+      duration: 1600 #ms
+      transition: true
+      costs:
+
+        - name: "state_reg"
+          type: "CostModelState"
+          weight: 1e-3
+          reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights:
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+
+        - name: "state_limits"
+          type: "CostModelState"
+          weight: 10
+          reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuadraticBarrier"
+          weights: [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1]
+          u_bound: [0, 0, 0, 0, 0, 0, 1.9, 1.9, 1.9, 0, 0, 0, 0, 0, 0, 3, 3, 3]
+          l_bound:
+            [0, 0, 0, 0, 0, 0, -1.9, -1.9, -1.9, 0, 0, 0, 0, 0, 0, -3, -3, -3]
+
+        - name: "control_reg"
+          type: "CostModelControl"
+          weight: 1e-2
+          reference: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 1, 1, 1, 0.01, 0.01, 0.01]
+
+    - name: "hover"
+      duration: 0 #ms
+      costs:
+        - name: "state_reg"
+          type: "CostModelState"
+          weight: 1e-3
+          reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights:
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+
+        - name: "state_limits"
+          type: "CostModelState"
+          weight: 10
+          reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuadraticBarrier"
+          weights: [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1]
+          u_bound: [0, 0, 0, 0, 0, 0, 1.9, 1.9, 1.9, 0, 0, 0, 0, 0, 0, 3, 3, 3]
+          l_bound:
+            [0, 0, 0, 0, 0, 0, -1.9, -1.9, -1.9, 0, 0, 0, 0, 0, 0, -3, -3, -3]
+            
+        - name: "control_reg"
+          type: "CostModelControl"
+          weight: 1e-2
+          reference: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 1, 1, 1, 0.01, 0.01, 0.01]
+
+        - name: "placement_base_link"
+          type: "CostModelFramePlacement"
+          weight: 1000
+          link_name: "hexacopter370__base_link"
+          position: [10, 0, 1.5]
+          orientation: [0, 0, 0, 1] # x,y,z,w
+
+        - name: "motion_base_link"
+          type: "CostModelFrameVelocity"
+          weight: 1000
+          link_name: "hexacopter370__base_link"
+          linear: [0, 0, 0]
+          angular: [0, 0, 0]
+
+        - name: "state_arm"
+          type: "CostModelState"
+          weight: 100
+          reference: [0, 0, 0, 0, 0, 0, 1, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights: [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1]
