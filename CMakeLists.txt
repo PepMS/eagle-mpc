@@ -24,6 +24,7 @@ find_package(eigenpy REQUIRED)
 find_package(pinocchio REQUIRED)
 find_package(crocoddyl REQUIRED)
 find_package(yaml-cpp REQUIRED)
+find_package(example-robot-data QUIET)
 
 set(Python_ADDITIONAL_VERSIONS 3.6 3.7 3.8)
 find_package(Python3 REQUIRED Development Interpreter)
@@ -33,6 +34,18 @@ find_package(Boost COMPONENTS ${WHICH_PYTHON3} filesystem unit_test_framework RE
 SET(URDFDOM_LIB /usr/lib/x86_64-linux-gnu/liburdfdom_model.so)
 
 message(STATUS "Eigen library:" ${EIGEN3_INCLUDE_DIRS})
+
+set(EAGLE_MPC_YAML_DIR "${eagle_mpc_SOURCE_DIR}/yaml")
+
+if (example-robot-data_FOUND)
+  set(EAGLE_MPC_USE_EXAMPLE_ROBOT_DATA 1)
+else()
+  set(EAGLE_MPC_USE_EXAMPLE_ROBOT_DATA 0)
+  set(EAGLE_MPC_ROBOT_DATA_DIR "/home/erd_dir")
+endif()
+
+configure_file(${eagle_mpc_SOURCE_DIR}/config/path.h.in path.h)
+configure_file(${eagle_mpc_SOURCE_DIR}/config/path.py.in path.py)
 
 add_subdirectory(src)
 if (WITH_EXAMPLES)

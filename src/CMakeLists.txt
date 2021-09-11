@@ -30,3 +30,4 @@ install(FILES ${eagle_mpc_SOURCE_DIR}/cmake/eagle_mpc-config.cmake DESTINATION $
 install(EXPORT eagle_mpc DESTINATION ${LIBRARY_DESTINATION}/cmake/eagle_mpc)
 install(EXPORT eagle_mpc CONFIGURATIONS Release DESTINATION ${LIBRARY_DESTINATION}/cmake/eagle_mpc/Release)
 install(DIRECTORY ../include/eagle_mpc DESTINATION ${INCLUDE_DESTINATION})
+install(FILES ${CMAKE_BINARY_DIR}/path.h DESTINATION ${INCLUDE_DESTINATION}/eagle_mpc)
