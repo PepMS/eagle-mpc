@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8) # to enable debugging
+cmake_minimum_required(VERSION 3.12) 
 SET(CMAKE_CONFIGURATION_TYPES ${CMAKE_BUILD_TYPE} CACHE STRING "" FORCE)
 PROJECT(eagle_mpc VERSION 0.0
                   DESCRIPTION "Model predictive Control & Optimal control library for MultiCopter-based robots"
@@ -31,17 +31,17 @@ find_package(Python3 REQUIRED Development Interpreter)
 set(WHICH_PYTHON3 "python3${Python3_VERSION_MINOR}")
 find_package(Boost COMPONENTS ${WHICH_PYTHON3} filesystem unit_test_framework REQUIRED)
 
-SET(URDFDOM_LIB /usr/lib/x86_64-linux-gnu/liburdfdom_model.so)
+set(URDFDOM_LIB /usr/lib/x86_64-linux-gnu/liburdfdom_model.so)
 
 message(STATUS "Eigen library:" ${EIGEN3_INCLUDE_DIRS})
 
 set(EAGLE_MPC_YAML_DIR "${eagle_mpc_SOURCE_DIR}/yaml")
 
 if (example-robot-data_FOUND)
-  set(EAGLE_MPC_USE_EXAMPLE_ROBOT_DATA 1)
+  add_compile_definitions(EAGLE_MPC_USE_EXAMPLE_ROBOT_DATA)
 else()
-  set(EAGLE_MPC_USE_EXAMPLE_ROBOT_DATA 0)
-  set(EAGLE_MPC_ROBOT_DATA_DIR "/home/erd_dir")
+  # if you don't want to use example-robot-data, place your path to the urdf base folder inside the ""
+  set(EAGLE_MPC_ROBOT_DATA_DIR "")
 endif()
 
 configure_file(${eagle_mpc_SOURCE_DIR}/config/path.h.in path.h)
