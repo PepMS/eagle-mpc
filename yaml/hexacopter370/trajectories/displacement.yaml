@@ -4,6 +4,11 @@ trajectory:
     urdf: "hexacopter370_description/urdf/hexacopter370.urdf"
     follow: "hexacopter370/platform/hexacopter370.yaml"
 
+  problem_params:
+    dt: 10
+    use_squash: true
+    integrator: "IntegratedActionModelEuler"
+
   stages:
     - name: "nav_wp1"
       duration: 2000 #ms

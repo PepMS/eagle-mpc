@@ -30,6 +30,11 @@ void exposeTrajectory()
     bp::register_ptr_to_python<boost::shared_ptr<crocoddyl::ActuationModelMultiCopterBase>>();
     bp::register_ptr_to_python<boost::shared_ptr<pinocchio::Model>>();
 
+    boost::shared_ptr<crocoddyl::ShootingProblem> (Trajectory::*create_problem_no_args)() const =
+        &Trajectory::createProblem;
+    boost::shared_ptr<crocoddyl::ShootingProblem> (Trajectory::*create_problem_args)(
+        const std::size_t&, const bool&, const std::string&) const = &Trajectory::createProblem;
+
     bp::class_<Trajectory, boost::shared_ptr<Trajectory>>("Trajectory", bp::no_init)
         .def("__init__", bp::make_constructor(&Trajectory::create))
         .add_property("stages",
@@ -54,7 +59,8 @@ void exposeTrajectory()
         .add_property("duration",
                       bp::make_function(&Trajectory::get_duration, bp::return_value_policy<bp::return_by_value>()),
                       "duration of the trajectory")
-        .def("createProblem", &Trajectory::createProblem, bp::args("self", "dt", "squash", "integration_method"))
+        .def("createProblem", create_problem_args, bp::args("self", "dt", "squash", "integration_method"))
+        .def("createProblem", create_problem_no_args, bp::args("self"))
         .def("autoSetup", &Trajectory::autoSetup, bp::args("self", "yaml_path"))
         .def("removeStage", &Trajectory::removeStage, bp::args("self", "idx_stage"));
 }

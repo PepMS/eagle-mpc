@@ -199,6 +199,10 @@ void ParserYaml::parse()
     }
 
     if (is_trajectory_) {
+        if (problem_params_.Type() == YAML::NodeType::Map) {
+            std::vector<std::string> tags = std::vector<std::string>();
+            walkTreeRecursive(problem_params_, tags, "problem_params");
+        }
         for (auto stage : stages_) {
             std::vector<std::string> tags = std::vector<std::string>();
             insertRegister("stages/" + stage.name + "/name", stage.name);
@@ -228,7 +232,7 @@ void ParserYaml::parseFirstLevel(std::string file)
             throw std::runtime_error(
                 "Could not find neither a trajectory or an mpc_controller node. Please make sure that your YAML "
                 "file " +
-                generatePath(file) + " starts with 'trajectory:' or 'mpc_controller'");
+                generatePath(file) + " starts with 'trajectory:' or 'mpc_controller:'");
         } else {
             is_trajectory_ = false;
             parseMpcController(n_mpc_controller, file);
@@ -248,6 +252,13 @@ void ParserYaml::parseTrajectory(const YAML::Node& node, const std::string& file
     }
 
     robot_ = node["robot"];
+
+    try {
+        if (node["problem_params"].Type() == YAML::NodeType::Map) {
+            problem_params_ = node["problem_params"];
+        }
+    } catch (const std::exception& e) {
+    }
 
     try {
         if (node["initial_state"].Type() == YAML::NodeType::Sequence) {
@@ -351,8 +362,6 @@ std::string ParserYaml::generatePath(std::string file)
 
 void ParserYaml::walkTreeRecursive(YAML::Node node, std::vector<std::string>& node_root, std::string node_name)
 {
-    // std::cout << "Node root: " << node_root[0] << std::endl;
-    // std::cout << "Node name: " << node_name << std::endl;
     switch (node.Type()) {
         case YAML::NodeType::Scalar: {
             std::regex r("^@.*");
