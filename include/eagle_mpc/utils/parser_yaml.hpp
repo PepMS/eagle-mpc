@@ -68,6 +68,7 @@ class ParserYaml
     std::string active_name_;
 
     YAML::Node robot_;
+    YAML::Node problem_params_;
 
     bool is_trajectory_;
 };

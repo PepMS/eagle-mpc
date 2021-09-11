@@ -33,6 +33,17 @@ void Trajectory::autoSetup(const std::string& yaml_path)
     platform_params_ = boost::make_shared<MultiCopterBaseParams>();
     platform_params_->autoSetup("robot/platform/", params_server_, robot_model_);
 
+    try {
+        problem_params_.use_squash = params_server_->getParam<bool>("problem_params/use_squash");
+        problem_params_.dt         = params_server_->getParam<int>("problem_params/dt");
+        problem_params_.integrator = params_server_->getParam<std::string>("problem_params/integrator");
+    } catch (const std::exception& e) {
+        problem_params_.use_squash = false;
+        problem_params_.dt         = 0;
+        problem_params_.integrator = "";
+        MMPC_WARN << "Problem params not found. If not in the Yaml file, specify when call createProblem()";
+    }
+
     robot_state_ = boost::make_shared<crocoddyl::StateMultibody>(robot_model_);
     actuation_ = boost::make_shared<crocoddyl::ActuationModelMultiCopterBase>(robot_state_, platform_params_->tau_f_);
     squash_    = boost::make_shared<crocoddyl::SquashingModelSmoothSat>(platform_params_->u_lb, platform_params_->u_ub,
@@ -75,6 +86,17 @@ void Trajectory::autoSetup(const std::string& yaml_path)
         }
     }
     duration_ = time;
+}
+
+boost::shared_ptr<crocoddyl::ShootingProblem> Trajectory::createProblem() const
+{
+    if (problem_params_.integrator == "") {
+        throw std::runtime_error(
+            "Problem parameters not specified in the YAML file. Try calling createProblem() by passing the problem "
+            "parameters.");
+    }
+
+    return createProblem(problem_params_.dt, problem_params_.use_squash, problem_params_.integrator);
 }
 
 boost::shared_ptr<crocoddyl::ShootingProblem> Trajectory::createProblem(const std::size_t& dt,

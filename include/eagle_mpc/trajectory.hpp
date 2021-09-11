@@ -51,6 +51,7 @@ class Trajectory : public boost::enable_shared_from_this<Trajectory>
 
     void autoSetup(const std::string& yaml_path);
 
+    boost::shared_ptr<crocoddyl::ShootingProblem> createProblem() const;
     boost::shared_ptr<crocoddyl::ShootingProblem> createProblem(const std::size_t& dt,
                                                                 const bool&        squash,
                                                                 const std::string& integration_method) const;
@@ -94,6 +95,12 @@ class Trajectory : public boost::enable_shared_from_this<Trajectory>
 
     boost::shared_ptr<DifferentialActionModelFactory> dam_factory_;
     boost::shared_ptr<IntegratedActionModelFactory>   iam_factory_;
+
+    struct ProblemParams {
+        bool        use_squash;
+        int         dt;
+        std::string integrator;
+    } problem_params_;
 };
 }  // namespace eagle_mpc
 
