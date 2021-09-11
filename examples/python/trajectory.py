@@ -1,10 +1,10 @@
 import sys
-import matplotlib.pyplot as plt
-import numpy as np
 
 import crocoddyl
-import eagle_mpc
 import example_robot_data
+
+import eagle_mpc
+from eagle_mpc.utils.path import EAGLE_MPC_YAML_DIR
 
 WITHDISPLAY = 'display' in sys.argv
 
@@ -14,8 +14,7 @@ robotName = 'hexacopter370_flying_arm_3'
 trajectoryName = 'displacement'
 
 trajectory = eagle_mpc.Trajectory()
-trajectory.autoSetup("/home/pepms/wsros/mpc-ws/src/eagle_mpc_ros/eagle_mpc_yaml/trajectories/" + robotName +
-                     '_' + trajectoryName + ".yaml")
+trajectory.autoSetup(EAGLE_MPC_YAML_DIR + "/" + robotName + "/trajectories/displacement.yaml")
 problem = trajectory.createProblem(dt, useSquash, "IntegratedActionModelEuler")
 
 if useSquash:
@@ -25,14 +24,6 @@ else:
 
 solver.setCallbacks([crocoddyl.CallbackVerbose()])
 solver.solve([], [], maxiter=100)
-
-fig, axs = plt.subplots(6, 1)
-us = np.vstack(solver.us_squash).T
-# us = np.vstack(solver.us).T
-for idx, ax in enumerate(axs):
-    ax.plot(us[idx, :])
-
-plt.show()
 
 if WITHDISPLAY:
     robot = example_robot_data.load(trajectory.robot_model.name)
