@@ -25,3 +25,4 @@ install(TARGETS ${PROJECT_NAME}_pywrap
         LIBRARY DESTINATION lib/python3/dist-packages/eagle_mpc)
 install(DIRECTORY python/eagle_mpc/utils DESTINATION lib/python3/dist-packages/eagle_mpc FILES_MATCHING PATTERN "*.py")
 install(FILES python/eagle_mpc/__init__.py DESTINATION lib/python3/dist-packages/eagle_mpc)
+install(FILES ${CMAKE_BINARY_DIR}/path.py DESTINATION lib/python3/dist-packages/eagle_mpc/utils)

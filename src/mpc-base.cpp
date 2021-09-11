@@ -19,7 +19,7 @@ MpcAbstract::MpcAbstract(const std::string& yaml_path)
 void MpcAbstract::initializeRobotObjects()
 {
     std::string prefix_robot = "robot/";
-    robot_model_path_        = params_server_->getParam<std::string>(prefix_robot + "urdf");
+    robot_model_path_        = getUrdfPath(params_server_->getParam<std::string>(prefix_robot + "urdf"));
 
     pinocchio::Model model;
     pinocchio::urdf::buildModel(robot_model_path_, pinocchio::JointModelFreeFlyer(), model);
