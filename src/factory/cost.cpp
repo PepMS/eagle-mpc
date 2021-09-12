@@ -42,7 +42,7 @@ boost::shared_ptr<crocoddyl::CostModelResidual> CostModelFactory::create(
                 reference =
                     converter<Eigen::VectorXd>::convert(server->getParam<std::string>(path_to_cost + "reference"));
             } catch (const std::exception& e) {
-                MMPC_WARN << e.what() << " Set to the zero state vector";
+                EMPC_WARN << e.what() << " Set to the zero state vector";
                 reference = state->zero();
             }
             if (reference.size() != state->get_nx()) {
@@ -61,7 +61,7 @@ boost::shared_ptr<crocoddyl::CostModelResidual> CostModelFactory::create(
                 reference =
                     converter<Eigen::VectorXd>::convert(server->getParam<std::string>(path_to_cost + "reference"));
             } catch (const std::exception& e) {
-                MMPC_WARN << e.what() << " Set to the zero control vector";
+                EMPC_WARN << e.what() << " Set to the zero control vector";
                 reference = Eigen::VectorXd::Zero(nu);
             }
             if (reference.size() != nu) {

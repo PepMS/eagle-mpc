@@ -50,7 +50,7 @@ IntegratedActionModelTypes SolverSbFDDP::getIntegratedModelType(
             return IntegratedActionModelTypes::IntegratedActionModelRK4;
         }
     }
-    MMPC_ERROR << "Integrated action type not found";
+    EMPC_ERROR << "Integrated action type not found";
     return IntegratedActionModelTypes::NbIntegratedActionModelTypes;
 }
 
@@ -66,7 +66,7 @@ DifferentialActionModelTypes SolverSbFDDP::getDifferentialModelType(
             return DifferentialActionModelTypes::DifferentialActionModelContactFwdDynamics;
         }
     }
-    MMPC_ERROR << "Differential action type not found";
+    EMPC_ERROR << "Differential action type not found";
     return DifferentialActionModelTypes::NbDifferentialActionModelTypes;
 }
 
@@ -114,7 +114,7 @@ IntegratedActionModelTypes SolverSbFDDP::getIntegratedDataType(
             return IntegratedActionModelTypes::IntegratedActionModelRK4;
         }
     }
-    MMPC_ERROR << "Integrated action data type not found";
+    EMPC_ERROR << "Integrated action data type not found";
     return IntegratedActionModelTypes::NbIntegratedActionModelTypes;
 }
 
@@ -130,7 +130,7 @@ DifferentialActionModelTypes SolverSbFDDP::getDifferentialDataType(
             return DifferentialActionModelTypes::DifferentialActionModelContactFwdDynamics;
         }
     }
-    MMPC_ERROR << "Differential action data type not found";
+    EMPC_ERROR << "Differential action data type not found";
     return DifferentialActionModelTypes::NbDifferentialActionModelTypes;
 }
 
