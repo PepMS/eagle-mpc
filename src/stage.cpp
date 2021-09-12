@@ -43,10 +43,10 @@ void Stage::autoSetup(const std::string&                        path_to_stages,
                 path_to_stage + "contacts/" + contact_name + "/", server, shared_from_this(), contact_type);
             contacts_->addContact(contact_name, contact);
             contact_types_.insert({contact_name, contact_type});
-            MMPC_INFO << "Stage '" << name_ << "': added contact '" << contact_name << "'";
+            EMPC_INFO << "Stage '" << name_ << "': added contact '" << contact_name << "'";
         }
     } catch (const std::exception& e) {
-        MMPC_INFO << "Stage: " << name_ << " DOES NOT HAVE contacts";
+        EMPC_INFO << "Stage: " << name_ << " DOES NOT HAVE contacts";
     }
 
     std::vector<std::string> cost_names = converter<std::vector<std::string>>::convert(stage.at("costs"));
@@ -56,7 +56,7 @@ void Stage::autoSetup(const std::string&                        path_to_stages,
         try {
             server->getParam<double>(path_to_stage + "costs/" + cost_name + "/active");
         } catch (const std::exception& e) {
-            MMPC_WARN << e.what() << " Set to true.";
+            EMPC_WARN << e.what() << " Set to true.";
             active = true;
         }
         CostModelTypes                                  cost_type;
@@ -66,7 +66,7 @@ void Stage::autoSetup(const std::string&                        path_to_stages,
         costs_->addCost(cost_name, cost, weight, active);
         cost_types_.insert({cost_name, cost_type});
 
-        MMPC_INFO << "Stage '" << name_ << "': added cost '" << cost_name << "'";
+        EMPC_INFO << "Stage '" << name_ << "': added cost '" << cost_name << "'";
     }
 }
 

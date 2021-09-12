@@ -343,7 +343,7 @@ void ParserYaml::parseFreely()
 YAML::Node ParserYaml::loadYaml(std::string file_path)
 {
     try {
-        MMPC_INFO << "Parsing " << file_path;
+        EMPC_INFO << "Parsing " << file_path;
         return YAML::LoadFile(file_path);
     } catch (YAML::BadFile& e) {
         throw std::runtime_error("Couldn't load file: " + file_path);
@@ -436,7 +436,7 @@ void ParserYaml::walkTreeRecursive(YAML::Node node, std::vector<std::string>& no
         case YAML::NodeType::Null:
             break;
         default:
-            MMPC_ERROR << "Unsupported node Type at walkTreeR.";
+            EMPC_ERROR << "Unsupported node Type at walkTreeR.";
             break;
     }
 }

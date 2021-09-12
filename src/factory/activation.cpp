@@ -25,7 +25,7 @@ boost::shared_ptr<crocoddyl::ActivationModelAbstract> ActivationModelFactory::cr
     try {
         name = server->getParam<std::string>(path_to_cost + "activation");
     } catch (const std::exception& e) {
-        MMPC_WARN << e.what() << " Set to quadratic activation.";
+        EMPC_WARN << e.what() << " Set to quadratic activation.";
         name = "ActivationModelQuad";
     }
 
@@ -39,7 +39,7 @@ boost::shared_ptr<crocoddyl::ActivationModelAbstract> ActivationModelFactory::cr
             try {
                 weights = converter<Eigen::VectorXd>::convert(server->getParam<std::string>(path_to_cost + "weights"));
             } catch (const std::exception& e) {
-                MMPC_WARN << e.what() << " Set to a unitary vector";
+                EMPC_WARN << e.what() << " Set to a unitary vector";
                 weights = Eigen::VectorXd::Ones(nr);
             }
 
@@ -75,7 +75,7 @@ boost::shared_ptr<crocoddyl::ActivationModelAbstract> ActivationModelFactory::cr
             try {
                 weights = converter<Eigen::VectorXd>::convert(server->getParam<std::string>(path_to_cost + "weights"));
             } catch (const std::exception& e) {
-                MMPC_WARN << e.what() << " Set to a unitary vector";
+                EMPC_WARN << e.what() << " Set to a unitary vector";
                 weights = Eigen::VectorXd::Ones(nr);
             }
 

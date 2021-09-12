@@ -55,7 +55,7 @@ void CarrotMpc::loadCostParams()
     try {
         carrot_weight_ = params_server_->getParam<double>("mpc_controller/carrot_weight");
     } catch (const std::exception& e) {
-        MMPC_WARN
+        EMPC_WARN
             << "The following key: 'mpc_controller/carrot_weight' has not been found in the parameters server. Set "
                "to 10.0";
         carrot_weight_ = 10.0;
@@ -64,7 +64,7 @@ void CarrotMpc::loadCostParams()
     try {
         carrot_tail_weight_ = params_server_->getParam<double>("mpc_controller/carrot_tail_weight");
     } catch (const std::exception& e) {
-        MMPC_WARN << "The following key: 'mpc_controller/carrot_tail_weight' has not been found in the parameters "
+        EMPC_WARN << "The following key: 'mpc_controller/carrot_tail_weight' has not been found in the parameters "
                      "server. Set "
                      "to 5.0";
         carrot_tail_weight_ = 5.0;
@@ -73,7 +73,7 @@ void CarrotMpc::loadCostParams()
         carrot_tail_act_weights_ = converter<Eigen::VectorXd>::convert(
             params_server_->getParam<std::string>("mpc_controller/carrot_tail_act_weights"));
     } catch (const std::exception& e) {
-        MMPC_WARN
+        EMPC_WARN
             << "The following key: 'mpc_controller/carrot_tail_act_weights' has not been found in the parameters "
                "server. Set "
                "to unitary vector";
@@ -88,7 +88,7 @@ void CarrotMpc::loadCostParams()
     try {
         control_reg_weight_ = params_server_->getParam<double>("mpc_controller/carrot_control_reg_weight");
     } catch (const std::exception& e) {
-        MMPC_WARN
+        EMPC_WARN
             << "The following key: 'mpc_controller/carrot_control_reg_weight' has not been found in the parameters "
                "server. Set "
                "to 1e-2";
@@ -98,7 +98,7 @@ void CarrotMpc::loadCostParams()
         control_reg_act_weights_ = converter<Eigen::VectorXd>::convert(
             params_server_->getParam<std::string>("mpc_controller/carrot_control_reg_act_weights"));
     } catch (const std::exception& e) {
-        MMPC_WARN << "The following key: 'mpc_controller/carrot_control_reg_act_weights' has not been found in the "
+        EMPC_WARN << "The following key: 'mpc_controller/carrot_control_reg_act_weights' has not been found in the "
                      "parameters "
                      "server. Set "
                      "to unitary vector";
@@ -113,7 +113,7 @@ void CarrotMpc::loadCostParams()
     try {
         state_reg_weight_ = params_server_->getParam<double>("mpc_controller/carrot_state_reg_weight");
     } catch (const std::exception& e) {
-        MMPC_WARN
+        EMPC_WARN
             << "The following key: 'mpc_controller/carrot_state_reg_weight' has not been found in the parameters "
                "server. Set to 1e-3";
         state_reg_weight_ = 1e-3;
@@ -122,7 +122,7 @@ void CarrotMpc::loadCostParams()
         state_ref_act_weights_ = converter<Eigen::VectorXd>::convert(
             params_server_->getParam<std::string>("mpc_controller/carrot_state_ref_act_weights"));
     } catch (const std::exception& e) {
-        MMPC_WARN
+        EMPC_WARN
             << "The following key: 'mpc_controller/carrot_state_ref_act_weights' has not been found in the parameters "
                "server. Set to unitary vector";
         state_ref_act_weights_ = Eigen::VectorXd::Ones(robot_state_->get_ndx());
@@ -136,7 +136,7 @@ void CarrotMpc::loadCostParams()
     try {
         state_limits_weight_ = params_server_->getParam<double>("mpc_controller/carrot_state_limits_weight");
     } catch (const std::exception& e) {
-        MMPC_WARN
+        EMPC_WARN
             << "The following key: 'mpc_controller/carrot_state_limits_weight' has not been found in the parameters "
                "server. Set to 100";
         state_limits_weight_ = 100;
@@ -145,7 +145,7 @@ void CarrotMpc::loadCostParams()
         state_limits_act_weights_ = converter<Eigen::VectorXd>::convert(
             params_server_->getParam<std::string>("mpc_controller/carrot_state_limits_act_weights"));
     } catch (const std::exception& e) {
-        MMPC_WARN << "The following key: 'mpc_controller/carrot_state_limits_act_weights' has not been found in the "
+        EMPC_WARN << "The following key: 'mpc_controller/carrot_state_limits_act_weights' has not been found in the "
                      "parameters "
                      "server. Set to unitary vector";
         state_limits_act_weights_ = Eigen::VectorXd::Ones(robot_state_->get_ndx());
@@ -199,7 +199,7 @@ void CarrotMpc::createProblem()
                                                                                             costs);
                 break;
             case DifferentialActionModelTypes::DifferentialActionModelContactFwdDynamics:
-                MMPC_ERROR << "Carrot with contact has not been implemented";
+                EMPC_ERROR << "Carrot with contact has not been implemented";
                 break;
         }
 
