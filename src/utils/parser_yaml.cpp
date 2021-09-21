@@ -7,7 +7,7 @@
 
 #include "eagle_mpc/utils/parser_yaml.hpp"
 #include "eagle_mpc/utils/log.hpp"
-#include "eagle_mpc/path.h"
+#include "eagle_mpc/path.hpp"
 
 namespace eagle_mpc
 {
