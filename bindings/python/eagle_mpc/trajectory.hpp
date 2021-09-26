@@ -26,8 +26,6 @@ void exposeTrajectory()
     StdVectorPythonVisitor<boost::shared_ptr<Stage>, std::allocator<boost::shared_ptr<Stage>>, true>::expose(
         "StdVec_Stages");
 
-    bp::register_ptr_to_python<boost::shared_ptr<crocoddyl::StateMultibody>>();
-    bp::register_ptr_to_python<boost::shared_ptr<crocoddyl::ActuationModelMultiCopterBase>>();
     bp::register_ptr_to_python<boost::shared_ptr<pinocchio::Model>>();
 
     boost::shared_ptr<crocoddyl::ShootingProblem> (Trajectory::*create_problem_no_args)() const =
