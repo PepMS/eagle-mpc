@@ -8,28 +8,89 @@
 #ifndef EAGLE_MPC_UTILS_LOG_HPP_
 #define EAGLE_MPC_UTILS_LOG_HPP_
 
-#include <iostream>
+#include <stdio.h>
+#include <utility>
+
+#define ANSI_COLOR_RED "\x1b[31m"
+#define ANSI_COLOR_GREEN "\x1b[32m"
+#define ANSI_COLOR_YELLOW "\x1b[33m"
+#define ANSI_COLOR_BLUE "\x1b[34m"
+#define ANSI_COLOR_MAGENTA "\x1b[35m"
+#define ANSI_COLOR_CYAN "\x1b[36m"
+#define ANSI_COLOR_RESET "\x1b[0m \n"
 
 namespace eagle_mpc
 {
-class Log
+void log();
+
+template <typename First, typename... Rest>
+void log(First&& first, Rest&&... rest)
 {
-    public:
-    Log(const std::string &funcName) { std::cout << funcName; }
+    std::cout << std::forward<First>(first);
+    log(std::forward<Rest>(rest)...);
+}
 
-    template <class T>
-    Log &operator<<(const T &v)
-    {
-        std::cout << v;
-        return *this;
+#if VERBOSE_LEVEL == 1
+#define EMPC_ERROR(...)           \
+    {                             \
+        printf(ANSI_COLOR_RED);   \
+        log(__VA_ARGS__);         \
+        printf(ANSI_COLOR_RESET); \
     }
+#define EMPC_WARN(...)             \
+    {                              \
+        printf(ANSI_COLOR_YELLOW); \
+        log(__VA_ARGS__);          \
+        printf(ANSI_COLOR_RESET);  \
+    }
+#define EMPC_INFO(...) \
+    {                  \
+    }
+#elif VERBOSE_LEVEL == 2
+#define EMPC_ERROR(...)           \
+    {                             \
+        printf(ANSI_COLOR_RED);   \
+        log(__VA_ARGS__);         \
+        printf(ANSI_COLOR_RESET); \
+    }
+#define EMPC_WARN(...)             \
+    {                              \
+        printf(ANSI_COLOR_YELLOW); \
+        log(__VA_ARGS__);          \
+        printf(ANSI_COLOR_RESET);  \
+    }
+#define EMPC_INFO(...)            \
+    {                             \
+        printf(ANSI_COLOR_CYAN);  \
+        log(__VA_ARGS__);         \
+        printf(ANSI_COLOR_RESET); \
+    }
+#else
+#define EMPC_ERROR(...)           \
+    {                             \
+        printf(ANSI_COLOR_RED);   \
+        log(__VA_ARGS__);         \
+        printf(ANSI_COLOR_RESET); \
+    }
+#define EMPC_WARN(...) \
+    {                  \
+    }
+#define EMPC_INFO(...) \
+    {                  \
+    }
+#endif
 
-    ~Log() { std::cout << "\033[0m" << std::endl; }
-};
-
-#define EMPC_INFO Log("\033[0;36m[EAGLE_MPC INFO]: ")  // 36==cyan
-#define EMPC_WARN Log("\033[0;33m[EAGLE_MPC WARN]:")   // 33==yellow
-#define EMPC_ERROR Log("\033[0;31m[EAGLE_MPC ERROR]")  // 31==red
+#if VERBOSE_DEBUG == 1
+#define EMPC_DEBUG(...)           \
+    {                             \
+        log(__VA_ARGS__);         \
+        printf(ANSI_COLOR_RESET); \
+    }
+#else
+#define EMPC_DEBUG(...) \
+    {                   \
+    }
+#endif
 
 }  // namespace eagle_mpc
 #endif

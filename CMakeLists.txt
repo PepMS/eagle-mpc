@@ -37,7 +37,8 @@ set(WHICH_PYTHON3 "python3${Python3_VERSION_MINOR}" CACHE STRING "Python3 versio
 find_package(
   Boost
   COMPONENTS ${WHICH_PYTHON3} filesystem unit_test_framework
-  REQUIRED)
+  REQUIRED
+  )
 
 set(EAGLE_MPC_YAML_DIR "${eagle_mpc_SOURCE_DIR}/yaml")
 
@@ -50,6 +51,20 @@ else()
 endif()
 
 configure_file(${eagle_mpc_SOURCE_DIR}/config/path.py.in path.py)
+
+# Define level of verbosity
+# VERBOSE_LEVEL
+# 0: errors messages
+# 1: errors & warnings
+# 2: errors, warnings & info
+#
+# VERBOSE_DEBUG: to activate debug messages
+set(VERBOSE_LEVEL 2)
+set(VERBOSE_DEBUG 0)
+
+
+add_compile_definitions(VERBOSE_DEBUG=${VERBOSE_DEBUG})
+add_compile_definitions(VERBOSE_LEVEL=${VERBOSE_LEVEL})
 
 add_subdirectory(src)
 if(WITH_EXAMPLES)

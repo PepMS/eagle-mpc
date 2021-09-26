@@ -24,9 +24,9 @@ RailMpc::RailMpc(const std::vector<Eigen::VectorXd>& state_ref, const std::size_
     try {
         state_weight_ = params_server_->getParam<double>("mpc_controller/rail_weight");
     } catch (const std::exception& e) {
-        EMPC_WARN
-            << "The following key: 'mpc_controller/rail_weight' has not been found in the parameters server. Set "
-               "to 10.0";
+        EMPC_DEBUG(
+            "The following key: 'mpc_controller/rail_weight' has not been found in the parameters server. Set "
+            "to 10.0");
         state_weight_ = 10;
     }
 
@@ -34,10 +34,10 @@ RailMpc::RailMpc(const std::vector<Eigen::VectorXd>& state_ref, const std::size_
         state_activation_weights_ = converter<Eigen::VectorXd>::convert(
             params_server_->getParam<std::string>("mpc_controller/rail_activation_weights"));
     } catch (const std::exception& e) {
-        EMPC_WARN
-            << "The following key: 'mpc_controller/rail_activation_weights' has not been found in the parameters "
-               "server. Set "
-               "to unitary vector";
+        EMPC_DEBUG(
+            "The following key: 'mpc_controller/rail_activation_weights' has not been found in the parameters "
+            "server. Set "
+            "to unitary vector");
         state_activation_weights_ = Eigen::VectorXd::Ones(robot_state_->get_ndx());
     }
     if (state_activation_weights_.size() != robot_state_->get_ndx()) {
@@ -49,9 +49,10 @@ RailMpc::RailMpc(const std::vector<Eigen::VectorXd>& state_ref, const std::size_
     try {
         control_weight_ = params_server_->getParam<double>("mpc_controller/rail_control_weight");
     } catch (const std::exception& e) {
-        EMPC_WARN << "The following key: 'mpc_controller/rail_control_weight' has not been found in the parameters "
-                     "server. Set "
-                     "to 1e-1";
+        EMPC_DEBUG(
+            "The following key: 'mpc_controller/rail_control_weight' has not been found in the parameters "
+            "server. Set "
+            "to 1e-1");
         control_weight_ = 1e-1;
     }
     createProblem();
@@ -83,7 +84,7 @@ void RailMpc::createProblem()
                                                                                             costs);
                 break;
             case DifferentialActionModelTypes::DifferentialActionModelContactFwdDynamics:
-                EMPC_ERROR << "Carrot with contact has not been implemented";
+                EMPC_ERROR("Carrot with contact has not been implemented");
                 break;
         }
 

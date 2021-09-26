@@ -38,8 +38,8 @@ void MultiCopterBaseParams::autoSetup(const std::string&                     pat
         base_link_name_ = server->getParam<std::string>(path_to_platform + "base_link_name");
         n_rotors_       = server->getParam<int>(path_to_platform + "n_rotors");
 
-        EMPC_INFO << "Number of rotors: " << n_rotors_;
-        
+        EMPC_INFO("Number of rotors: ", n_rotors_);
+
         std::vector<std::string> rotors = server->getParam<std::vector<std::string>>(path_to_platform + "rotors");
         if (n_rotors_ != rotors.size()) {
             throw std::runtime_error("'n_rotors' field and the number of rotor poses specified must be the same.");
