@@ -86,9 +86,6 @@ void Trajectory::autoSetup(const std::string& yaml_path)
         }
     }
     duration_ = time;
-    EMPC_ERROR("This is an error message ", 213);
-    EMPC_WARN("This is an warn message ", 213);
-    EMPC_INFO("This is an info message ", 213);
 }
 
 boost::shared_ptr<crocoddyl::ShootingProblem> Trajectory::createProblem() const
