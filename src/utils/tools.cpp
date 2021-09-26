@@ -6,6 +6,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "eagle_mpc/utils/tools.hpp"
+#include "eagle_mpc/utils/log.hpp"
 
 namespace eagle_mpc
 {
@@ -27,4 +28,6 @@ void Tools::thrustToSpeedNormalized(const Eigen::VectorXd&                      
     speed = (thrust.array() / params->cf_).sqrt();
     speed = -1.0 + 2 * (speed.array() - params->min_prop_speed_) / (params->max_prop_speed_ - params->min_prop_speed_);
 }
+
+void log(){}
 }  // namespace eagle_mpc

@@ -42,7 +42,7 @@ boost::shared_ptr<crocoddyl::ContactModelAbstract> ContactModelFactory::create(
             try {
                 gains = converter<Eigen::VectorXd>::convert(server->getParam<std::string>(path_to_contact + "gains"));
             } catch (const std::exception& e) {
-                EMPC_WARN << e.what() << " Set to the zero gains vector";
+                EMPC_DEBUG(e.what(), " Set to the zero gains vector");
                 gains = Eigen::Vector2d::Zero();
             }
 
@@ -70,7 +70,7 @@ boost::shared_ptr<crocoddyl::ContactModelAbstract> ContactModelFactory::create(
             try {
                 gains = converter<Eigen::VectorXd>::convert(server->getParam<std::string>(path_to_contact + "gains"));
             } catch (const std::exception& e) {
-                EMPC_WARN << e.what() << " Set to the zero gains vector";
+                EMPC_DEBUG(e.what(), "  Set to the zero gains vector");
                 gains = Eigen::Vector2d::Zero();
             }
 

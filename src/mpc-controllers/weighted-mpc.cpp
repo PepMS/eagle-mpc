@@ -21,36 +21,38 @@ WeightedMpc::WeightedMpc(const boost::shared_ptr<Trajectory>& trajectory,
     try {
         alpha_ = params_server_->getParam<double>("mpc_controller/weighted_alpha");
     } catch (const std::exception& e) {
-        EMPC_WARN
-            << "The following key: 'mpc_controller/weighted_alpha' has not been found in the parameters server. Set "
-               "to 20.0";
+        EMPC_DEBUG(
+            "The following key: 'mpc_controller/weighted_alpha' has not been found in the parameters server. Set "
+            "to 20.0");
         alpha_ = 20.0;
     }
 
     try {
         beta_ = params_server_->getParam<double>("mpc_controller/weighted_beta");
     } catch (const std::exception& e) {
-        EMPC_WARN
-            << "The following key: 'mpc_controller/weighted_beta' has not been found in the parameters server. Set "
-               "to 1.0";
+        EMPC_DEBUG(
+            "The following key: 'mpc_controller/weighted_beta' has not been found in the parameters server. Set "
+            "to 1.0");
         beta_ = 1.0;
     }
 
     try {
         state_reg_ = params_server_->getParam<double>("mpc_controller/weighted_state_reg");
     } catch (const std::exception& e) {
-        EMPC_WARN << "The following key: 'mpc_controller/weighted_state_reg' has not been found in the parameters "
-                     "server. Set "
-                     "to 1e-1";
+        EMPC_DEBUG(
+            "The following key: 'mpc_controller/weighted_state_reg' has not been found in the parameters "
+            "server. Set "
+            "to 1e-1");
         state_reg_ = 1e-1;
     }
 
     try {
         control_reg_ = params_server_->getParam<double>("mpc_controller/weighted_control_reg");
     } catch (const std::exception& e) {
-        EMPC_WARN << "The following key: 'mpc_controller/weighted_control_reg' has not been found in the parameters "
-                     "server. Set "
-                     "to 1e-1";
+        EMPC_DEBUG(
+            "The following key: 'mpc_controller/weighted_control_reg' has not been found in the parameters "
+            "server. Set "
+            "to 1e-1");
         control_reg_ = 1e-1;
     }
 
@@ -99,7 +101,7 @@ void WeightedMpc::createProblem()
                                                                                             costs);
                 break;
             case DifferentialActionModelTypes::DifferentialActionModelContactFwdDynamics:
-                EMPC_ERROR << "Weighted with contact has not been implemented";
+                EMPC_ERROR("Weighted with contact has not been implemented");
                 break;
         }
 

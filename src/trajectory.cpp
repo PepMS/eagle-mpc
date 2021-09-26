@@ -41,7 +41,7 @@ void Trajectory::autoSetup(const std::string& yaml_path)
         problem_params_.use_squash = false;
         problem_params_.dt         = 0;
         problem_params_.integrator = "";
-        EMPC_WARN << "Problem params not found. If not in the Yaml file, specify when call createProblem()";
+        EMPC_DEBUG("Problem params not found. If not in the Yaml file, specify when call createProblem()");
     }
 
     robot_state_ = boost::make_shared<crocoddyl::StateMultibody>(robot_model_);
@@ -55,7 +55,7 @@ void Trajectory::autoSetup(const std::string& yaml_path)
         initial_state_ = params_server_->getParam<Eigen::VectorXd>("initial_state");
     } catch (const std::exception& e) {
         initial_state_ = robot_state_->zero();
-        EMPC_WARN << "Initial state not found, set to the zero state";
+        EMPC_DEBUG("Initial state not found, set to the zero state");
     }
 
     if (initial_state_.size() != robot_state_->get_nx()) {
@@ -86,6 +86,9 @@ void Trajectory::autoSetup(const std::string& yaml_path)
         }
     }
     duration_ = time;
+    EMPC_ERROR("This is an error message ", 213);
+    EMPC_WARN("This is an warn message ", 213);
+    EMPC_INFO("This is an info message ", 213);
 }
 
 boost::shared_ptr<crocoddyl::ShootingProblem> Trajectory::createProblem() const
@@ -103,7 +106,7 @@ boost::shared_ptr<crocoddyl::ShootingProblem> Trajectory::createProblem(const st
                                                                         const bool&        squash,
                                                                         const std::string& integration_method) const
 {
-    EMPC_INFO << "Creating problem for the given stages. Contact Trajectory = " << has_contact_;
+    EMPC_INFO("Creating problem for the given stages. Contact Trajectory = ", has_contact_);
     std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> running_models;
     boost::shared_ptr<crocoddyl::ActionModelAbstract>              terminal_model;
 
@@ -126,7 +129,7 @@ boost::shared_ptr<crocoddyl::ShootingProblem> Trajectory::createProblem(const st
             last_duration0 = false;
         }
 
-        EMPC_INFO << "Create Problem; " << (*stage)->get_name() << ", # Knots: " << n_knots;
+        EMPC_INFO("Create Problem; ", (*stage)->get_name(), "# Knots: ", n_knots);
 
         iam->set_u_lb(platform_params_->u_lb);
         iam->set_u_ub(platform_params_->u_ub);
