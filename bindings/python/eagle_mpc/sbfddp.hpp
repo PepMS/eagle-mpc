@@ -26,7 +26,6 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SolverSbFDDP_solves, SolverSbFDDP::solve,
 void exposeSolverSbFDDP()
 {
     bp::register_ptr_to_python<boost::shared_ptr<SolverSbFDDP>>();
-    bp::register_ptr_to_python<boost::shared_ptr<crocoddyl::SquashingModelSmoothSat>>();
 
     const std::vector<Eigen::VectorXd>& (SolverSbFDDP::*get_controls)() const = &SolverSbFDDP::get_us;
     const std::vector<Eigen::VectorXd>& (SolverSbFDDP::*get_controls_squash)() const =
