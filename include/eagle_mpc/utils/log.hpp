@@ -89,7 +89,7 @@ printf(ANSI_COLOR_RESET);
 #if VERBOSE_DEBUG == 1
 #define EMPC_DEBUG(...)           \
     {                             \
-        printf("[EAGLE_MPC | DEBUG]: ");
+        printf("[EAGLE_MPC | DEBUG]: "); \
         log(__VA_ARGS__);         \
         printf(ANSI_COLOR_RESET); \
     }
