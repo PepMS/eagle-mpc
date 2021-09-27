@@ -71,13 +71,13 @@ void log(First&& first, Rest&&... rest)
         printf(ANSI_COLOR_RESET);       \
     }
 #else
-#define EMPC_ERROR(...)         \
-    {                           \
-        printf(ANSI_COLOR_RED); \
-        printf("[EAGLE_MPC | ERROR]: ");
-log(__VA_ARGS__);
-printf(ANSI_COLOR_RESET);
-}
+#define EMPC_ERROR(...)                  \
+    {                                    \
+        printf(ANSI_COLOR_RED);          \
+        printf("[EAGLE_MPC | ERROR]: "); \
+        log(__VA_ARGS__);                \
+        printf(ANSI_COLOR_RESET);        \
+    }
 #define EMPC_WARN(...) \
     {                  \
     }
@@ -87,11 +87,11 @@ printf(ANSI_COLOR_RESET);
 #endif
 
 #if VERBOSE_DEBUG == 1
-#define EMPC_DEBUG(...)           \
-    {                             \
+#define EMPC_DEBUG(...)                  \
+    {                                    \
         printf("[EAGLE_MPC | DEBUG]: "); \
-        log(__VA_ARGS__);         \
-        printf(ANSI_COLOR_RESET); \
+        log(__VA_ARGS__);                \
+        printf(ANSI_COLOR_RESET);        \
     }
 #else
 #define EMPC_DEBUG(...) \
