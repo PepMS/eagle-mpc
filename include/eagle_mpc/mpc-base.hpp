@@ -110,6 +110,7 @@ class MpcAbstract
         std::size_t                knots;
         std::size_t                iters;
         std::size_t                dt;
+        bool                       callback;
     } params_;
 
     private:

@@ -8,6 +8,7 @@ mpc_controller:
   solver: "SolverSbFDDP"
   iters: 2
   dt: 30
+  callback: false
 
   carrot_weight: 1000
   carrot_tail_weight: 1

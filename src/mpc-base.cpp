@@ -48,6 +48,13 @@ void MpcAbstract::loadParams()
 
     std::string solver  = params_server_->getParam<std::string>(prefix_controller + "solver");
     params_.solver_type = SolverTypes_map.at(solver);
+
+    try {
+        params_.callback = params_server_->getParam<bool>(prefix_controller + "callback");
+    } catch (const std::exception& e) {
+        EMPC_DEBUG(e.what(), " Set to false.");
+        params_.callback = false;
+    }
 }
 
 const boost::shared_ptr<pinocchio::Model>&      MpcAbstract::get_robot_model() const { return robot_model_; }
