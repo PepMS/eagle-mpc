@@ -60,7 +60,7 @@ configure_file(${eagle_mpc_SOURCE_DIR}/config/path.py.in path.py)
 #
 # VERBOSE_DEBUG: to activate debug messages
 set(VERBOSE_LEVEL 2)
-set(VERBOSE_DEBUG 0)
+set(VERBOSE_DEBUG 1)
 
 
 add_compile_definitions(VERBOSE_DEBUG=${VERBOSE_DEBUG})
