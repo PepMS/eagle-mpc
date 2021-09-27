@@ -8,13 +8,13 @@ from eagle_mpc.utils.path import EAGLE_MPC_YAML_DIR
 
 WITHDISPLAY = 'display' in sys.argv
 
-dt = 10  # ms
+dt = 20  # ms
 useSquash = True
 robotName = 'hexacopter370_flying_arm_3'
 trajectoryName = 'displacement'
 
 trajectory = eagle_mpc.Trajectory()
-trajectory.autoSetup(EAGLE_MPC_YAML_DIR + "/" + robotName + "/trajectories/displacement.yaml")
+trajectory.autoSetup(EAGLE_MPC_YAML_DIR + "/" + robotName + "/trajectories/" + trajectoryName + ".yaml")
 problem = trajectory.createProblem(dt, useSquash, "IntegratedActionModelEuler")
 
 if useSquash:
