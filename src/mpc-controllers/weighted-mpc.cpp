@@ -139,8 +139,11 @@ void WeightedMpc::createProblem()
             solver_ = boost::make_shared<crocoddyl::SolverBoxDDP>(problem_);
             break;
     }
-    solver_callbacks_.push_back(boost::make_shared<crocoddyl::CallbackVerbose>());
-    solver_->setCallbacks(solver_callbacks_);
+
+    if (params_.callback) {
+        solver_callbacks_.push_back(boost::make_shared<crocoddyl::CallbackVerbose>());
+        solver_->setCallbacks(solver_callbacks_);
+    }
 }
 
 boost::shared_ptr<crocoddyl::CostModelSum> WeightedMpc::createCosts() const
